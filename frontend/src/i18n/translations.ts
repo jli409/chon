@@ -8,23 +8,6 @@ interface Translation {
     login: string;
   };
   home: {
-    motherhood: {
-      title: string;
-      asset: string;
-      carbonBasedLives: string;
-      paragraph: string;
-    };
-    empowerment: {
-      dontEmpower: string;
-      corporateWorld: string;
-      love: string;
-      paragraph: string;
-    };
-    about: {
-      weAre: string;
-      paragraph: string;
-      percentage: string;
-    };
     paragraphs: string[];
     cta: string;
   };
