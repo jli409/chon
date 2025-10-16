@@ -269,6 +269,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   }, [step, onHideUIChange]);
 
+  // Reset corporate roles state when returning to identity step
+  useEffect(() => {
+    if (step === 'identity') {
+      setShowCorporateRoles(false);
+      setSelectedCorporateRole(null);
+    }
+  }, [step]);
+
   // 添加获取intro统计数据的函数
   const fetchIntroStats = async () => {
     try {
@@ -1992,7 +2000,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const renderIdentitySelection = () => {
     return (
       <div className="identity-selection" lang={language}>
-        <h1 className="identity-title" lang={language}>{t.personalityTest.identity.title}</h1>
+        {!showCorporateRoles && (
+          <h1 className="identity-title" lang={language}>{t.personalityTest.identity.title}</h1>
+        )}
 
         {/* Identity selection as circles */}
         <div className="identity-circles" lang={language}>
@@ -2009,31 +2019,71 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             <div 
               className={`identity-circle corporate ${isIdentitySelected('corporate') ? 'selected' : ''}`}
               onClick={() => {
-                handleIdentitySelect('corporate');
-                setShowCorporateRoles(true);
+                if (isIdentitySelected('corporate')) {
+                  // If already selected, toggle off
+                  handleIdentitySelect('corporate');
+                } else {
+                  // If not selected, select and show roles
+                  handleIdentitySelect('corporate');
+                  setShowCorporateRoles(true);
+                }
               }}
             >
               <span>{t.personalityTest.identity.corporate}</span>
             </div>
           ) : (
-            <div className="corporate-roles-inline" lang={language}>
-              {(language === 'en' ? corporateRolesEn : corporateRolesZh).map((role) => (
-                <div
-                  key={role}
-                  className={`corporate-role-circle ${selectedCorporateRole === role ? 'selected' : ''}`}
+            <div className="corporate-roles-container">
+              <div className="corporate-roles-inline" lang={language}>
+                {(language === 'en' ? corporateRolesEn : corporateRolesZh).map((role) => (
+                  <div
+                    key={role}
+                    className={`corporate-role-circle ${selectedCorporateRole === role ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (!isIdentitySelected('corporate')) {
+                        handleIdentitySelect('corporate');
+                      }
+                      setSelectedCorporateRole(role);
+                    }}
+                  >
+                    <span>{role}</span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Actions row with Back and Continue when roles are shown */}
+              <div className="identity-actions">
+                <button 
+                  className="continue-button"
                   onClick={() => {
-                    if (!isIdentitySelected('corporate')) {
+                    setShowCorporateRoles(false);
+                    setSelectedCorporateRole(null);
+                    // Unselect corporate if no role was selected
+                    if (!selectedCorporateRole) {
                       handleIdentitySelect('corporate');
                     }
-                    setSelectedCorporateRole(role);
                   }}
+                  lang={language}
                 >
-                  <span>{role}</span>
-                </div>
-              ))}
+                  {language === 'en' ? '← Back' : '← 返回'}
+                </button>
+                <button 
+                  className="continue-button"
+                  onClick={() => {
+                    // If corporate selected but no specific role chosen, don't proceed
+                    if (isIdentitySelected('corporate') && !selectedCorporateRole) {
+                      return; // Stay on corporate roles selection
+                    }
+                    handleContinue();
+                  }}
+                  disabled={selectedIdentities.size === 0 || (isIdentitySelected('corporate') && !selectedCorporateRole)}
+                  lang={language}
+                >
+                  {language === 'en' ? 'CONTINUE →' : '继续 →'}
+                </button>
+              </div>
             </div>
           )}
-
+          
           {!showCorporateRoles && (
             <div 
               className={`identity-circle other ${isIdentitySelected('other') ? 'selected' : ''}`}
@@ -2044,33 +2094,6 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
           )}
         </div>
 
-        {/* Actions row with Back and Continue when roles are shown */}
-        {showCorporateRoles && (
-          <div className="identity-actions">
-            <button 
-              className="continue-button"
-              onClick={() => setShowCorporateRoles(false)}
-              lang={language}
-            >
-              {language === 'en' ? '← Back' : '← 返回'}
-            </button>
-            <button 
-              className="continue-button"
-              onClick={() => {
-                // If corporate selected but no specific role chosen, don't proceed
-                if (isIdentitySelected('corporate') && !selectedCorporateRole) {
-                  return; // Stay on corporate roles selection
-                }
-                handleContinue();
-              }}
-              disabled={selectedIdentities.size === 0 || (isIdentitySelected('corporate') && !selectedCorporateRole)}
-              lang={language}
-            >
-              {language === 'en' ? 'CONTINUE →' : '继续 →'}
-            </button>
-          </div>
-        )}
-        
         {/* other handled as circle above; no bar rendering here */}
 
         {!showCorporateRoles && (

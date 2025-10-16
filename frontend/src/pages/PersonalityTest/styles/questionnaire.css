@@ -367,18 +367,18 @@
   }
   
   .privacy-continue {
-    padding: 0.5rem 2.5rem 0.5rem 1.2rem;
-    font-size: 0.85rem;
-    min-width: 140px;
-    max-width: 180px;
+    padding: 0.425rem 2.125rem 0.425rem 1.02rem;
+    font-size: 0.7225rem;
+    min-width: 119px;
+    max-width: 153px;
   }
   
   .mother-privacy .privacy-continue,
   .other-privacy .privacy-continue {
-    padding: 0.5rem 2.5rem 0.5rem 1.2rem;
-    font-size: 0.85rem;
-    min-width: 140px;
-    max-width: 180px;
+    padding: 0.425rem 2.125rem 0.425rem 1.02rem;
+    font-size: 0.7225rem;
+    min-width: 119px;
+    max-width: 153px;
   }
   
   .mother-privacy .privacy-continue .continue-arrow,
@@ -419,18 +419,18 @@
   }
   
   .privacy-continue {
-    padding: 0.4rem 2.2rem 0.4rem 1rem;
-    font-size: 0.8rem;
-    min-width: 120px;
-    max-width: 160px;
+    padding: 0.34rem 1.87rem 0.34rem 0.85rem;
+    font-size: 0.68rem;
+    min-width: 102px;
+    max-width: 136px;
   }
   
   .mother-privacy .privacy-continue,
   .other-privacy .privacy-continue {
-    padding: 0.4rem 2.2rem 0.4rem 1rem;
-    font-size: 0.8rem;
-    min-width: 120px;
-    max-width: 160px;
+    padding: 0.34rem 1.87rem 0.34rem 0.85rem;
+    font-size: 0.68rem;
+    min-width: 102px;
+    max-width: 136px;
   }
   
   .mother-privacy .privacy-continue .continue-arrow,
@@ -781,8 +781,8 @@
   }
   
   .first-page-continue {
-    min-width: 130px;
-    padding: 0.8rem 2rem;
+    min-width: 110.5px;
+    padding: 0.68rem 1.7rem;
   }
 }
 

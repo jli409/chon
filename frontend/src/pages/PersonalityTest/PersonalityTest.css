@@ -367,8 +367,8 @@
   background-color: transparent;
   color: white;
   border: 1px solid white;
-  padding: 1rem 2.5rem;
-  font-size: 1.2rem;
+  padding: 0.7rem 1.75rem;
+  font-size: 0.84rem;
   letter-spacing: 0.2em;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -376,7 +376,7 @@
   font-weight: 500;
   border-radius: 2px;
   white-space: nowrap;
-  min-width: 120px;
+  min-width: 84px;
 }
 
 .continue-button:hover:not(:disabled) {
@@ -560,8 +560,8 @@
   }
   
   .continue-button {
-    padding: 1rem 2rem;
-    font-size: 1rem;
+    padding: 0.7rem 1.4rem;
+    font-size: 0.7rem;
     margin-top: 1.5rem;
     width: 100%;
     max-width: 300px;
@@ -666,8 +666,8 @@
   }
   
   .continue-button {
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
+    padding: 0.56rem 1.05rem;
+    font-size: 0.63rem;
     margin-top: 1rem;
   }
   

@@ -134,8 +134,8 @@
   }
   
   .continue-button {
-    padding: 1rem 2rem;
-    font-size: 1rem;
+    padding: 0.56rem 1.12rem;
+    font-size: 0.56rem;
     margin-top: 1.5rem;
     width: 100%;
     max-width: 300px;
@@ -221,8 +221,8 @@
   }
   
   .continue-button {
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
+    padding: 0.448rem 0.84rem;
+    font-size: 0.504rem;
     margin-top: 1rem;
   }
   
@@ -314,7 +314,7 @@
   }
   
   .continue-button {
-    padding: 0.6rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.336rem 0.56rem;
+    font-size: 0.476rem;
   }
 } 
