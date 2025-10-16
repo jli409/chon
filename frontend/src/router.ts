@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 import Home from './pages/Home/Home';
 import PersonalityTest from './pages/PersonalityTest/PersonalityTest';
 import Contact from './pages/Contact/Contact';
