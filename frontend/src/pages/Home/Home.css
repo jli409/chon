@@ -146,6 +146,18 @@
   margin-bottom: 0 !important;
 }
 
+/* Chinese paragraph styles - increased by 20% */
+.unified-home-paragraphs[lang="zh"] p,
+.unified-home-paragraphs [lang="zh"] {
+  font-size: 1.68rem !important; /* 1.4rem * 1.2 */
+  margin: 0 0 2.4rem 0 !important; /* 2rem * 1.2 */
+}
+
+.unified-home-paragraphs[lang="zh"] .mission-statement,
+.unified-home-paragraphs [lang="zh"].mission-statement {
+  font-size: 2.16rem !important; /* 1.8rem * 1.2 */
+}
+
 /* 最后一个段落不需要底部margin */
 .content-section p:last-child {
   margin-bottom: 0 !important;
@@ -238,6 +250,17 @@
     font-size: 1.3rem;
     line-height: 1.5; /* 保持统一行高 */
   }
+  
+  /* Chinese responsive styles - 1200px breakpoint */
+  .unified-home-paragraphs[lang="zh"] p,
+  .unified-home-paragraphs [lang="zh"] {
+    font-size: 1.56rem !important; /* 1.3rem * 1.2 */
+  }
+  
+  .unified-home-paragraphs[lang="zh"] .mission-statement,
+  .unified-home-paragraphs [lang="zh"].mission-statement {
+    font-size: 2.04rem !important; /* 1.7rem * 1.2 */
+  }
 }
 
 @media (max-width: 900px) {
@@ -257,6 +280,17 @@
   .content-section p {
     font-size: 1.2rem;
     line-height: 1.5; /* 保持统一行高 */
+  }
+  
+  /* Chinese responsive styles - 900px breakpoint */
+  .unified-home-paragraphs[lang="zh"] p,
+  .unified-home-paragraphs [lang="zh"] {
+    font-size: 1.44rem !important; /* 1.2rem * 1.2 */
+  }
+  
+  .unified-home-paragraphs[lang="zh"] .mission-statement,
+  .unified-home-paragraphs [lang="zh"].mission-statement {
+    font-size: 1.92rem !important; /* 1.6rem * 1.2 */
   }
   
   .content-section {
@@ -286,6 +320,17 @@
   .content-section p {
     font-size: 1.1rem;
     line-height: 1.5; /* 保持统一行高 */
+  }
+  
+  /* Chinese responsive styles - 768px breakpoint */
+  .unified-home-paragraphs[lang="zh"] p,
+  .unified-home-paragraphs [lang="zh"] {
+    font-size: 1.32rem !important; /* 1.1rem * 1.2 */
+  }
+  
+  .unified-home-paragraphs[lang="zh"] .mission-statement,
+  .unified-home-paragraphs [lang="zh"].mission-statement {
+    font-size: 1.8rem !important; /* 1.5rem * 1.2 */
   }
   
   .content-section {
@@ -320,6 +365,17 @@
   .content-section p {
     font-size: 1rem;
     line-height: 1.5; /* 保持统一行高 */
+  }
+  
+  /* Chinese responsive styles - 480px breakpoint */
+  .unified-home-paragraphs[lang="zh"] p,
+  .unified-home-paragraphs [lang="zh"] {
+    font-size: 1.2rem !important; /* 1rem * 1.2 */
+  }
+  
+  .unified-home-paragraphs[lang="zh"] .mission-statement,
+  .unified-home-paragraphs [lang="zh"].mission-statement {
+    font-size: 1.68rem !important; /* 1.4rem * 1.2 */
   }
   
   .cta-container {

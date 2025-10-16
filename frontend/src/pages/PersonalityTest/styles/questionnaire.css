@@ -150,9 +150,9 @@
 }
 
 .privacy-text {
-  font-size: 2rem;
-  line-height: 1.7;
-  margin-bottom: 3rem;
+  font-size: 1.8rem;
+  line-height: 1.2;
+  margin-bottom: 1rem;
   font-family: 'Kaisei Decol', serif;
   font-weight: 300;
   letter-spacing: 0.02em;
@@ -160,12 +160,46 @@
   max-width: 100%;
   overflow-wrap: break-word;
   box-sizing: border-box;
-  white-space: pre-line; /* 确保换行符生效 */
+  color: #000000;
+}
+
+/* Style HTML elements within privacy text */
+.privacy-text strong {
+  font-weight: 700;
+  color: #000000;
+}
+
+.privacy-text hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  margin: 0.5rem 0;
+}
+
+.privacy-text ul {
+  margin: 0.4rem 0;
+  padding-left: 1.5rem;
+}
+
+.privacy-text li {
+  margin-bottom: 0.2rem;
+  list-style-type: disc;
 }
 
 /* 添加段落间距样式 */
 .privacy-text p {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Typing cursor animation */
+.typing-cursor {
+  animation: blink 1s infinite;
+  font-weight: 300;
+  color: inherit;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 /* 重新设计privacy continue按钮 */
@@ -260,8 +294,27 @@
   }
   
   .privacy-text {
-    font-size: 1.7rem;
-    margin-bottom: 2.5rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #000000;
+  }
+  
+  .privacy-text strong {
+    color: #000000;
+  }
+  
+  .privacy-text ul {
+    margin: 0.3rem 0;
+    padding-left: 1.2rem;
+  }
+  
+  .privacy-text li {
+    margin-bottom: 0.15rem;
+  }
+  
+  .privacy-text hr {
+    margin: 0.4rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -281,21 +334,36 @@
   .mother-privacy .privacy-text,
   .other-privacy .privacy-text {
     font-size: 1.15rem;
-    line-height: 1.8;
+    line-height: 1.25;
     padding: 1.2rem;
     max-width: 100%;
-    margin-bottom: 2rem;
+    margin-bottom: 0.75rem;
+    color: #000000;
   }
   
   .privacy-text {
-    font-size: 1.5rem;
-    line-height: 1.6;
-    margin-bottom: 2.2rem;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+    color: #000000;
   }
   
-  /* 调整段落间距 */
-  .privacy-text p {
-    margin-bottom: 1.8rem;
+  .privacy-text strong {
+    color: #000000;
+  }
+  
+  .privacy-text ul {
+    margin: 0.25rem 0;
+    padding-left: 1rem;
+  }
+  
+  .privacy-text li {
+    margin-bottom: 0.125rem;
+  }
+  
+  .privacy-text hr {
+    margin: 0.3rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.3);
   }
   
   .privacy-continue {
@@ -347,7 +415,7 @@
   
   /* 调整段落间距 */
   .privacy-text p {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
   }
   
   .privacy-continue {
@@ -1338,20 +1406,27 @@ html[data-privacy="true"] {
 
 /* 根据语言调整文本样式 */
 [lang="zh"] .privacy-text {
-  line-height: 1.9; /* 为中文文本增加行高 */
+  line-height: 1.25; /* 进一步减少行高以节省空间 */
   letter-spacing: 0.02em;
+  color: #000000;
+}
+
+[lang="zh"] .privacy-text strong {
+  color: #000000;
 }
 
 @media (max-width: 768px) {
   [lang="zh"] .privacy-text {
-    line-height: 1.8;
+    line-height: 1.2;
+    color: #000000;
   }
 }
 
 @media (max-width: 480px) {
   [lang="zh"] .privacy-text {
-    line-height: 1.7;
+    line-height: 1.15;
     letter-spacing: 0.01em;
+    color: #000000;
   }
 }
 

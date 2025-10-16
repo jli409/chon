@@ -47,6 +47,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [userChoice, setUserChoice] = useState<string | null>(null);
   const [selectedIdentities, setSelectedIdentities] = useState<Set<IdentityType>>(new Set());
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [typingText, setTypingText] = useState<string>('');
+  const [isTyping, setIsTyping] = useState<boolean>(false);
   // Identity roles expansion for corporate
   const [showCorporateRoles, setShowCorporateRoles] = useState(false);
   const [selectedCorporateRole, setSelectedCorporateRole] = useState<string | null>(null);
@@ -225,13 +227,47 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
           existingStyle.remove();
       }
     }
-    
-    // 根据步骤决定是否隐藏UI元素
+  }, [step, onWhiteThemeChange]);
+
+  // Typing animation effect for privacy statement
+  useEffect(() => {
+    if (step === 'privacy') {
+      const currentQuestionnaire = getCurrentQuestionnaire();
+      if (!currentQuestionnaire) return;
+
+      const privacyTextEn = "<strong>Data Usage and Privacy Statement</strong><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><strong>For Individual Participants</strong><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>We do <strong>not sell, share, or disclose</strong> your individual data under any circumstances. All responses are securely stored and accessible only to authorized research personnel.";
+      
+      const privacyTextZh = "<strong>数据使用与隐私声明</strong><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><strong>针对个人参与者</strong><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>我们在任何情况下都不会出售、共享或泄露您的个人数据。所有问卷回应将进行加密并安全存储，仅限授权研究人员访问使用。";
+
+      const fullText = language === 'en' 
+        ? currentQuestionnaire.privacyStatement?.contentEn || privacyTextEn
+        : currentQuestionnaire.privacyStatement?.contentZh || privacyTextZh;
+
+      setTypingText('');
+      setIsTyping(true);
+      
+      let currentIndex = 0;
+      const typingInterval = setInterval(() => {
+        if (currentIndex < fullText.length) {
+          setTypingText(fullText.slice(0, currentIndex + 1));
+          currentIndex++;
+        } else {
+          setIsTyping(false);
+          clearInterval(typingInterval);
+        }
+      }, 30); // Adjust speed as needed
+
+      return () => clearInterval(typingInterval);
+    }
+  }, [step, language]);
+
+  // 根据步骤决定是否隐藏UI元素
+  useEffect(() => {
     if (onHideUIChange) {
       const shouldHideUI = step === 'privacy' || step === 'questionnaire';
       onHideUIChange(shouldHideUI);
     }
-  }, [step, onWhiteThemeChange, onHideUIChange]);
+  }, [step, onHideUIChange]);
 
   // 添加获取intro统计数据的函数
   const fetchIntroStats = async () => {
@@ -2320,27 +2356,24 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     const privacyClass = currentQuestionnaire.type === 'other' ? 'other-privacy' : 'mother-privacy';
     
     // 添加换行的隐私文本 - 英文版本
-    const privacyTextEn = "Your information will only be used for verification purposes and to formulate your CHON personality test.\n\n" +
-      "It will not be shared, disclosed, or used for any other purpose.\n\n" +
-      "We are committed to protecting your privacy and ensuring the security of your data.";
+    const privacyTextEn = "<strong>Data Usage and Privacy Statement</strong><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><strong>For Individual Participants</strong><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>We do <strong>not sell, share, or disclose</strong> your individual data under any circumstances. All responses are securely stored and accessible only to authorized research personnel.";
     
     // 中文版本的隐私文本 - 优化中文段落结构
-    const privacyTextZh = "您的信息将仅用于验证目的和制定您的 CHON 性格测试。\n\n" +
-      "您的信息不会被共享、披露或用于任何其他目的。\n\n" +
-      "我们重视您的隐私，并承诺保护您的数据安全。";
+    const privacyTextZh = "<strong>数据使用与隐私声明</strong><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><strong>针对个人参与者</strong><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>我们在任何情况下都不会出售、共享或泄露您的个人数据。所有问卷回应将进行加密并安全存储，仅限授权研究人员访问使用。";
     
     return (
       <div className={`privacy-statement ${privacyClass}`} lang={language} style={{ overflowX: 'hidden', maxWidth: '100%' }}>
-        <p className="privacy-text" lang={language} style={{ whiteSpace: 'pre-line' }}>
-          {language === 'en' 
-            ? currentQuestionnaire.privacyStatement?.contentEn || privacyTextEn
-            : currentQuestionnaire.privacyStatement?.contentZh || privacyTextZh
-          }
-        </p>
+        <div 
+          className="privacy-text" 
+          lang={language} 
+          dangerouslySetInnerHTML={{ __html: typingText }}
+        />
         <button 
           className="privacy-continue"
           onClick={handlePrivacyContinue}
           lang={language}
+          disabled={isTyping}
+          style={{ opacity: isTyping ? 0.5 : 1, cursor: isTyping ? 'not-allowed' : 'pointer' }}
         >
           <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
           <span className="continue-arrow">→</span>
