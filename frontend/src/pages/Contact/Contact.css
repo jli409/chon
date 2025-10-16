@@ -20,7 +20,7 @@
   position: fixed;
   top: 50%;
   right: 0;
-  width: 70%;
+  width: 50%;
   height: 70%;
   background-image: url('/images/molecule.jpg');
   background-repeat: no-repeat;
@@ -243,16 +243,17 @@
 }
 
 /* Coming Soon 页面样式 */
-.coming-soon-container {
+.contact-info-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
   width: 100%;
   margin: 0 auto;
   position: relative;
   z-index: 1;
 }
 
-.coming-soon-container h1 {
+.contact-info-container h1 {
   font-size: 3rem;
   margin-bottom: 2rem;
   color: #F0BDC0;
@@ -260,7 +261,7 @@
   z-index: 1;
 }
 
-.coming-soon-content {
+.contact-info-content {
   margin-top: 2rem;
   padding: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -270,7 +271,7 @@
   background-color: rgba(255, 255, 255, 0.03);
 }
 
-.coming-soon-content p {
+.contact-info-content p {
   font-size: 1.2rem;
   line-height: 1.5;
   color: white;
@@ -279,32 +280,32 @@
 
 /* 响应式调整 - Coming Soon */
 @media (max-width: 768px) {
-  .coming-soon-container h1 {
+  .contact-info-container h1 {
     font-size: 2.2rem;
     margin-bottom: 1.5rem;
     text-align: center;
   }
   
-  .coming-soon-content {
+  .contact-info-content {
     margin-top: 1.5rem;
     padding: 1.5rem;
   }
   
-  .coming-soon-content p {
+  .contact-info-content p {
     font-size: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .coming-soon-container h1 {
+  .contact-info-container h1 {
     font-size: 1.8rem;
   }
   
-  .coming-soon-content {
+  .contact-info-content {
     padding: 1.2rem;
   }
   
-  .coming-soon-content p {
+  .contact-info-content p {
     font-size: 1rem;
   }
 } 

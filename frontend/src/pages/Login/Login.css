@@ -16,21 +16,22 @@
   font-family: 'Alike Angular', serif !important;
 }
 
-.login-container .molecule-background {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    width: 70%;
-    height: 70%;
-    background-image: url('/images/molecule.jpg');
-    background-repeat: no-repeat;
-    background-position: center right;
-    background-size: contain;
-    opacity: 0.15;
-    pointer-events: none;
-    z-index: 0;
-    transform: translateY(-50%);
-  }
+/* Molecule Background */
+.molecule-background {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  width: 50%;
+  height: 70%;
+  background-image: url('/images/molecule.jpg');
+  background-repeat: no-repeat;
+  background-position: center right;
+  background-size: contain;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateY(-50%);
+}
   
 .login-container .hexagon-pattern {
     position: absolute;

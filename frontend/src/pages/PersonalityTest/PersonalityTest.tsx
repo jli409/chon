@@ -47,6 +47,17 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [userChoice, setUserChoice] = useState<string | null>(null);
   const [selectedIdentities, setSelectedIdentities] = useState<Set<IdentityType>>(new Set());
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  // Identity roles expansion for corporate
+  const [showCorporateRoles, setShowCorporateRoles] = useState(false);
+  const [selectedCorporateRole, setSelectedCorporateRole] = useState<string | null>(null);
+  const corporateRolesEn = [
+    'Founder', 'Board Member', 'C-Suite Executive', 'President', 'Managing Director',
+    'Partner', 'Vice President', 'Director', 'Senior Manager'
+  ];
+  const corporateRolesZh = [
+    '企业创始人', '董事会成员', 'C级高管', '总裁', '董事总经理',
+    '合伙人', '副总裁', '总监', '高级经理'
+  ];
   const [showFirstPage, setShowFirstPage] = useState(true);
   const [showSecondPage, setShowSecondPage] = useState(false);
   const [showThirdPage, setShowThirdPage] = useState(false);
@@ -1946,67 +1957,96 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     return (
       <div className="identity-selection" lang={language}>
         <h1 className="identity-title" lang={language}>{t.personalityTest.identity.title}</h1>
-        
-        <div 
-          className={`option-container ${isIdentitySelected('mother') ? 'selected' : ''}`}
-          onClick={() => handleIdentitySelect('mother')}
-        >
-          <div className="identity-checkbox" onClick={(e) => { e.stopPropagation(); handleIdentitySelect('mother'); }}></div>
-          <div 
-            className={`identity-option mother ${isIdentitySelected('mother') ? 'selected' : ''}`}
-            lang={language}
-          >
-            <p lang={language}>{t.personalityTest.identity.mother}</p>
-          </div>
-        </div>
-        
-        <div 
-          className={`option-container ${isIdentitySelected('corporate') ? 'selected' : ''}`}
-          onClick={() => handleIdentitySelect('corporate')}
-        >
-          <div className="identity-checkbox" onClick={(e) => { e.stopPropagation(); handleIdentitySelect('corporate'); }}></div>
-          <div 
-            className={`identity-option corporate ${isIdentitySelected('corporate') ? 'selected' : ''}`}
-            lang={language}
-          >
-            <p lang={language}>
-              {(language === 'en' 
-                ? `Founder / Board Member /
-C-Suite Executive / President / Managing Director / Partner /
-Vice President / Director / Senior Manager`
-                : `创始人 / 董事会成员 /
-首席执行官 / 总裁 / 董事总经理 / 合伙人 /
-副总裁 / 总监 / 高级经理`
-              ).split('\n').map((line, index, arr) => (
-                <React.Fragment key={index}>
-                  {line}
-                  {index < arr.length - 1 && <br />}
-                </React.Fragment>
+
+        {/* Identity selection as circles */}
+        <div className="identity-circles" lang={language}>
+          {!showCorporateRoles && (
+            <div 
+              className={`identity-circle mother ${isIdentitySelected('mother') ? 'selected' : ''}`}
+              onClick={() => handleIdentitySelect('mother')}
+            >
+              <span>{t.personalityTest.identity.mother}</span>
+            </div>
+          )}
+
+          {!showCorporateRoles ? (
+            <div 
+              className={`identity-circle corporate ${isIdentitySelected('corporate') ? 'selected' : ''}`}
+              onClick={() => {
+                handleIdentitySelect('corporate');
+                setShowCorporateRoles(true);
+              }}
+            >
+              <span>{t.personalityTest.identity.corporate}</span>
+            </div>
+          ) : (
+            <div className="corporate-roles-inline" lang={language}>
+              {(language === 'en' ? corporateRolesEn : corporateRolesZh).map((role) => (
+                <div
+                  key={role}
+                  className={`corporate-role-circle ${selectedCorporateRole === role ? 'selected' : ''}`}
+                  onClick={() => {
+                    if (!isIdentitySelected('corporate')) {
+                      handleIdentitySelect('corporate');
+                    }
+                    setSelectedCorporateRole(role);
+                  }}
+                >
+                  <span>{role}</span>
+                </div>
               ))}
-            </p>
-          </div>
-        </div>
-        
-        <div 
-          className={`option-container ${isIdentitySelected('other') ? 'selected' : ''}`}
-          onClick={() => handleIdentitySelect('other')}
-        >
-          <div 
-            className={`identity-option other ${isIdentitySelected('other') ? 'selected' : ''}`}
-            lang={language}
-          >
-            <p lang={language}>{t.personalityTest.identity.other}</p>
-          </div>
+            </div>
+          )}
+
+          {!showCorporateRoles && (
+            <div 
+              className={`identity-circle other ${isIdentitySelected('other') ? 'selected' : ''}`}
+              onClick={() => handleIdentitySelect('other')}
+            >
+              <span>{t.personalityTest.identity.other}</span>
+            </div>
+          )}
         </div>
 
-        <button 
-          className="continue-button"
-          onClick={handleContinue}
-          disabled={selectedIdentities.size === 0}
-          lang={language}
-        >
-          {language === 'en' ? 'CONTINUE →' : '继续 →'}
-        </button>
+        {/* Actions row with Back and Continue when roles are shown */}
+        {showCorporateRoles && (
+          <div className="identity-actions">
+            <button 
+              className="continue-button"
+              onClick={() => setShowCorporateRoles(false)}
+              lang={language}
+            >
+              {language === 'en' ? '← Back' : '← 返回'}
+            </button>
+            <button 
+              className="continue-button"
+              onClick={() => {
+                // If corporate selected but no specific role chosen, don't proceed
+                if (isIdentitySelected('corporate') && !selectedCorporateRole) {
+                  return; // Stay on corporate roles selection
+                }
+                handleContinue();
+              }}
+              disabled={selectedIdentities.size === 0 || (isIdentitySelected('corporate') && !selectedCorporateRole)}
+              lang={language}
+            >
+              {language === 'en' ? 'CONTINUE →' : '继续 →'}
+            </button>
+          </div>
+        )}
+        
+        {/* other handled as circle above; no bar rendering here */}
+
+        {!showCorporateRoles && (
+          <button 
+            className="continue-button"
+            onClick={handleContinue}
+            disabled={selectedIdentities.size === 0}
+            lang={language}
+          >
+            {language === 'en' ? 'CONTINUE →' : '继续 →'}
+          </button>
+        )}
       </div>
     );
   };

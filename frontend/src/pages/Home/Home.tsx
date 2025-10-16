@@ -38,22 +38,13 @@ const Home = () => {
         </h1>
       </div>
 
-      {/* Content Sections */}
-      <section className="content-section" lang={language}>
-        <p className="mission-statement" lang={language}>
-          {renderHtml(t.home.motherhood.paragraph)}
-        </p>
-      </section>
-
-      <section className="content-section" lang={language}>
-        <p className="dont-empower-text" lang={language}>{t.home.empowerment.dontEmpower}</p>
-        <p lang={language}>{renderHtml(t.home.empowerment.paragraph)}</p>
-      </section>
-
-      <section className="content-section close-section" lang={language}>
-        <p lang={language}>
-          {renderHtml(t.home.about.weAre)}, {renderHtml(t.home.about.paragraph)}
-        </p>
+      {/* Content Sections - unified paragraphs */}
+      <section className="content-section unified-home-paragraphs" lang={language}>
+        {t.home.paragraphs.map((html, idx) => (
+          <p className={idx === 0 ? 'mission-statement' : idx === 1 ? 'dont-empower-text' : ''} key={idx} lang={language}>
+            {renderHtml(html)}
+          </p>
+        ))}
       </section>
 
       {/* Call to Action Button */}

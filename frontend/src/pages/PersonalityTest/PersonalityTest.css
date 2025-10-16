@@ -351,29 +351,48 @@
   color: white;
 }
 
+/* Corporate roles list should stack like identity options and match width */
+.corporate-roles {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.corporate-roles .option-container {
+  width: 100%;
+}
+
 .continue-button {
   margin-top: 2rem;
-  background-color: white;
-  color: black;
-  border: none;
-  padding: 1.2rem 2.5rem;
-  font-size: 1.1rem;
-  letter-spacing: 0.15em;
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.2em;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
   font-weight: 500;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 2px;
   white-space: nowrap;
-  min-width: 200px;
+  min-width: 120px;
 }
 
 .continue-button:hover:not(:disabled) {
   background-color: #F0BDC0;
-  color: white;
-  box-shadow: 0 4px 15px rgba(240, 189, 192, 0.3);
+  color: black;
+  border-color: #F0BDC0;
   transform: translateY(-2px);
+}
+
+/* Actions row for identity step */
+.identity-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.5rem;
 }
 
 .continue-button:disabled {

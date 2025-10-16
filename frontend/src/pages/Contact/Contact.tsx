@@ -9,7 +9,7 @@ const SHOW_COMING_SOON = true;
 
 const Contact = () => {
   const { t, language } = useLanguage();
-  const [isComingSoon, setIsComingSoon] = useState(SHOW_COMING_SOON);
+  const [isContactInfo, setIsContactInfo] = useState(SHOW_COMING_SOON);
   
   const renderHtml = (html: string) => {
     const wrappedHtml = `<span lang="${language}">${html}</span>`;
@@ -17,16 +17,16 @@ const Contact = () => {
   };
 
   // 渲染 Coming Soon 页面
-  const renderComingSoon = () => {
+  const renderContactInfo = () => {
     return (
-      <div className="coming-soon-container" lang={language}>
+      <div className="contact-info-container" lang={language}>
         <div className="molecule-background"></div>
         <div className="hexagon-pattern"></div>
         
         <h1 lang={language}>{t.contact.title}</h1>
-        <div className="coming-soon-content" lang={language}>
+        <div className="contact-info-content" lang={language}>
           <p lang={language}>
-            {t.contact.comingSoon}
+            {renderHtml(t.contact.contactInfo)}
           </p>
         </div>
       </div>
@@ -64,8 +64,8 @@ const Contact = () => {
   };
 
   return (
-    <main className={isComingSoon ? "contact-container coming-soon-mode" : "contact-container"} lang={language}>
-      {isComingSoon ? renderComingSoon() : renderOriginalContact()}
+    <main className={isContactInfo ? "contact-container contact-info-mode" : "contact-container"} lang={language}>
+      {isContactInfo ? renderContactInfo() : renderOriginalContact()}
     </main>
   );
 };
