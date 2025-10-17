@@ -470,6 +470,10 @@
     padding: 1rem 2rem;
     font-size: 1rem;
   }
+  
+  .molecule-background {
+    opacity: 0.1;
+  }
 }
 
 @media (max-width: 768px) {
@@ -610,7 +614,8 @@
   }
   
   .molecule-background {
-    opacity: 0.06;
+    width: 100%;
+    opacity: 0.08;
   }
   
   .hexagon-pattern {

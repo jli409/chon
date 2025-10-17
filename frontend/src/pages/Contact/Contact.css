@@ -20,7 +20,7 @@
   position: fixed;
   top: 50%;
   right: 0;
-  width: 50%;
+  width: 70%;
   height: 70%;
   background-image: url('/images/molecule.jpg');
   background-repeat: no-repeat;
@@ -169,7 +169,7 @@
   }
   
   .contact-container .molecule-background {
-    right: 0;
+    opacity: 0.1;
   }
   
   .main-text {

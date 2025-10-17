@@ -154,7 +154,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                         const value = getCurrentAnswers()[question.id]?.split('_')[0] || '';
                         handleTextAnswer(question.id, `${value}_${unitId}`);
                       }}
-                      language={language}
+                      language={language as 'en' | 'zh'}
                     />
                   </div>
                 </div>
