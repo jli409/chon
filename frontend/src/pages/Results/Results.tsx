@@ -50,8 +50,9 @@ const HexagonChart: React.FC<{
   scores: Record<string, number>,
   labels: Record<string, TagTranslations>,
   language: string,
-  animationKey?: number // 添加动画重置键
-}> = ({ scores, labels, language, animationKey }) => {
+  animationKey?: number, // 添加动画重置键
+  characterRanges?: Record<string, [number, number]> // 添加角色分数范围
+}> = ({ scores, labels, language, animationKey, characterRanges }) => {
   // 六边形的6个顶点 - 调整起始角度为30度，使顶点而非边在正上方
   const getHexagonPoints = (center: [number, number], size: number) => {
     const points = [];
@@ -279,15 +280,15 @@ const HexagonChart: React.FC<{
           }}
         />
         
-        {/* 分数多边形 */}
+        {/* 用户分数线（无填充，仅边框） */}
         <polygon 
           points={scorePolygon} 
-          fill="rgba(240,189,192,0.15)" 
+          fill="none" 
           stroke="#F0BDC0" 
-          strokeWidth="2"
+          strokeWidth="3"
           style={{
             opacity: animated ? 1 : 0,
-            transition: 'opacity 1s ease 0.7s, fill 0.3s ease'
+            transition: 'opacity 1s ease 0.7s'
           }}
         />
 
@@ -310,6 +311,59 @@ const HexagonChart: React.FC<{
             }}
           />
         ))}
+        
+        {/* 角色范围区域（粉色阴影区） */}
+        {characterRanges && (() => {
+          const rangePoints = [];
+          for (let i = 0; i < 6; i++) {
+            const tag = tagKeys[i];
+            const range = characterRanges[tag];
+            if (range) {
+              const minSize = (size * range[0]) / 100;
+              const maxSize = (size * range[1]) / 100;
+              const angle = (Math.PI / 6) + (Math.PI / 3 * i);
+              
+              rangePoints.push({
+                minX: center[0] + minSize * Math.cos(angle),
+                minY: center[1] + minSize * Math.sin(angle),
+                maxX: center[0] + maxSize * Math.cos(angle),
+                maxY: center[1] + maxSize * Math.sin(angle)
+              });
+            }
+          }
+          
+          // 创建内外两个六边形来表示范围
+          const minPolygon = rangePoints.map(p => `${p.minX},${p.minY}`).join(' ');
+          const maxPolygon = rangePoints.map(p => `${p.maxX},${p.maxY}`).join(' ');
+          
+          return (
+            <g style={{
+              opacity: animated ? 0.3 : 0,
+              transition: 'opacity 0.8s ease 0.5s'
+            }}>
+              {/* 使用clip-path创建范围区域 */}
+              <defs>
+                <clipPath id="range-clip">
+                  <polygon points={maxPolygon} />
+                </clipPath>
+              </defs>
+              {/* 最大范围轮廓 */}
+              <polygon 
+                points={maxPolygon}
+                fill="rgba(240, 189, 192, 0.15)"
+                stroke="rgba(240, 189, 192, 0.4)"
+                strokeWidth="2"
+              />
+              {/* 最小范围轮廓 */}
+              <polygon 
+                points={minPolygon}
+                fill="rgba(10, 10, 10, 0.3)"
+                stroke="rgba(240, 189, 192, 0.4)"
+                strokeWidth="2"
+              />
+            </g>
+          );
+        })()}
         
         {/* 分数值气泡 */}
         {tagPositions.map((item, index) => {
@@ -511,34 +565,6 @@ const Results: React.FC = () => {
       image: '/images/characters/odin.jpg'
     },
     {
-      id: 'athena',
-      name: {
-        en: 'Athena',
-        zh: '雅典娜'
-      },
-      title: {
-        en: 'The Strategic Guardian',
-        zh: '战略守护者'
-      },
-      description: {
-        en: 'As Athena, you embody wisdom, strategic thinking, and protective leadership. Your ability to analyze complex situations with clarity and objectivity makes you a trusted advisor and decision-maker. You excel in roles that require careful planning, ethical judgment, and the ability to guide others through challenging circumstances. Your balanced approach to emotional regulation and social intelligence allows you to maintain composure while building meaningful professional relationships. You thrive in careers such as strategic consulting, legal professions, project management, and executive leadership where wisdom and strategic foresight are essential.',
-        zh: '作为雅典娜，你体现了智慧、战略思维和保护性领导力。你能够清晰客观地分析复杂情况，这使你成为值得信赖的顾问和决策者。你在需要仔细规划、道德判断和引导他人度过挑战性环境的角色中表现出色。你在情绪调节和社交智能方面的平衡方法使你能够在建立有意义的专业关系的同时保持镇定。你在战略咨询、法律职业、项目管理和行政领导等需要智慧和战略远见的职业中茁壮成长。'
-      },
-      mythology: {
-        en: 'Athena, the Greek goddess of wisdom, warfare, and crafts, is known for her strategic mind and protective nature. Born fully grown from Zeus\'s head, she represents rational thought, justice, and the defense of civilization. Unlike Ares, the god of war, Athena embodies strategic warfare and the protection of cities. She is the patron of heroes, offering guidance and wisdom to those who seek righteous paths.',
-        zh: '雅典娜是希腊的智慧、战争和工艺女神，以其战略思维和保护性而闻名。她从宙斯的头部完全成长，代表着理性思维、正义和文明的防御。与战神阿瑞斯不同，雅典娜体现了战略战争和城市保护。她是英雄的守护神，为那些寻求正义道路的人提供指导和智慧。'
-      },
-      tagRanges: {
-        selfAwareness: [70, 90],
-        dedication: [60, 80],
-        socialIntelligence: [50, 80],
-        emotionalRegulation: [60, 90],
-        objectivity: [80, 100],
-        coreEndurance: [60, 80]
-      },
-      image: '/images/characters/athena.jpg'
-    },
-    {
       id: 'wukong',
       name: {
         en: 'Wukong',
@@ -557,12 +583,12 @@ const Results: React.FC = () => {
         zh: '悟空是《西游记》中聪明顽皮、法力无边的主角。他拥有无与伦比的速度、力量和变形能力，他单打天庭，与天兵天将作战，甚至将自己的名字从生死簿中抹掉。在佛祖的启蒙下，他从一个不羁的战士变成了一个严于律己的保护者。他体现了自由、机智和坚不可摧的决心，总是向他面前的规则发起挑战。'
       },
       tagRanges: {
-        selfAwareness: [40, 80],
-        dedication: [40, 80],
-        socialIntelligence: [70, 90],
+        selfAwareness: [40, 60],
+        dedication: [0, 40],
+        socialIntelligence: [40, 70],
         emotionalRegulation: [80, 100],
-        objectivity: [60, 80],
-        coreEndurance: [60, 90]
+        objectivity: [40, 60],
+        coreEndurance: [40, 60]
       },
       image: '/images/characters/wukong.jpg'
     },
@@ -588,7 +614,7 @@ const Results: React.FC = () => {
         selfAwareness: [0, 40],
         dedication: [80, 100],
         socialIntelligence: [30, 60],
-        emotionalRegulation: [0, 40],
+        emotionalRegulation: [10, 50],
         objectivity: [30, 70],
         coreEndurance: [60, 80]
       },
@@ -613,14 +639,42 @@ const Results: React.FC = () => {
         zh: '女娲是中国神话中最受尊崇的人物之一，是创造、平衡和恢复的女神。传说中，她用泥土创造了人类；当天体破裂时，她用五色石补缀天空，恢复了世界的秩序。她通常被描绘成蛇的下半身，体现了孕育的力量、智慧、创造与和谐，守护着世界的完整性和可持续发展性。'
       },
       tagRanges: {
-        selfAwareness: [0, 60],
-        dedication: [80, 100],
-        socialIntelligence: [60, 90],
-        emotionalRegulation: [80, 100],
-        objectivity: [60, 80],
+        selfAwareness: [0, 40],
+        dedication: [50, 80],
+        socialIntelligence: [40, 60],
+        emotionalRegulation: [60, 80],
+        objectivity: [40, 60],
         coreEndurance: [80, 100]
       },
       image: '/images/characters/nuwa.jpg'
+    },
+    {
+      id: 'athena',
+      name: {
+        en: 'Athena',
+        zh: '雅典娜'
+      },
+      title: {
+        en: 'The Strategic Guardian',
+        zh: '战略守护者'
+      },
+      description: {
+        en: 'As Athena, you embody wisdom, strategic thinking, and protective leadership. Your ability to analyze complex situations with clarity and objectivity makes you a trusted advisor and decision-maker. You excel in roles that require careful planning, ethical judgment, and the ability to guide others through challenging circumstances. Your balanced approach to emotional regulation and social intelligence allows you to maintain composure while building meaningful professional relationships. You thrive in careers such as strategic consulting, legal professions, project management, and executive leadership where wisdom and strategic foresight are essential.',
+        zh: '作为雅典娜，你体现了智慧、战略思维和保护性领导力。你能够清晰客观地分析复杂情况，这使你成为值得信赖的顾问和决策者。你在需要仔细规划、道德判断和引导他人度过挑战性环境的角色中表现出色。你在情绪调节和社交智能方面的平衡方法使你能够在建立有意义的专业关系的同时保持镇定。你在战略咨询、法律职业、项目管理和行政领导等需要智慧和战略远见的职业中茁壮成长。'
+      },
+      mythology: {
+        en: 'Athena, the Greek goddess of wisdom, warfare, and crafts, is known for her strategic mind and protective nature. Born fully grown from Zeus\'s head, she represents rational thought, justice, and the defense of civilization. Unlike Ares, the god of war, Athena embodies strategic warfare and the protection of cities. She is the patron of heroes, offering guidance and wisdom to those who seek righteous paths.',
+        zh: '雅典娜是希腊的智慧、战争和工艺女神，以其战略思维和保护性而闻名。她从宙斯的头部完全成长，代表着理性思维、正义和文明的防御。与战神阿瑞斯不同，雅典娜体现了战略战争和城市保护。她是英雄的守护神，为那些寻求正义道路的人提供指导和智慧。'
+      },
+      tagRanges: {
+        selfAwareness: [60, 80],
+        dedication: [0, 40],
+        socialIntelligence: [50, 70],
+        emotionalRegulation: [40, 60],
+        objectivity: [70, 100],
+        coreEndurance: [40, 60]
+      },
+      image: '/images/characters/athena.jpg'
     },
     {
       id: 'venus',
@@ -644,7 +698,7 @@ const Results: React.FC = () => {
         selfAwareness: [60, 80],
         dedication: [40, 60],
         socialIntelligence: [80, 100],
-        emotionalRegulation: [40, 90],
+        emotionalRegulation: [40, 70],
         objectivity: [30, 60],
         coreEndurance: [20, 50]
       },
@@ -738,20 +792,20 @@ const Results: React.FC = () => {
     });
 
     setTagScores(userScores);
-    setCards(cardsData);
 
-    // 匹配最佳符合的卡片
+    // 匹配最佳符合的卡片并按匹配度排序
     if (Object.keys(userScores).length > 0) {
-      findBestMatch(userScores);
+      const sortedCards = findBestMatchAndSort(userScores);
+      setCards(sortedCards);
+    } else {
+      setCards(cardsData);
     }
   }, []);
 
-  // 寻找最佳匹配的卡片
-  const findBestMatch = (userScores: Record<string, number>) => {
-    let bestMatchIndex = 0;
-    let highestMatchScore = -1;
-
-    cardsData.forEach((card, index) => {
+  // 寻找最佳匹配的卡片并按匹配度排序（从高到低）
+  const findBestMatchAndSort = (userScores: Record<string, number>) => {
+    // 计算每个卡片的匹配分数
+    const cardsWithScores = cardsData.map((card, index) => {
       let matchScore = 0;
       
       // 计算每个标签的匹配分数
@@ -765,14 +819,22 @@ const Results: React.FC = () => {
         }
       });
 
-      if (matchScore > highestMatchScore) {
-        highestMatchScore = matchScore;
-        bestMatchIndex = index;
-      }
+      return {
+        card,
+        matchScore,
+        originalIndex: index
+      };
     });
 
-    setActiveCardIndex(bestMatchIndex);
-    setMatchedCard(cardsData[bestMatchIndex]);
+    // 按匹配分数从高到低排序
+    const sorted = cardsWithScores.sort((a, b) => b.matchScore - a.matchScore);
+    
+    // 设置最佳匹配为第一个（匹配度最高的）
+    setActiveCardIndex(0);
+    setMatchedCard(sorted[0].card);
+    
+    // 返回排序后的卡片数组
+    return sorted.map(item => item.card);
   };
 
   const handleCardClick = (index: number) => {
@@ -828,7 +890,8 @@ const Results: React.FC = () => {
               scores={tagScores} 
               labels={tagLabels} 
               language={language} 
-              animationKey={animationKey} 
+              animationKey={animationKey}
+              characterRanges={matchedCard.tagRanges}
             />
           </div>
         </div>
@@ -847,9 +910,12 @@ const Results: React.FC = () => {
             </div>
           </div>
           
-          <div className="workplace-description">
-            <p>{language === 'en' ? matchedCard.description.en : matchedCard.description.zh}</p>
-          </div>
+          {/* Only show workplace description for the most matched character */}
+          {activeCardIndex === 0 && (
+            <div className="workplace-description">
+              <p>{language === 'en' ? matchedCard.description.en : matchedCard.description.zh}</p>
+            </div>
+          )}
           
           <div className="user-results">
             <h3>{language === 'en' ? 'Your Test Results' : '您的测试结果'}</h3>
