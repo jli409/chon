@@ -190,6 +190,18 @@ button,
     right: 0.6rem;
     font-size: 0.8rem;
   }
+  
+  /* Reduce spacing between headers and paragraphs on mobile */
+  .privacy-statement.mother-privacy .privacy-text,
+  .privacy-statement.other-privacy .privacy-text {
+    line-height: 1.5;
+  }
+  
+  .privacy-statement.mother-privacy .privacy-text strong,
+  .privacy-statement.other-privacy .privacy-text strong {
+    display: block;
+    margin-bottom: 0.3rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -220,6 +232,18 @@ button,
   .other-privacy .privacy-continue .continue-arrow {
     right: 0.5rem;
     font-size: 0.7rem;
+  }
+  
+  /* Reduce spacing between headers and paragraphs on small mobile */
+  .privacy-statement.mother-privacy .privacy-text,
+  .privacy-statement.other-privacy .privacy-text {
+    line-height: 1.5;
+  }
+  
+  .privacy-statement.mother-privacy .privacy-text strong,
+  .privacy-statement.other-privacy .privacy-text strong {
+    display: block;
+    margin-bottom: 0.4rem;
   }
   
   /* 调整页面内容边距，提供更好的阅读体验 */

@@ -511,6 +511,34 @@ const Results: React.FC = () => {
       image: '/images/characters/odin.jpg'
     },
     {
+      id: 'athena',
+      name: {
+        en: 'Athena',
+        zh: '雅典娜'
+      },
+      title: {
+        en: 'The Strategic Guardian',
+        zh: '战略守护者'
+      },
+      description: {
+        en: 'As Athena, you embody wisdom, strategic thinking, and protective leadership. Your ability to analyze complex situations with clarity and objectivity makes you a trusted advisor and decision-maker. You excel in roles that require careful planning, ethical judgment, and the ability to guide others through challenging circumstances. Your balanced approach to emotional regulation and social intelligence allows you to maintain composure while building meaningful professional relationships. You thrive in careers such as strategic consulting, legal professions, project management, and executive leadership where wisdom and strategic foresight are essential.',
+        zh: '作为雅典娜，你体现了智慧、战略思维和保护性领导力。你能够清晰客观地分析复杂情况，这使你成为值得信赖的顾问和决策者。你在需要仔细规划、道德判断和引导他人度过挑战性环境的角色中表现出色。你在情绪调节和社交智能方面的平衡方法使你能够在建立有意义的专业关系的同时保持镇定。你在战略咨询、法律职业、项目管理和行政领导等需要智慧和战略远见的职业中茁壮成长。'
+      },
+      mythology: {
+        en: 'Athena, the Greek goddess of wisdom, warfare, and crafts, is known for her strategic mind and protective nature. Born fully grown from Zeus\'s head, she represents rational thought, justice, and the defense of civilization. Unlike Ares, the god of war, Athena embodies strategic warfare and the protection of cities. She is the patron of heroes, offering guidance and wisdom to those who seek righteous paths.',
+        zh: '雅典娜是希腊的智慧、战争和工艺女神，以其战略思维和保护性而闻名。她从宙斯的头部完全成长，代表着理性思维、正义和文明的防御。与战神阿瑞斯不同，雅典娜体现了战略战争和城市保护。她是英雄的守护神，为那些寻求正义道路的人提供指导和智慧。'
+      },
+      tagRanges: {
+        selfAwareness: [70, 90],
+        dedication: [60, 80],
+        socialIntelligence: [50, 80],
+        emotionalRegulation: [60, 90],
+        objectivity: [80, 100],
+        coreEndurance: [60, 80]
+      },
+      image: '/images/characters/athena.jpg'
+    },
+    {
       id: 'wukong',
       name: {
         en: 'Wukong',
