@@ -127,8 +127,8 @@
 
 /* Inline 3x3 cluster replacing the corporate circle */
 .corporate-roles-inline {
-  width: 580px;
-  height: 480px;
+  width: 420px;
+  height: 360px;
   position: relative;
   margin: 0 auto;
   display: flex;
@@ -138,22 +138,22 @@
 
 /* Organic absolute positions for the 9 circles */
 .corporate-roles-inline .corporate-role-circle {
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   position: absolute;
   animation-duration: 3.5s;
 }
 
-/* Manually place circles in an organic layout (non-overlapping within 280x280) */
-.corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 30px; left: 30px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 15px; left: 200px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 35px; left: 370px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 200px; left: 90px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 220px; left: 220px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 190px; left: 380px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 370px; left: 45px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 390px; left: 220px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 360px; left: 390px; }
+/* Manually place circles in an organic layout (non-overlapping within 320x260) */
+.corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 20px; left: 20px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 10px; left: 140px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 25px; left: 260px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 130px; left: 60px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 140px; left: 160px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 125px; left: 280px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 250px; left: 30px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 260px; left: 160px; }
+.corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 245px; left: 280px; }
 
 /* Corporate roles grid of small floating circles */
 .corporate-roles {
@@ -166,8 +166,8 @@
 }
 
 .corporate-role-circle {
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background-color: white;
   display: flex;
@@ -216,8 +216,8 @@
 .corporate-role-circle:nth-child(8) { animation-delay: 1.4s; }
 .corporate-role-circle:nth-child(9) { animation-delay: 1.6s; }
 .identity-circle {
-  width: 280px;
-  height: 280px;
+  width: 210px;
+  height: 210px;
   border-radius: 50%;
   background-color: white;
   display: flex;
@@ -353,8 +353,8 @@
   }
   
   .identity-circle {
-    width: 200px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
   }
   
   .identity-circle span {
@@ -392,12 +392,38 @@
   }
   
   .identity-circle {
-    width: 180px;
-    height: 180px;
+    width: 140px;
+    height: 140px;
   }
   
   .identity-circle span {
     font-size: 1.1rem;
+  }
+  
+  /* Mobile corporate roles container */
+  .corporate-roles-inline {
+    width: 320px;
+    height: 280px;
+  }
+  
+  .corporate-roles-inline .corporate-role-circle {
+    width: 80px;
+    height: 80px;
+  }
+  
+  /* Adjust positions for mobile */
+  .corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 15px; left: 15px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 8px; left: 110px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 20px; left: 205px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 100px; left: 45px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 110px; left: 120px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 95px; left: 215px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 195px; left: 25px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 205px; left: 120px; }
+  .corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 190px; left: 215px; }
+  
+  .corporate-role-circle span {
+    font-size: 0.9rem;
   }
 }
 

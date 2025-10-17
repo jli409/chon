@@ -2077,6 +2077,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   }}
                   disabled={selectedIdentities.size === 0 || (isIdentitySelected('corporate') && !selectedCorporateRole)}
                   lang={language}
+                  style={{ display: selectedCorporateRole ? 'block' : 'none' }}
                 >
                   {language === 'en' ? 'CONTINUE →' : '继续 →'}
                 </button>
@@ -2102,6 +2103,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             onClick={handleContinue}
             disabled={selectedIdentities.size === 0}
             lang={language}
+            style={{ display: (selectedIdentities.has('mother') || selectedIdentities.has('other')) ? 'block' : 'none' }}
           >
             {language === 'en' ? 'CONTINUE →' : '继续 →'}
           </button>
