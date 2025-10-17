@@ -1,4 +1,4 @@
-export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question';
+export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question' | 'multi-select' | 'searchable-dropdown' | 'text-with-unit';
 export type QuestionnaireType = 'mother' | 'corporate' | 'other' | 'both';
 
 export interface Option {
@@ -8,20 +8,62 @@ export interface Option {
 }
 
 export interface ScaleLabels {
-  minEn: string;
-  minZh: string;
-  maxEn: string;
-  maxZh: string;
+  left: {
+    en: string;
+    zh: string;
+  };
+  right: {
+    en: string;
+    zh: string;
+  };
 }
 
 export interface Question {
-  id: number;
+  id: string;
   type: QuestionType;
   textEn: string;
   textZh: string;
   options?: Option[];
   scaleLabels?: ScaleLabels;
   tags?: string[];
+  multiple?: boolean;
+  unifiedId?: number; // Reference to the unified question ID for conditional logic
+}
+
+export interface QuestionnaireConfig {
+  type: QuestionnaireType;
+  title: {
+    en: string;
+    zh: string;
+  };
+  questionIds: number[]; // References to unified questions by numeric ID
+  questionModifications?: Record<number, {
+    textEn?: string;
+    textZh?: string;
+    sectionTitle?: {
+      en: string;
+      zh: string;
+    };
+  }>;
+  conditionalModifications?: Record<number, {
+    condition: {
+      questionId: number;
+      answer: string;
+    };
+    modifications: {
+      textEn?: string;
+      textZh?: string;
+    };
+  }[]>;
+  sections?: {
+    title: {
+      en: string;
+      zh: string;
+    };
+    startIndex: number;
+    endIndex: number;
+  }[];
+  totalQuestions: number;
 }
 
 export interface PrivacyStatement {
@@ -33,2820 +75,1744 @@ export interface PrivacyStatement {
 
 export interface QuestionnaireContext {
   type: QuestionnaireType;
-  totalQuestions: number;
+  title: {
+    en: string;
+    zh: string;
+  };
   questions: Question[];
-  privacyStatement?: PrivacyStatement;
-  uniqueIdMapping?: Record<string, number>;
+  privacyStatement: PrivacyStatement;
+  totalQuestions: number;
 }
 
-export const questionnaires: Record<QuestionnaireType, QuestionnaireContext> = {
-  mother: {
-    type: 'mother',
-    totalQuestions: 50,
-    questions: [
-      {
-        id: 1,
+export const unifiedQuestions: Record<number, Question> = {
+  // Demographics
+  1: {
+    id: '1',
+    type: 'multiple-choice',
+    textEn: 'What\'s your biological sex?',
+    textZh: '您的生理性别是什么？',
+    options: [
+      { id: 'A', textEn: 'Female', textZh: '女' },
+      { id: 'B', textEn: 'Male', textZh: '男' }
+    ]
+  },
+  2: {
+    id: '2',
         type: 'multiple-choice',
         textEn: 'What is your age range?',
         textZh: '您的年龄是？',
         options: [
           { id: 'A', textEn: 'Under 18', textZh: '18岁以下' },
-          { id: 'B', textEn: '18 - 24', textZh: '18 - 24' },
-          { id: 'C', textEn: '25 - 34', textZh: '25 - 34' },
-          { id: 'D', textEn: '35 - 44', textZh: '35 - 44' },
-          { id: 'E', textEn: '45 - 54', textZh: '45 - 54' },
-          { id: 'F', textEn: '55 - 64', textZh: '55 - 64' },
+          { id: 'B', textEn: '18–24', textZh: '18–24' },
+          { id: 'C', textEn: '25–34', textZh: '25–34' },
+          { id: 'D', textEn: '35–44', textZh: '35–44' },
+          { id: 'E', textEn: '45–54', textZh: '45–54' },
+          { id: 'F', textEn: '55–64', textZh: '55–64' },
           { id: 'G', textEn: '65 or above', textZh: '65岁及以上' }
         ]
       },
-      {
-        id: 2,
-        type: 'multiple-choice',
+  3: {
+    id: '3',
+    type: 'searchable-dropdown',
         textEn: 'Where are you currently based?',
-        textZh: '您目前所在的地区是？',
+    textZh: '您目前所在的国家或地区是？',
         options: [
-          { id: 'A', textEn: 'Asia', textZh: '亚洲' },
-          { id: 'B', textEn: 'North America', textZh: '北美' },
-          { id: 'C', textEn: 'South America', textZh: '南美' },
-          { id: 'D', textEn: 'Europe', textZh: '欧洲' },
-          { id: 'E', textEn: 'Africa', textZh: '非洲' },
-          { id: 'F', textEn: 'Australia/Oceania', textZh: '澳大利亚/大洋洲' }
-        ]
-      },
-      {
-        id: 3,
+      { id: 'AF', textEn: 'Afghanistan', textZh: '阿富汗' },
+      { id: 'AL', textEn: 'Albania', textZh: '阿尔巴尼亚' },
+      { id: 'DZ', textEn: 'Algeria', textZh: '阿尔及利亚' },
+      { id: 'AD', textEn: 'Andorra', textZh: '安道尔' },
+      { id: 'AO', textEn: 'Angola', textZh: '安哥拉' },
+      { id: 'AG', textEn: 'Antigua and Barbuda', textZh: '安提瓜和巴布达' },
+      { id: 'AR', textEn: 'Argentina', textZh: '阿根廷' },
+      { id: 'AM', textEn: 'Armenia', textZh: '亚美尼亚' },
+      { id: 'AU', textEn: 'Australia', textZh: '澳大利亚' },
+      { id: 'AT', textEn: 'Austria', textZh: '奥地利' },
+      { id: 'AZ', textEn: 'Azerbaijan', textZh: '阿塞拜疆' },
+      { id: 'BS', textEn: 'Bahamas', textZh: '巴哈马' },
+      { id: 'BH', textEn: 'Bahrain', textZh: '巴林' },
+      { id: 'BD', textEn: 'Bangladesh', textZh: '孟加拉国' },
+      { id: 'BB', textEn: 'Barbados', textZh: '巴巴多斯' },
+      { id: 'BY', textEn: 'Belarus', textZh: '白俄罗斯' },
+      { id: 'BE', textEn: 'Belgium', textZh: '比利时' },
+      { id: 'BZ', textEn: 'Belize', textZh: '伯利兹' },
+      { id: 'BJ', textEn: 'Benin', textZh: '贝宁' },
+      { id: 'BT', textEn: 'Bhutan', textZh: '不丹' },
+      { id: 'BO', textEn: 'Bolivia', textZh: '玻利维亚' },
+      { id: 'BA', textEn: 'Bosnia and Herzegovina', textZh: '波斯尼亚和黑塞哥维那' },
+      { id: 'BW', textEn: 'Botswana', textZh: '博茨瓦纳' },
+      { id: 'BR', textEn: 'Brazil', textZh: '巴西' },
+      { id: 'BN', textEn: 'Brunei', textZh: '文莱' },
+      { id: 'BG', textEn: 'Bulgaria', textZh: '保加利亚' },
+      { id: 'BF', textEn: 'Burkina Faso', textZh: '布基纳法索' },
+      { id: 'BI', textEn: 'Burundi', textZh: '布隆迪' },
+      { id: 'CV', textEn: 'Cabo Verde', textZh: '佛得角' },
+      { id: 'KH', textEn: 'Cambodia', textZh: '柬埔寨' },
+      { id: 'CM', textEn: 'Cameroon', textZh: '喀麦隆' },
+      { id: 'CA', textEn: 'Canada', textZh: '加拿大' },
+      { id: 'CF', textEn: 'Central African Republic', textZh: '中非共和国' },
+      { id: 'TD', textEn: 'Chad', textZh: '乍得' },
+      { id: 'CL', textEn: 'Chile', textZh: '智利' },
+      { id: 'CN', textEn: 'China', textZh: '中国' },
+      { id: 'CO', textEn: 'Colombia', textZh: '哥伦比亚' },
+      { id: 'KM', textEn: 'Comoros', textZh: '科摩罗' },
+      { id: 'CG', textEn: 'Congo', textZh: '刚果（布）' },
+      { id: 'CD', textEn: 'Congo (DRC)', textZh: '刚果（金）' },
+      { id: 'CR', textEn: 'Costa Rica', textZh: '哥斯达黎加' },
+      { id: 'CI', textEn: 'Côte d\'Ivoire', textZh: '科特迪瓦' },
+      { id: 'HR', textEn: 'Croatia', textZh: '克罗地亚' },
+      { id: 'CU', textEn: 'Cuba', textZh: '古巴' },
+      { id: 'CY', textEn: 'Cyprus', textZh: '塞浦路斯' },
+      { id: 'CZ', textEn: 'Czech Republic', textZh: '捷克' },
+      { id: 'DK', textEn: 'Denmark', textZh: '丹麦' },
+      { id: 'DJ', textEn: 'Djibouti', textZh: '吉布提' },
+      { id: 'DM', textEn: 'Dominica', textZh: '多米尼克' },
+      { id: 'DO', textEn: 'Dominican Republic', textZh: '多米尼加' },
+      { id: 'EC', textEn: 'Ecuador', textZh: '厄瓜多尔' },
+      { id: 'EG', textEn: 'Egypt', textZh: '埃及' },
+      { id: 'SV', textEn: 'El Salvador', textZh: '萨尔瓦多' },
+      { id: 'GQ', textEn: 'Equatorial Guinea', textZh: '赤道几内亚' },
+      { id: 'ER', textEn: 'Eritrea', textZh: '厄立特里亚' },
+      { id: 'EE', textEn: 'Estonia', textZh: '爱沙尼亚' },
+      { id: 'SZ', textEn: 'Eswatini', textZh: '斯威士兰' },
+      { id: 'ET', textEn: 'Ethiopia', textZh: '埃塞俄比亚' },
+      { id: 'FJ', textEn: 'Fiji', textZh: '斐济' },
+      { id: 'FI', textEn: 'Finland', textZh: '芬兰' },
+      { id: 'FR', textEn: 'France', textZh: '法国' },
+      { id: 'GA', textEn: 'Gabon', textZh: '加蓬' },
+      { id: 'GM', textEn: 'Gambia', textZh: '冈比亚' },
+      { id: 'GE', textEn: 'Georgia', textZh: '格鲁吉亚' },
+      { id: 'DE', textEn: 'Germany', textZh: '德国' },
+      { id: 'GH', textEn: 'Ghana', textZh: '加纳' },
+      { id: 'GR', textEn: 'Greece', textZh: '希腊' },
+      { id: 'GD', textEn: 'Grenada', textZh: '格林纳达' },
+      { id: 'GT', textEn: 'Guatemala', textZh: '危地马拉' },
+      { id: 'GN', textEn: 'Guinea', textZh: '几内亚' },
+      { id: 'GW', textEn: 'Guinea-Bissau', textZh: '几内亚比绍' },
+      { id: 'GY', textEn: 'Guyana', textZh: '圭亚那' },
+      { id: 'HT', textEn: 'Haiti', textZh: '海地' },
+      { id: 'HN', textEn: 'Honduras', textZh: '洪都拉斯' },
+      { id: 'HK', textEn: 'Hong Kong SAR', textZh: '香港特别行政区' },
+      { id: 'HU', textEn: 'Hungary', textZh: '匈牙利' },
+      { id: 'IS', textEn: 'Iceland', textZh: '冰岛' },
+      { id: 'IN', textEn: 'India', textZh: '印度' },
+      { id: 'ID', textEn: 'Indonesia', textZh: '印度尼西亚' },
+      { id: 'IR', textEn: 'Iran', textZh: '伊朗' },
+      { id: 'IQ', textEn: 'Iraq', textZh: '伊拉克' },
+      { id: 'IE', textEn: 'Ireland', textZh: '爱尔兰' },
+      { id: 'IL', textEn: 'Israel', textZh: '以色列' },
+      { id: 'IT', textEn: 'Italy', textZh: '意大利' },
+      { id: 'JM', textEn: 'Jamaica', textZh: '牙买加' },
+      { id: 'JP', textEn: 'Japan', textZh: '日本' },
+      { id: 'JO', textEn: 'Jordan', textZh: '约旦' },
+      { id: 'KZ', textEn: 'Kazakhstan', textZh: '哈萨克斯坦' },
+      { id: 'KE', textEn: 'Kenya', textZh: '肯尼亚' },
+      { id: 'KI', textEn: 'Kiribati', textZh: '基里巴斯' },
+      { id: 'KP', textEn: 'North Korea', textZh: '朝鲜' },
+      { id: 'KR', textEn: 'South Korea', textZh: '韩国' },
+      { id: 'KW', textEn: 'Kuwait', textZh: '科威特' },
+      { id: 'KG', textEn: 'Kyrgyzstan', textZh: '吉尔吉斯斯坦' },
+      { id: 'LA', textEn: 'Laos', textZh: '老挝' },
+      { id: 'LV', textEn: 'Latvia', textZh: '拉脱维亚' },
+      { id: 'LB', textEn: 'Lebanon', textZh: '黎巴嫩' },
+      { id: 'LS', textEn: 'Lesotho', textZh: '莱索托' },
+      { id: 'LR', textEn: 'Liberia', textZh: '利比里亚' },
+      { id: 'LY', textEn: 'Libya', textZh: '利比亚' },
+      { id: 'LI', textEn: 'Liechtenstein', textZh: '列支敦士登' },
+      { id: 'LT', textEn: 'Lithuania', textZh: '立陶宛' },
+      { id: 'LU', textEn: 'Luxembourg', textZh: '卢森堡' },
+      { id: 'MO', textEn: 'Macao SAR', textZh: '澳门特别行政区' },
+      { id: 'MG', textEn: 'Madagascar', textZh: '马达加斯加' },
+      { id: 'MW', textEn: 'Malawi', textZh: '马拉维' },
+      { id: 'MY', textEn: 'Malaysia', textZh: '马来西亚' },
+      { id: 'MV', textEn: 'Maldives', textZh: '马尔代夫' },
+      { id: 'ML', textEn: 'Mali', textZh: '马里' },
+      { id: 'MT', textEn: 'Malta', textZh: '马耳他' },
+      { id: 'MH', textEn: 'Marshall Islands', textZh: '马绍尔群岛' },
+      { id: 'MR', textEn: 'Mauritania', textZh: '毛里塔尼亚' },
+      { id: 'MU', textEn: 'Mauritius', textZh: '毛里求斯' },
+      { id: 'MX', textEn: 'Mexico', textZh: '墨西哥' },
+      { id: 'FM', textEn: 'Micronesia', textZh: '密克罗尼西亚' },
+      { id: 'MD', textEn: 'Moldova', textZh: '摩尔多瓦' },
+      { id: 'MC', textEn: 'Monaco', textZh: '摩纳哥' },
+      { id: 'MN', textEn: 'Mongolia', textZh: '蒙古' },
+      { id: 'ME', textEn: 'Montenegro', textZh: '黑山' },
+      { id: 'MA', textEn: 'Morocco', textZh: '摩洛哥' },
+      { id: 'MZ', textEn: 'Mozambique', textZh: '莫桑比克' },
+      { id: 'MM', textEn: 'Myanmar', textZh: '缅甸' },
+      { id: 'NA', textEn: 'Namibia', textZh: '纳米比亚' },
+      { id: 'NR', textEn: 'Nauru', textZh: '瑙鲁' },
+      { id: 'NP', textEn: 'Nepal', textZh: '尼泊尔' },
+      { id: 'NL', textEn: 'Netherlands', textZh: '荷兰' },
+      { id: 'NZ', textEn: 'New Zealand', textZh: '新西兰' },
+      { id: 'NI', textEn: 'Nicaragua', textZh: '尼加拉瓜' },
+      { id: 'NE', textEn: 'Niger', textZh: '尼日尔' },
+      { id: 'NG', textEn: 'Nigeria', textZh: '尼日利亚' },
+      { id: 'MK', textEn: 'North Macedonia', textZh: '北马其顿' },
+      { id: 'NO', textEn: 'Norway', textZh: '挪威' },
+      { id: 'OM', textEn: 'Oman', textZh: '阿曼' },
+      { id: 'PK', textEn: 'Pakistan', textZh: '巴基斯坦' },
+      { id: 'PW', textEn: 'Palau', textZh: '帕劳' },
+      { id: 'PS', textEn: 'Palestine', textZh: '巴勒斯坦' },
+      { id: 'PA', textEn: 'Panama', textZh: '巴拿马' },
+      { id: 'PG', textEn: 'Papua New Guinea', textZh: '巴布亚新几内亚' },
+      { id: 'PY', textEn: 'Paraguay', textZh: '巴拉圭' },
+      { id: 'PE', textEn: 'Peru', textZh: '秘鲁' },
+      { id: 'PH', textEn: 'Philippines', textZh: '菲律宾' },
+      { id: 'PL', textEn: 'Poland', textZh: '波兰' },
+      { id: 'PT', textEn: 'Portugal', textZh: '葡萄牙' },
+      { id: 'QA', textEn: 'Qatar', textZh: '卡塔尔' },
+      { id: 'RO', textEn: 'Romania', textZh: '罗马尼亚' },
+      { id: 'RU', textEn: 'Russia', textZh: '俄罗斯' },
+      { id: 'RW', textEn: 'Rwanda', textZh: '卢旺达' },
+      { id: 'KN', textEn: 'Saint Kitts and Nevis', textZh: '圣基茨和尼维斯' },
+      { id: 'LC', textEn: 'Saint Lucia', textZh: '圣卢西亚' },
+      { id: 'VC', textEn: 'Saint Vincent and the Grenadines', textZh: '圣文森特和格林纳丁斯' },
+      { id: 'WS', textEn: 'Samoa', textZh: '萨摩亚' },
+      { id: 'SM', textEn: 'San Marino', textZh: '圣马力诺' },
+      { id: 'ST', textEn: 'Sao Tome and Principe', textZh: '圣多美和普林西比' },
+      { id: 'SA', textEn: 'Saudi Arabia', textZh: '沙特阿拉伯' },
+      { id: 'SN', textEn: 'Senegal', textZh: '塞内加尔' },
+      { id: 'RS', textEn: 'Serbia', textZh: '塞尔维亚' },
+      { id: 'SC', textEn: 'Seychelles', textZh: '塞舌尔' },
+      { id: 'SL', textEn: 'Sierra Leone', textZh: '塞拉利昂' },
+      { id: 'SG', textEn: 'Singapore', textZh: '新加坡' },
+      { id: 'SK', textEn: 'Slovakia', textZh: '斯洛伐克' },
+      { id: 'SI', textEn: 'Slovenia', textZh: '斯洛文尼亚' },
+      { id: 'SB', textEn: 'Solomon Islands', textZh: '所罗门群岛' },
+      { id: 'SO', textEn: 'Somalia', textZh: '索马里' },
+      { id: 'ZA', textEn: 'South Africa', textZh: '南非' },
+      { id: 'SS', textEn: 'South Sudan', textZh: '南苏丹' },
+      { id: 'ES', textEn: 'Spain', textZh: '西班牙' },
+      { id: 'LK', textEn: 'Sri Lanka', textZh: '斯里兰卡' },
+      { id: 'SD', textEn: 'Sudan', textZh: '苏丹' },
+      { id: 'SR', textEn: 'Suriname', textZh: '苏里南' },
+      { id: 'SE', textEn: 'Sweden', textZh: '瑞典' },
+      { id: 'CH', textEn: 'Switzerland', textZh: '瑞士' },
+      { id: 'SY', textEn: 'Syria', textZh: '叙利亚' },
+      { id: 'TJ', textEn: 'Tajikistan', textZh: '塔吉克斯坦' },
+      { id: 'TZ', textEn: 'Tanzania', textZh: '坦桑尼亚' },
+      { id: 'TW', textEn: 'Taiwan Region', textZh: '台湾地区' },
+      { id: 'TH', textEn: 'Thailand', textZh: '泰国' },
+      { id: 'TL', textEn: 'Timor-Leste', textZh: '东帝汶' },
+      { id: 'TG', textEn: 'Togo', textZh: '多哥' },
+      { id: 'TO', textEn: 'Tonga', textZh: '汤加' },
+      { id: 'TT', textEn: 'Trinidad and Tobago', textZh: '特立尼达和多巴哥' },
+      { id: 'TN', textEn: 'Tunisia', textZh: '突尼斯' },
+      { id: 'TR', textEn: 'Turkey', textZh: '土耳其' },
+      { id: 'TM', textEn: 'Turkmenistan', textZh: '土库曼斯坦' },
+      { id: 'TV', textEn: 'Tuvalu', textZh: '图瓦卢' },
+      { id: 'UG', textEn: 'Uganda', textZh: '乌干达' },
+      { id: 'UA', textEn: 'Ukraine', textZh: '乌克兰' },
+      { id: 'AE', textEn: 'United Arab Emirates', textZh: '阿联酋' },
+      { id: 'GB', textEn: 'United Kingdom', textZh: '英国' },
+      { id: 'US', textEn: 'United States', textZh: '美国' },
+      { id: 'UY', textEn: 'Uruguay', textZh: '乌拉圭' },
+      { id: 'UZ', textEn: 'Uzbekistan', textZh: '乌兹别克斯坦' },
+      { id: 'VU', textEn: 'Vanuatu', textZh: '瓦努阿图' },
+      { id: 'VA', textEn: 'Vatican City', textZh: '梵蒂冈' },
+      { id: 'VE', textEn: 'Venezuela', textZh: '委内瑞拉' },
+      { id: 'VN', textEn: 'Vietnam', textZh: '越南' },
+      { id: 'YE', textEn: 'Yemen', textZh: '也门' },
+      { id: 'ZM', textEn: 'Zambia', textZh: '赞比亚' },
+      { id: 'ZW', textEn: 'Zimbabwe', textZh: '津巴布韦' }
+    ]
+  },
+  4: {
+    id: '4',
         type: 'multiple-choice',
         textEn: 'Have you worked in a for-profit corporate setting, currently or in the past?',
-        textZh: '您目前或过去是否在营利性企业环境中工作过？',
+    textZh: '您目前或过去是否曾在营利性企业环境中工作过？',
         options: [
           { id: 'A', textEn: 'Yes', textZh: '是' },
           { id: 'B', textEn: 'No', textZh: '否' }
         ]
       },
-      {
-        id: 4,
+  5: {
+    id: '5',
         type: 'multiple-choice',
-        textEn: 'How many children do you have or are expecting to have?',
-        textZh: '您有或预计有多少个孩子？',
+    textEn: 'How would you describe your racial or ethnic background?',
+    textZh: '您如何描述您的种族或民族背景？',
         options: [
-          { id: 'A', textEn: '1', textZh: '1 个' },
-          { id: 'B', textEn: '2', textZh: '2 个' },
-          { id: 'C', textEn: '3', textZh: '3 个' },
-          { id: 'D', textEn: '4 or more', textZh: '4 个或更多' }
-        ]
-      },
-      {
-        id: 5,
-        type: 'multiple-choice',
-        textEn: 'How many weeks did you experience noticeable morning sickness?',
-        textZh: '您经历了几个妊娠期有明显的孕吐反应？',
-        options: [
-          { id: 'A', textEn: 'None', textZh: '无' },
-          { id: 'B', textEn: '1 trimester', textZh: '1个妊娠期' },
-          { id: 'C', textEn: '2 trimesters', textZh: '2个妊娠期' },
-          { id: 'D', textEn: 'Entire pregnancy', textZh: '整个孕期' }
-        ]
-      },
-      {
-        id: 6,
-        type: 'text-input',
-        textEn: "What was your youngest child's birth weight?",
-        textZh: '您第一胎宝宝的出生体重是多少？'
-      },
-      {
-        id: 7,
-        type: 'multiple-choice',
-        textEn: 'How long was your maternity leave?',
-        textZh: '您的产假有多长时间？',
-        options: [
-          { id: 'A', textEn: '<8 weeks', textZh: '少于8周' },
-          { id: 'B', textEn: '8-14 weeks', textZh: '8-14周' },
-          { id: 'C', textEn: '15-26 weeks', textZh: '15-26周' },
-          { id: 'D', textEn: '27-52 weeks', textZh: '27-52周' },
-          { id: 'E', textEn: '>1 year', textZh: '超过1年' }
-        ]
-      },
-      {
-        id: 8,
-        type: 'multiple-choice',
-        textEn: 'Did you receive any postpartum care services?',
-        textZh: '您是否接受了产后护理或入住了月子中心？',
-        options: [
-          { id: 'A', textEn: 'Yes', textZh: '是' },
-          { id: 'B', textEn: 'No', textZh: '否' }
-        ]
-      },
-      {
-        id: 9,
-        type: 'text-input',
-        textEn: 'Your postpartum emotions in one word',
-        textZh: '一个词形容您的产后状态'
-      },
-      {
-        id: 10,
-        type: 'text-input',
-        textEn: 'Motherhood experience in ten words',
-        textZh: '十词形容您作为母亲的经历'
-      },
-      {
-        id: 11,
-        type: 'scale-question',
-        textEn: 'How involved are you with previous social life from work after pregnancy?',
-        textZh: '您觉得怀孕后自己与以往工作的社交联系程度如何？',
-        scaleLabels: {
-          minEn: 'Not involved at all',
-          minZh: '完全未参与',
-          maxEn: 'Very involved',
-          maxZh: '非常投入'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 12,
-        type: 'scale-question',
-        textEn: 'How well does your work arrangement support your needs?',
-        textZh: '您怀孕后的工作安排对您有多大支持作用？',
-        scaleLabels: {
-          minEn: 'Not supportive at all',
-          minZh: '完全不支持',
-          maxEn: 'Extremely supportive',
-          maxZh: '非常支持'
-        }
-      },
-      {
-        id: 13,
-        type: 'scale-question',
-        textEn: 'How connected do you feel to your professional identity?',
-        textZh: '您对自己的职业身份感有多强？',
-        scaleLabels: {
-          minEn: 'Not connected - motherhood is full priority',
-          minZh: '完全不强 - 母亲角色优先',
-          maxEn: 'Very connected - profession is important',
-          maxZh: '非常强 - 职业身份很重要'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 14,
-        type: 'scale-question',
-        textEn: 'How has motherhood impacted your career progression or promotion opportunities?',
-        textZh: '母亲身份对您的职业发展机会有何影响？',
-        scaleLabels: {
-          minEn: 'Very negative - significantly hindered',
-          minZh: '非常负面 - 明显阻碍',
-          maxEn: 'Very positive - enhanced opportunities',
-          maxZh: '非常积极 - 提升机会'
-        }
-      },
-      {
-        id: 15,
-        type: 'scale-question',
-        textEn: 'How capable are you with the current support your employer provides?',
-        textZh: '您运用公司提供的支持的能力如何？',
-        scaleLabels: {
-          minEn: 'Not capable of being supported',
-          minZh: '完全不能运用',
-          maxEn: 'Extremely supported',
-          maxZh: '非常能运用'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 16,
-        type: 'scale-question',
-        textEn: 'How has motherhood influenced your leadership or management style at work?',
-        textZh: '母亲身份如何影响了您在工作中的领导或管理风格？',
-        scaleLabels: {
-          minEn: 'Negative - worse at communication',
-          minZh: '消极影响 - 降低沟通能力',
-          maxEn: 'Positive - better at communication',
-          maxZh: '积极影响 - 提升沟通能力'
-        },
-        tags: ['情绪调节']
-      },
-      {
-        id: 17,
-        type: 'scale-question',
-        textEn: 'How effective are you at managing work-related stress since becoming a mother?',
-        textZh: '自成为母亲后，您应对工作压力的能力如何？',
-        scaleLabels: {
-          minEn: 'Much less - harder to manage stress now',
-          minZh: '更低效 - 更难应对压力',
-          maxEn: 'Much more - strengthened my resilience',
-          maxZh: '更有效 - 增强了韧性'
-        },
-        tags: ['核心耐力', '情绪调节']
-      },
-      {
-        id: 18,
-        type: 'scale-question',
-        textEn: 'How motivated do you feel to pursue career growth since becoming a mother?',
-        textZh: '自成为母亲后，您在职业发展方面的动力有多强？',
-        scaleLabels: {
-          minEn: 'Not motivated at all',
-          minZh: '完全没有',
-          maxEn: 'Very motivated',
-          maxZh: '非常强'
-        },
-        tags: ['核心耐力']
-      },
-      {
-        id: 19,
-        type: 'scale-question',
-        textEn: 'How satisfy are you with your ability to maintain work-life balance?',
-        textZh: '您对您目前工作与生活平衡的能力感到满意吗？',
-        scaleLabels: {
-          minEn: 'Very dissatisfied',
-          minZh: '非常不满意',
-          maxEn: 'Very satisfied',
-          maxZh: '非常满意'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 20,
-        type: 'scale-question',
-        textEn: 'How often do you feel your needs as a mother are taken into account during important workplace decisions?',
-        textZh: '在重要的职场决策中，您觉得作为职场母亲的需求被考虑的频率如何？',
-        scaleLabels: {
-          minEn: 'Never - completely overlooked',
-          minZh: '从未 - 完全未被考虑',
-          maxEn: 'Always - consistently considered',
-          maxZh: '总是 - 经常被考虑'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 21,
-        type: 'scale-question',
-        textEn: 'How connected do you feel with other mothers through your work?',
-        textZh: '您在工作中与其他母亲的联系如何？',
-        scaleLabels: {
-          minEn: 'Very disconnected - no connection',
-          minZh: '非常弱 - 没有联系',
-          maxEn: 'Very connected - strong networks',
-          maxZh: '非常强 - 紧密网络'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 22,
-        type: 'scale-question',
-        textEn: 'Do you seek more opportunities to connect with other mothers through your profession?',
-        textZh: '您是否寻求更多与其他职场母亲建立联系的机会？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '从不',
-          maxEn: 'Always',
-          maxZh: '经常'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 23,
-        type: 'multiple-choice',
-        textEn: 'If you were the god or goddess of the business world and could change or create one thing from the following, what would it be?',
-        textZh: '如果您是商业世界的创造神，并且可以创造或改变以下任何一件事，您会改变什么？',
-        options: [
-          { id: 'A', textEn: 'Redistribute corporate shares so that every individual owns a piece of every business', textZh: '重新分配公司股份，让每个人都能在每家企业中分一杯羹' },
-          { id: 'B', textEn: 'Create 72 versions of yourself, each mastering a different industry', textZh: '创造72个化身，每个精通一个不同的行业' },
-          { id: 'C', textEn: 'Transform into an omnipotent prophet that oversees and predicts moves of everyone in the business world', textZh: '化身为全知预言家，精准观测并预测商业世界中每个人的行动' },
-          { id: 'D', textEn: 'Imbue every product of my organization with divine allure, making it irresistible to all', textZh: '赋予我的企业所有产品神圣吸引力，让所有人都无法抗拒' },
-          { id: 'E', textEn: 'Reconstruct the entire economic system to achieve absolute perfection and sustainability', textZh: '重塑所有经济体系，实现绝对完美与可持续发展' },
-          { id: 'F', textEn: 'Ensure that no matter what happens, my organization always stays ahead and outmaneuvers my competitors', textZh: '确保无论发生什么，我的企业始终超越我的竞争对手' }
-        ]
-      },
-      {
-        id: 24,
-        type: 'scale-question',
-        textEn: 'How well do you think logical thinking would address emotional and life concerns?',
-        textZh: '您认为加强抽象逻辑思维对解决情感和生活问题有多大帮助？',
-        scaleLabels: {
-          minEn: 'Not well - No link with emotions',
-          minZh: '完全不行 - 毫无关系',
-          maxEn: 'Extremely well - Very effective',
-          maxZh: '非常好 - 极其有效'
-        },
-        tags: ['客观能力', '情绪调节']
-      },
-      {
-        id: 25,
-        type: 'scale-question',
-        textEn: 'Do you believe that self-love and the ability to care for others require strong logic to navigate challenges in life?',
-        textZh: '你认为自爱和关爱他人的能力在多大程度上需要逻辑思维来解决生活中的挑战？',
-        scaleLabels: {
-          minEn: 'Strongly disagree',
-          minZh: '非常不同意',
-          maxEn: 'Strongly agree',
-          maxZh: '非常同意'
-        }
-      },
-      {
-        id: 26,
-        type: 'scale-question',
-        textEn: 'How valuable do you find having a professional page within our app to showcase your previous work?',
-        textZh: '您觉得在应用内拥有一个用于展示以往工作的职业页面有多大价值？',
-        scaleLabels: {
-          minEn: 'Not valuable at all',
-          minZh: '完全没有价值',
-          maxEn: 'Extremely valuable',
-          maxZh: '非常有价值'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 27,
-        type: 'scale-question',
-        textEn: 'How likely are you to use our app to share completed projects or achievements for deal sourcing or client acquisition?',
-        textZh: '您有多大可能使用该应用分享完成的商业项目或工作成就，以寻找合作机会或获取客户？',
-        scaleLabels: {
-          minEn: 'Very unlikely',
-          minZh: '完全不可能',
-          maxEn: 'Very likely',
-          maxZh: '非常可能'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 28,
-        type: 'scale-question',
-        textEn: 'How valuable would you find a feature to stay updated with trends in your professional field?',
-        textZh: '您认为一个帮助了解其行业领域最新动态的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 毫无益处',
-          maxEn: 'Extremely valuable',
-          maxZh: '极具价值 - 职业发展必备'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 29,
-        type: 'scale-question',
-        textEn: 'How likely are you to use a forum to connect with medical resources for health support?',
-        textZh: '您有多大可能使用与医疗资源联系的论坛以获得医疗支持？',
-        scaleLabels: {
-          minEn: 'Very unlikely',
-          minZh: '完全不可能',
-          maxEn: 'Very likely',
-          maxZh: '非常可能'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 30,
-        type: 'scale-question',
-        textEn: 'How valuable do you think a forum would be in helping you feel less isolated as a working mother?',
-        textZh: '您认为论坛在帮助您增进作为职场母亲与别的职场母亲连接方面有多大价值？',
-        scaleLabels: {
-          minEn: 'Not valuable at all',
-          minZh: '完全没有价值',
-          maxEn: 'Extremely valuable',
-          maxZh: '非常有价值'
-        },
-        tags: ['自我意识', '社交情商']
-      },
-      {
-        id: 31,
-        type: 'scale-question',
-        textEn: 'How motivated are you to use visuospatial training modules within our app to strengthen logical thinking?',
-        textZh: '您有多大动力使用应用内的视觉空间和逻辑训练模块？',
-        scaleLabels: {
-          minEn: 'Not motivated at all',
-          minZh: '完全没有动力',
-          maxEn: 'Very motivated',
-          maxZh: '非常有动力'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 32,
-        type: 'scale-question',
-        textEn: 'How helpful do you think the training would be in enhancing your problem-solving abilities?',
-        textZh: '您认为此训练对提升您解决问题的能力有多大帮助？',
-        scaleLabels: {
-          minEn: 'Not helpful at all',
-          minZh: '完全无帮助',
-          maxEn: 'Extremely helpful',
-          maxZh: '非常有帮助'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 33,
-        type: 'scale-question',
-        textEn: 'How engaging do you think it would be to create and interact with an electronic child avatar in your personal profile?',
-        textZh: '您觉得在个人主页中创建并与自定义的"电子小孩"虚拟形象互动的这个功能有多大吸引力？',
-        scaleLabels: {
-          minEn: 'Not engaging at all',
-          minZh: '完全无吸引力',
-          maxEn: 'Very engaging',
-          maxZh: '非常有吸引力'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 34,
-        type: 'scale-question',
-        textEn: 'How would you like a company-specific AI model offering work-related productivity features for you and other mothers?',
-        textZh: '您如何看待一个专门为每家公司定制的职场母亲专用人工智能模型？',
-        scaleLabels: {
-          minEn: 'Not valuable -- completely unnecessary',
-          minZh: '毫无必要 -- 完全不需要',
-          maxEn: 'Extremely helpful -- enhances efficiency',
-          maxZh: '极具价值 -- 提升效率'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 35,
-        type: 'scale-question',
-        textEn: 'How do you feel about requiring you to submit a confidential child health-related record to verify that you and other users are active caregivers?',
-        textZh: '您如何看待要求您在使用本应用程序之前提交与儿童健康相关的保密记录，以证实您是孩子的照顾者？',
-        scaleLabels: {
-          minEn: 'Strongly oppose -- utterly invasive',
-          minZh: '强烈反对 - 违反隐私',
-          maxEn: 'Strongly support -- ensures safety and trust',
-          maxZh: '强烈支持 - 保障安全的基础'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 36,
-        type: 'scale-question',
-        textEn: 'Do you believe misuse by unintended users (including your partner without permission) could negatively affect trust in the app?',
-        textZh: '您认为如果有非目标用户滥用该平台（包括您的生活伴侣未经允许访问账户等情况），是否会对用户对本应用的信任度产生负面影响？',
-        scaleLabels: {
-          minEn: 'Definitely no -- no trust risk',
-          minZh: '绝对不 -- 完全无风险',
-          maxEn: 'Definitely yes -- severely undermines trust',
-          maxZh: '绝对会 -- 严重破坏信任'
-        }
-      },
-      {
-        id: 37,
-        type: 'scale-question',
-        textEn: 'How do you feel about your company verifying through HR that business updates and activities posted on this platform are by yourself and other mother users, not others misusing their accounts?',
-        textZh: '您如何看待由公司人力资源部门核查平台上的业务更新和动态确实由目标用户本人发布，而非他人滥用账户？',
-        scaleLabels: {
-          minEn: 'Strongly oppose',
-          minZh: '强烈反对',
-          maxEn: 'Strongly support',
-          maxZh: '强烈支持'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 38,
-        type: 'scale-question',
-        textEn: 'How important are empathy, compassion, and selflessness associated with motherhood in leadership and life?',
-        textZh: '您认为母亲体现出的同理心、关爱与无私，对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 39,
-        type: 'scale-question',
-        textEn: 'How important are resilience and perseverance associated with motherhood in leadership and life?',
-        textZh: '您认为母亲展现出的韧性和毅力对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['核心耐力']
-      },
-      {
-        id: 40,
-        type: 'scale-question',
-        textEn: 'How valuable are communication and listening associated with motherhood in leadership and life?',
-        textZh: '您认为母亲身上的沟通与倾听能力对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not valuable at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 41,
-        type: 'scale-question',
-        textEn: 'How crucial are responsibility and accountability associated with motherhood in leadership and life?',
-        textZh: '您认为母亲身上的责任感和担当对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 42,
-        type: 'scale-question',
-        textEn: 'How prepared did you feel for motherhood before becoming a mother?',
-        textZh: '在成为母亲之前，您觉得自己对母亲这一角色的准备程度如何？',
-        scaleLabels: {
-          minEn: 'Not prepared at all',
-          minZh: '完全没有准备',
-          maxEn: 'Very prepared',
-          maxZh: '非常充分'
-        },
-        tags: ['核心耐力']
-      },
-      {
-        id: 43,
-        type: 'scale-question',
-        textEn: 'How much has motherhood changed your personal values or priorities?',
-        textZh: '母亲身份对您的个人价值观或人生优先事项改变有多大？',
-        scaleLabels: {
-          minEn: 'No change',
-          minZh: '没有改变',
-          maxEn: 'Completely',
-          maxZh: '完全改变'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 44,
-        type: 'scale-question',
-        textEn: 'How supported do you feel by your family or community in your motherhood journey?',
-        textZh: '在做母亲的过程中，您觉得家人或社群对您的支持程度如何？',
-        scaleLabels: {
-          minEn: 'Not supported at all',
-          minZh: '完全没有支持',
-          maxEn: 'Extremely supported',
-          maxZh: '非常支持'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 45,
-        type: 'scale-question',
-        textEn: 'How much emotional fulfillment has motherhood brought to your life?',
-        textZh: '母亲身份为您的生活带来了多少情绪满足感？',
-        scaleLabels: {
-          minEn: 'No emotion at all',
-          minZh: '完全没有情感',
-          maxEn: 'Extremely fulfilling',
-          maxZh: '非常满足'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 46,
-        type: 'scale-question',
-        textEn: 'How much do you feel that motherhood has made you more resilient or emotionally strong?',
-        textZh: '母亲身份是否让您在情感方面变得更有韧性或更强大？',
-        scaleLabels: {
-          minEn: 'Much weaker',
-          minZh: '明显减弱',
-          maxEn: 'Much stronger',
-          maxZh: '显著增强'
-        },
-        tags: ['情绪调节', '核心耐力']
-      },
-      {
-        id: 47,
-        type: 'scale-question',
-        textEn: 'How has motherhood affected your ability to set boundaries (e.g., with work, family, or friends) in life?',
-        textZh: '母亲身份对您设定边界（如与工作、家庭或朋友）能力的影响如何？',
-        scaleLabels: {
-          minEn: 'Significantly weakened',
-          minZh: '显著减弱',
-          maxEn: 'Improved greatly',
-          maxZh: '显著提升'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 48,
-        type: 'scale-question',
-        textEn: 'How often do you feel pressure to meet external expectations of motherhood (e.g., societal, cultural, or family expectations)?',
-        textZh: '您多久感受到来自外界对母亲角色（如社会、文化或家庭）的期待压力？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '从不',
-          maxEn: 'Always',
-          maxZh: '总是'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 49,
-        type: 'scale-question',
-        textEn: 'How satisfied are you with the balance between your motherhood role and your sense of self outside of being a mother?',
-        textZh: '您对自己平衡母亲这一身份与作为母亲之外的自我身份有多满意？',
-        scaleLabels: {
-          minEn: 'Very dissatisfied',
-          minZh: '非常不满意',
-          maxEn: 'Very satisfied',
-          maxZh: '非常满意'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 50,
-        type: 'scale-question',
-        textEn: 'How much do you feel that your own mother\'s role influenced your early understanding of leadership or responsibility?',
-        textZh: '您认为您的母亲在多大程度上影响了童年时期您对领导力或责任感的认知？',
-        scaleLabels: {
-          minEn: 'Not at all',
-          minZh: '没有影响',
-          maxEn: 'Very strongly',
-          maxZh: '非常深远'
-        },
-        tags: ['自我意识']
-      }
-    ],
-    privacyStatement: {
-      titleEn: 'Privacy Statement',
-      titleZh: '隐私声明',
-      contentEn: '<strong style="font-size: 1.2em;">Data Usage and Privacy Statement</strong><br><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><strong style="font-size: 1.2em;">For Individual Participants</strong><br><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>',
-      contentZh: '<strong style="font-size: 1.2em;">数据使用与隐私声明</strong><br><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><strong style="font-size: 1.2em;">针对个人参与者</strong><br><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>'
-    },
-    uniqueIdMapping: {
-      "mother 1": 2,
-      "mother 2": 3,
-      "mother 3": 4,
-      "mother 4": 54,
-      "mother 5": 55,
-      "mother 6": 56,
-      "mother 7": 57,
-      "mother 8": 58,
-      "mother 9": 59,
-      "mother 10": 60,
-      "mother 11": 61,
-      "mother 12": 62,
-      "mother 13": 63,
-      "mother 14": 64,
-      "mother 15": 65,
-      "mother 16": 66,
-      "mother 17": 67,
-      "mother 18": 68,
-      "mother 19": 69,
-      "mother 20": 70,
-      "mother 21": 71,
-      "mother 22": 72,
-      "mother 23": 27,
-      "mother 24": 28,
-      "mother 25": 29,
-      "mother 26": 73,
-      "mother 27": 31,
-      "mother 28": 30,
-      "mother 29": 33,
-      "mother 30": 32,
-      "mother 31": 34,
-      "mother 32": 74,
-      "mother 33": 35,
-      "mother 34": 37,
-      "mother 35": 40,
-      "mother 36": 41,
-      "mother 37": 42,
-      "mother 38": 43,
-      "mother 39": 44,
-      "mother 40": 45,
-      "mother 41": 46,
-      "mother 42": 75,
-      "mother 43": 76,
-      "mother 44": 77,
-      "mother 45": 78,
-      "mother 46": 79,
-      "mother 47": 80,
-      "mother 48": 81,
-      "mother 49": 82,
-      "mother 50": 53
-    }
+      { id: 'A', textEn: 'African American', textZh: '非裔美国人' },
+      { id: 'B', textEn: 'Asian', textZh: '亚洲人' },
+      { id: 'C', textEn: 'Hispanic/Latino', textZh: '西班牙裔/拉丁美洲人' },
+      { id: 'D', textEn: 'Middle Eastern/North African', textZh: '中东人/北非人' },
+      { id: 'E', textEn: 'Mixed/Multiracial', textZh: '混血/多民族' },
+      { id: 'F', textEn: 'Native American/Alaska Native', textZh: '美洲原住民/阿拉斯加原住民' },
+      { id: 'G', textEn: 'Native Hawaiian/Pacific Islander', textZh: '夏威夷原住民/太平洋岛民' },
+      { id: 'H', textEn: 'White/Caucasian', textZh: '白人/高加索人' },
+      { id: 'I', textEn: 'Other', textZh: '其他' },
+      { id: 'J', textEn: 'Prefer not to say', textZh: '不愿回答' }
+    ]
   },
-  corporate: {
-    type: 'corporate',
-    totalQuestions: 52,
-    questions: [
-      {
-        id: 1,
-        type: 'multiple-choice',
-        textEn: "What's your biological sex at birth?",
-        textZh: '您出生时的生理性别是什么？',
-        options: [
-          { id: 'A', textEn: 'Female', textZh: '女' },
-          { id: 'B', textEn: 'Male', textZh: '男' }
-        ]
-      },
-      {
-        id: 2,
-        type: 'multiple-choice',
-        textEn: 'What is your age range?',
-        textZh: '您的年龄是？',
-        options: [
-          { id: 'A', textEn: 'Under 18', textZh: '18岁以下' },
-          { id: 'B', textEn: '18 - 24', textZh: '18 - 24' },
-          { id: 'C', textEn: '25 - 34', textZh: '25 - 34' },
-          { id: 'D', textEn: '35 - 44', textZh: '35 - 44' },
-          { id: 'E', textEn: '45 - 54', textZh: '45 - 54' },
-          { id: 'F', textEn: '55 - 64', textZh: '55 - 64' },
-          { id: 'G', textEn: '65 or above', textZh: '65岁及以上' }
-        ]
-      },
-      {
-        id: 3,
-        type: 'multiple-choice',
-        textEn: 'Where are you currently based?',
-        textZh: '您目前所在的地区是？',
-        options: [
-          { id: 'A', textEn: 'Asia', textZh: '亚洲' },
-          { id: 'B', textEn: 'North America', textZh: '北美' },
-          { id: 'C', textEn: 'South America', textZh: '南美' },
-          { id: 'D', textEn: 'Europe', textZh: '欧洲' },
-          { id: 'E', textEn: 'Africa', textZh: '非洲' },
-          { id: 'F', textEn: 'Australia/Oceania', textZh: '澳大利亚/大洋洲' },
-        ]
-      },
-      {
-        id: 4,
+  6: {
+    id: '6',
         type: 'text-input',
-        textEn: 'What is your current / most recent job position?',
-        textZh: '您目前的职位名称是什么？'
+    textEn: 'Please enter your professional contact to allow us to verify your identity.',
+    textZh: '请输入您的职业联系方式，以便验证身份。'
       },
-      {
-        id: 5,
-        type: 'text-input',
-        textEn: 'What is your professional contact (e.g., email, LinkedIn)?',
-        textZh: '请问您的职业联系方式是什么（例如：邮箱、领英）？'
-      },
-      {
-        id: 6,
+  7: {
+    id: '7',
         type: 'multiple-choice',
-        textEn: 'How many years of experience do you have in a managerial or leadership role?',
+    textEn: 'How long have you been in a managerial or leadership role?',
         textZh: '您在管理或领导岗位上有多少年的工作经验？',
         options: [
-          { id: 'A', textEn: '1-3 years', textZh: '1-3年' },
-          { id: 'B', textEn: '4-6 years', textZh: '4-6年' },
-          { id: 'C', textEn: '7-9 years', textZh: '7-9年' },
+          { id: 'A', textEn: '1–3 years', textZh: '1–3年' },
+          { id: 'B', textEn: '4–6 years', textZh: '4–6年' },
+          { id: 'C', textEn: '7–9 years', textZh: '7–9年' },
           { id: 'D', textEn: '10+ years', textZh: '10年以上' }
         ]
       },
-      {
-        id: 7,
+  8: {
+    id: '8',
         type: 'multiple-choice',
         textEn: 'Which industry or business sector does your company operate in?',
         textZh: '贵公司属于哪个行业或业务领域？',
         options: [
-          { id: 'A', textEn: 'Consumer Goods & Retail', textZh: '消费品和零售' },
-          { id: 'B', textEn: 'Education & Business Professional Services', textZh: '教育和商业专业服务' },
-          { id: 'C', textEn: 'Energy & Utilities', textZh: '能源和公用事业' },
-          { id: 'D', textEn: 'Entertainment & Media', textZh: '娱乐和媒体' },
-          { id: 'E', textEn: 'Financial Services', textZh: '金融服务' },
-          { id: 'F', textEn: 'Government, Nonprofits & Public Services', textZh: '政府、非营利和公共服务' },
-          { id: 'G', textEn: 'Healthcare & Pharmaceuticals', textZh: '医疗保健和制药' },
-          { id: 'H', textEn: 'Industrial Production & Manufacturing', textZh: '工业生产和制造' },
-          { id: 'I', textEn: 'Real Estate & Construction', textZh: '房地产和建筑' },
-          { id: 'J', textEn: 'Technology & Telecommunications', textZh: '技术和电信' },
-          { id: 'K', textEn: 'Transportation & Logistics', textZh: '运输和物流' }
-        ]
-      },
-      {
-        id: 8,
+      { id: 'A', textEn: 'Consumer Goods & Retail', textZh: '消费品与零售' },
+      { id: 'B', textEn: 'Education & Business Professional Services', textZh: '教育与商业专业服务' },
+      { id: 'C', textEn: 'Energy & Utilities', textZh: '能源与公用事业' },
+      { id: 'D', textEn: 'Entertainment & Media', textZh: '娱乐与媒体' },
+      { id: 'E', textEn: 'Financial Services', textZh: '金融服务' },
+      { id: 'F', textEn: 'Government, Nonprofits & Public Services', textZh: '政府、非营利组织与公共服务' },
+      { id: 'G', textEn: 'Healthcare & Pharmaceuticals', textZh: '医疗保健与制药' },
+      { id: 'H', textEn: 'Industrial Production & Manufacturing', textZh: '工业生产与制造业' },
+      { id: 'I', textEn: 'Real Estate & Construction', textZh: '房地产与建筑' },
+      { id: 'J', textEn: 'Technology & Telecommunications', textZh: '技术与电信' },
+      { id: 'K', textEn: 'Transportation & Logistics', textZh: '运输与物流' }
+    ]
+  },
+  9: {
+    id: '9',
         type: 'multiple-choice',
-        textEn: "What is your company's total employee headcount?",
+    textEn: 'What is your company\'s total employee headcount?',
         textZh: '贵公司的员工总人数是多少？',
         options: [
           { id: 'A', textEn: 'Fewer than 50', textZh: '少于50人' },
-          { id: 'B', textEn: '50-249', textZh: '50-249' },
-          { id: 'C', textEn: '250-999', textZh: '250-999' },
-          { id: 'D', textEn: '1,000-9,999', textZh: '1,000-9,999' },
-          { id: 'E', textEn: '10,000-99,999', textZh: '10,000-99,999' },
-          { id: 'F', textEn: '100,000 or more', textZh: '100,000人及以上' }
-        ]
-      },
-      {
-        id: 9,
+          { id: 'B', textEn: '50–249', textZh: '50–249人' },
+          { id: 'C', textEn: '250–999', textZh: '250–999人' },
+          { id: 'D', textEn: '1,000–9,999', textZh: '1,000–9,999人' },
+          { id: 'E', textEn: '10,000–50,000', textZh: '10,000–50,000人' },
+          { id: 'F', textEn: '50,000 or more', textZh: '50,000人及以上' }
+    ]
+  },
+  10: {
+    id: '10',
         type: 'multiple-choice',
-        textEn: "What is the approximate annual revenue of your company?",
+    textEn: 'What is the approximate annual revenue of your company?',
         textZh: '贵公司的年营收大约是多少？',
         options: [
-          { id: 'A', textEn: 'Less than $10 million', textZh: '少于1000万' },
-          { id: 'B', textEn: '$10-50 million', textZh: '1000万-5000万' },
-          { id: 'C', textEn: '$50-500 million', textZh: '5000万-5亿' },
-          { id: 'D', textEn: '$500 million-$10 billion', textZh: '5亿-100亿' },
-          { id: 'E', textEn: '$10-100 billion', textZh: '100亿-1000亿' },
-          { id: 'F', textEn: 'Over $100 billion', textZh: '超过1000亿' }
-        ]
-      },
-      {
-        id: 10,
+      { id: 'A', textEn: 'Less than $1 million', textZh: '少于500万' },
+      { id: 'B', textEn: '$1–10 million', textZh: '500–5,000万' },
+      { id: 'C', textEn: '$10–50 million', textZh: '5,000万–5亿' },
+      { id: 'D', textEn: '$50–500 million', textZh: '5亿–50亿' },
+      { id: 'E', textEn: '$500 million–$5 billion', textZh: '50亿–500亿' },
+      { id: 'F', textEn: 'Over $10 billion', textZh: '超过500亿' }
+    ]
+  },
+  11: {
+    id: '11',
         type: 'multiple-choice',
-        textEn: 'What is the approximate size of your direct span of control?',
-        textZh: '您的直接管理团队规模是多少？',
+    textEn: 'What is the approximate size of your span of control?',
+    textZh: '您的管理规模是多少？',
         options: [
-          { id: 'A', textEn: '1-5 people', textZh: '1-5人' },
-          { id: 'B', textEn: '6-15 people', textZh: '6-15人' },
-          { id: 'C', textEn: '16-30 people', textZh: '16-30人' },
-          { id: 'D', textEn: '30-50 people', textZh: '30-50人' },
-          { id: 'E', textEn: 'More than 50 people', textZh: '50人以上' }
-        ]
-      },
-      {
-        id: 11,
-        type: 'multiple-choice',
-        textEn: 'What is the approximate size of your indirect span of control?',
-        textZh: '您简介管理多少人？',
-        options: [
-          { id: 'A', textEn: '1-15 people', textZh: '1-15人' },
-          { id: 'B', textEn: '16-50 people', textZh: '11-50人' },
-          { id: 'C', textEn: '51-200 people', textZh: '51-200人' },
-          { id: 'D', textEn: '200-500 people', textZh: '200-500人' },
-          { id: 'E', textEn: 'More than 500 people', textZh: '500人以上' }
-        ]
-      },
-      {
-        id: 12,
-        type: 'text-input',
-        textEn: 'Describe the overall reporting structure within your team in ten words',
-        textZh: '请在十字以内描述您团队中的整体报告结构'
-      },
-      {
-        id: 13,
-        type: 'scale-question',
-        textEn: 'How would you describe the decision-making structure in your organization?',
-        textZh: '您如何描述贵公司决策体系的运作方式？',
-        scaleLabels: {
-          minEn: 'Highly centralized',
-          minZh: '高度集中化',
-          maxEn: 'Flexibly adaptive',
-          maxZh: '灵活变通'
-        }
-      },
-      {
-        id: 14,
-        type: 'scale-question',
-        textEn: 'In your opinion, what should be the primary basis of decision-making authority in your organization?',
-        textZh: '在您看来，贵司的决策权应该主要基于什么？',
-        scaleLabels: {
-          minEn: 'Rigid policies & Top-down command',
-          minZh: '严格的政策和自上而下的指挥',
-          maxEn: 'Entirely based on individual\'s ability',
-          maxZh: '完全基于个人能力'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 15,
-        type: 'scale-question',
-        textEn: 'How well-organized would you say your team structure is under your leadership?',
-        textZh: '您认为在您的领导下，您的团队结构有多有序和高效？',
-        scaleLabels: {
-          minEn: 'Not organized',
-          minZh: '缺乏组织性',
-          maxEn: 'Very well-organized',
-          maxZh: '组织性非常强'
-        },
-        tags: ['客观能力', '核心耐力']
-      },
-      {
-        id: 16,
-        type: 'scale-question',
-        textEn: 'How would you rate your team\'s level of communication and collaboration under your leadership?',
-        textZh: '您认为在您的领导下，您的团队的沟通与协作水平如何？',
-        scaleLabels: {
-          minEn: 'Very poor -- Lack communication & efficiency',
-          minZh: '非常差 --- 缺乏沟通和效率',
-          maxEn: 'Excellent -- Great communication & efficiency',
-          maxZh: '非常好 --- 极好的沟通和效率'
-        },
-        tags: ['客观能力', '社交情商']
-      },
-      {
-        id: 17,
-        type: 'scale-question',
-        textEn: 'How would you rate your experience in communicating and establishing trust with clients or business partners?',
-        textZh: '您如何评价自己在与客户或业务伙伴沟通及建立信任方面的经验？',
-        scaleLabels: {
-          minEn: 'Very poor -- significant challenges',
-          minZh: '非常差 -- 极大挑战',
-          maxEn: 'Excellent -- effective and trusted',
-          maxZh: '非常好 -- 有效、可信'
-        },
-        tags: ['社交能力', '情商']
-      },
-      {
-        id: 18,
-        type: 'scale-question',
-        textEn: 'How effective do you believe your organization is at understanding client or market needs?',
-        textZh: '您认为贵司在理解客户或市场需求方面的效果如何？',
-        scaleLabels: {
-          minEn: 'Very poor -- insufficient understanding',
-          minZh: '非常差 -- 不充分了解',
-          maxEn: 'Excellent -- exceeds expectations',
-          maxZh: '非常好 -- 超出预期'
-        },
-        tags: ['社交能力', '情商']
-      },
-      {
-        id: 19,
-        type: 'scale-question',
-        textEn: 'How important do you think responsibility is in building successful business projects?',
-        textZh: '您认为责任感对商业项目的成功有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['客观能力', '奉献精神']
-      },
-      {
-        id: 20,
-        type: 'scale-question',
-        textEn: 'How important do you think empathy and communication are in building successful business relationships?',
-        textZh: '您认为同理心和沟通能力在建立成功的商业关系中有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['奉献精神', '社交情商']
-      },
-      {
-        id: 21,
-        type: 'scale-question',
-        textEn: 'How would you describe the current recognition and utilization of the "soft skills" of kindness, responsibility, empathy, and communication in your company?',
-        textZh: '您如何描述贵司目前对"软实力"（善良、责任心、同理心、沟通能力）的认可和使用情况？',
-        scaleLabels: {
-          minEn: 'Not recognized at all',
-          minZh: '完全不认可',
-          maxEn: 'Highly recognized and utilized',
-          maxZh: '高度认可和利用'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 22,
-        type: 'multiple-choice',
-        textEn: 'Do you think men and women are equally supported in your industry when it comes to balancing work and family?',
-        textZh: '在您的行业中, 您认为男性和女性是否在平衡工作与家庭方面得到了同等支持？',
-        options: [
-          { id: 'A', textEn: 'No, one is significantly less supported', textZh: '不是，其一得到的很少同等支持' },
-          { id: 'B', textEn: 'Yes, equally supported', textZh: '是的，两种性别都得到了平等支持' }
-        ],
-        tags: ['男：客观能力', '女：自我意识']
-      },
-      {
-        id: 23,
-        type: 'scale-question',
-        textEn: 'In your opinion, how important is it for your organization to provide resources in the form of support and social bonding for working mothers?',
-        textZh: '在您看来，公司为职场母亲提供情感支持和社交的资源有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Very important',
-          maxZh: '非常重要'
-        },
-        tags: ['男：奉献精神', '女：自我意识']
-      },
-      {
-        id: 24,
-        type: 'scale-question',
-        textEn: 'How would you describe your organization\'s current approach to supporting working mothers under your leadership?',
-        textZh: '您如何描述贵司在您的领导下目前对职场母亲的支持程度？',
-        scaleLabels: {
-          minEn: 'Not supportive at all',
-          minZh: '完全不支持',
-          maxEn: 'Highly supportive with clear policies and resources, please specify',
-          maxZh: '高度支持，有明确的政策和资源, 请阐述'
-        },
-        tags: ['男：奉献精神', '女：自我意识']
-      },
-      {
-        id: 25,
-        type: 'scale-question',
-        textEn: 'How effectively do you use technology to support collaboration and productivity within your team?',
-        textZh: '您在团队协作和生产力提升方面对科技的使用程度如何？',
-        scaleLabels: {
-          minEn: 'Not at all',
-          minZh: '完全不使用',
-          maxEn: 'Very effectively',
-          maxZh: '非常有效地使用'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 26,
-        type: 'multiple-choice',
-        textEn: 'If you were the god or goddess of the business world and could change or create one thing from the following, what would it be?',
-        textZh: '如果您是商业世界的创造神，并且可以创造或改变以下任何一件事，您会选择什么？',
-        options: [
-          { id: 'A', textEn: 'Redistribute all corporate shares so that every individual owns a piece of every business', textZh: '重新分配公司股份，让每个人都能在每家企业中分一杯羹' },
-          { id: 'B', textEn: 'Create 72 versions of yourself, each mastering a different industry', textZh: '创造72个化身，每个精通一个不同的行业' },
-          { id: 'C', textEn: 'Transform into an omnipotent prophet that oversees and predicts moves of everyone in the business world', textZh: '化身为全知预言家，精准观测并预测商业世界中每个人的行动' },
-          { id: 'D', textEn: 'Imbue every product with divine allure, making it irresistible to all', textZh: '赋予所有产品神圣吸引力，让所有人都无法抗拒' },
-          { id: 'E', textEn: 'Reconstruct the entire economic system to achieve absolute perfection and sustainability', textZh: '重塑所有经济体系，实现绝对完美与可持续发展' },
-          { id: 'F', textEn: 'Ensure that no matter what happens, my business always stays ahead and outmaneuvers my competitors', textZh: '确保无论发生什么，我的企业始终超越我的竞争对手' }
-        ]
-      },
-      {
-        id: 27,
-        type: 'scale-question',
-        textEn: 'How well do you think enhanced abstract logical thinking would address emotional and life concerns?',
-        textZh: '您认为加强抽象逻辑思维对解决情感和生活问题有多大帮助？',
-        scaleLabels: {
-          minEn: 'Not well - no link with emotions',
-          minZh: '完全不行 - 毫无关系',
-          maxEn: 'Extremely well - very effective',
-          maxZh: '非常好 - 极其有效'
-        },
-        tags: ['客观能力', '情绪调节']
-      },
-      {
-        id: 28,
-        type: 'scale-question',
-        textEn: 'Do you believe that self-love and the ability to care for others require strong logic to navigate challenges in life?',
-        textZh: '你认为真正的自爱和关爱他人的能力在多大程度上需要强大的客观思维来解决生活中的挑战？',
-        scaleLabels: {
-          minEn: 'Strongly disagree',
-          minZh: '非常不同意',
-          maxEn: 'Strongly agree',
-          maxZh: '非常同意'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 29,
-        type: 'scale-question',
-        textEn: 'How valuable would you find a feature that helps working mothers stay updated with trends and knowledge in their professional field?',
-        textZh: '您认为一个帮助职场母亲了解其行业领域最新动态的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 毫无益处',
-          maxEn: 'Extremely valuable',
-          maxZh: '极具价值 - 职业发展必备'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 30,
-        type: 'scale-question',
-        textEn: 'How valuable would a business opportunity board be, where working mothers on your team could post or access new projects and deals?',
-        textZh: '您认为一个帮助职场母亲发布和获取商业交易和商业合作的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Highly valuable',
-          maxZh: '极具价值 - 大幅提升发展'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 31,
-        type: 'scale-question',
-        textEn: 'How do you perceive the value of a forum where mothers can share maternal experiences and emotional support?',
-        textZh: '您认为一个帮助职场母亲分享育儿经验、获得情感支持的论坛有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely beneficial',
-          maxZh: '极其有益 - 非常重要的连接'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 32,
-        type: 'scale-question',
-        textEn: 'How valuable would direct access to external medical resouces for healthcare advice be within such an app?',
-        textZh: '您认为提供联系外部医疗资源获得医学建议的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely valuable',
-          maxZh: '极具价值 - 健康必备'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 33,
-        type: 'scale-question',
-        textEn: 'How beneficial would visuospatial and abstract logical training modules be for enhancing cognitive development?',
-        textZh: '您认为视觉空间与数学逻辑训练模块对抽象逻辑发展有多大用处？',
-        scaleLabels: {
-          minEn: 'Not beneficial',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely beneficial',
-          maxZh: '极具价值 - 提升效率'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 34,
-        type: 'scale-question',
-        textEn: 'How engaging do you think personalized profiles with interactive "electronic kids" avatars would be for promoting social interaction among working mothers?',
-        textZh: '您认为通过个人主页中使用"电子小孩"互动来促进职场母亲之间社交互动的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not engaging',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Very engaging',
-          maxZh: '极具价值 - 促进人性化连接'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 35,
-        type: 'scale-question',
-        textEn: 'How important would you find mentorship matching that connects new mothers with more experienced mothers within the same company or industry?',
-        textZh: '您认为一个将新晋母亲与同一公司或行业内有更多育儿经验的母亲相匹配的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not important',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely important',
-          maxZh: '极具价值 - 促进人性化连接'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 36,
-        type: 'scale-question',
-        textEn: 'How would you evaluate a company-specific AI model offering work-related productivity features for working mothers?',
-        textZh: '您如何看待一个专门为每家公司定制的职场母亲专用人工智能模型？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无必要 - 完全不需要',
-          maxEn: 'Extremely helpful',
-          maxZh: '极具价值 - 提升效率'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 37,
-        type: 'scale-question',
-        textEn: 'How do you see the role of AI technology evolving to support working parents in the next 5-10 years?',
-        textZh: '您如何看待未来5-10年内，人工智能在职场父母方面的角色？',
-        scaleLabels: {
-          minEn: 'AI brings new challenges ahead',
-          minZh: '带来全新挑战',
-          maxEn: 'AI revolutionizes support for parents',
-          maxZh: '革新对父母的支持'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 38,
-        type: 'scale-question',
-        textEn: 'In your mind, how could an app that incorporates motherhood also serve as a tool for improving client relationships, customer satisfaction, or deal development?',
-        textZh: '在您看来，一款引进母亲这一身份的应用程序如何同时成为改善客户关系、提高客户满意度或促进交易发展的工具？',
-        scaleLabels: {
-          minEn: 'Not beneficial',
-          minZh: '毫无价值 - 母爱毫无用处',
-          maxEn: 'Extremely beneficial',
-          maxZh: '极具价值 - 母爱增进连接'
-        },
-        tags: ['情绪管理']
-      },
-      {
-        id: 39,
-        type: 'scale-question',
-        textEn: 'How do you feel about requiring users to submit a confidential child health-related record to verify that they are active caregivers while using this app?',
-        textZh: '您如何看待要求用户在使用本应用程序的某些功能之前提交与儿童健康相关的保密记录，以证实她们是儿童的母亲？',
-        scaleLabels: {
-          minEn: 'Strongly oppose -- utterly invasive',
-          minZh: '强烈反对 - 违反隐私',
-          maxEn: 'Strongly support -- ensures safety and trust',
-          maxZh: '强烈支持 - 保障安全的基础'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 40,
-        type: 'scale-question',
-        textEn: 'Do you believe misuse by unintended users (including partners of pregnant women and mothers accessing accounts without permission) could negatively affect trust in the app?',
-        textZh: '您认为如果有非目标用户滥用该平台（包括孕妇以及母亲的生活伴侣未经允许访问账户等情况），是否会对本应用的信任度产生负面影响？',
-        scaleLabels: {
-          minEn: 'Definitely no -- no trust risk',
-          minZh: '绝对不 - 完全无风险',
-          maxEn: 'Definitely yes -- severely undermines trust',
-          maxZh: '绝对会 - 严重破坏信任'
-        }
-      },
-      {
-        id: 41,
-        type: 'scale-question',
-        textEn: 'How do you feel about companies verifying through HR that business updates and activities posted on this platform are genuinely from the intended mother users and not others misusing their accounts?',
-        textZh: '您如何看待由公司人力资源部门核查平台上的业务更新和动态确实由目标用户本人发布，而非他人滥用账户？',
-        scaleLabels: {
-          minEn: 'Strongly oppose',
-          minZh: '强烈反对',
-          maxEn: 'Strongly support',
-          maxZh: '强烈支持'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 42,
-        type: 'scale-question',
-        textEn: 'How important are empathy, compassion, and selflessness associated with motherhood in leadership and life?',
-        textZh: '您认为母亲体现出的同理心、关爱与无私，对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 43,
-        type: 'scale-question',
-        textEn: 'How important are resilience and perseverance associated with motherhood in leadership and life?',
-        textZh: '您认为母亲展现出的韧性和毅力对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['核心耐力']
-      },
-      {
-        id: 44,
-        type: 'scale-question',
-        textEn: 'How valuable are communication and listening associated with motherhood in leadership and life?',
-        textZh: '您认为母亲身上的沟通与倾听能力对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not valuable at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 45,
-        type: 'scale-question',
-        textEn: 'How crucial are responsibility and accountability associated with motherhood in leadership and life?',
-        textZh: '您认为母亲身上的责任感和担当对成功的领导力和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 46,
-        type: 'scale-question',
-        textEn: 'Have you personally resolved challenges balancing leadership responsibilities with parenting (or caregiving)?',
-        textZh: '您是否曾面临平衡领导责任与育儿（或照护他人）之间的挑战？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '从未',
-          maxEn: 'Yes, frequently',
-          maxZh: '经常'
-        },
-        tags: ['客观实力', '核心耐力']
-      },
-      {
-        id: 47,
-        type: 'scale-question',
-        textEn: 'How much has becoming a parent (or caregiver) influenced your leadership style?',
-        textZh: '成为父母（或照护者）对您的领导风格有多大影响？',
-        scaleLabels: {
-          minEn: 'No influence',
-          minZh: '没有影响',
-          maxEn: 'Significantly changed it for the better',
-          maxZh: '有显著的积极改变'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 48,
-        type: 'scale-question',
-        textEn: 'How do you believe motherhood impacts leadership effectiveness in the workplace?',
-        textZh: '您认为引进母亲这一身份如何影响职场中的领导效果？',
-        scaleLabels: {
-          minEn: 'Negatively',
-          minZh: '消极影响',
-          maxEn: 'Positively',
-          maxZh: '积极影响'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 49,
-        type: 'scale-question',
-        textEn: 'How well does your organization integrate leadership traits developed through motherhood into its talent and leadership pipeline?',
-        textZh: '您认为贵公司是否在人才培养和领导梯队中，重视并融合了母亲所带来的领导力特质？',
-        scaleLabels: {
-          minEn: 'Poorly',
-          minZh: '不太重视 - 从不考虑',
-          maxEn: 'Very well',
-          maxZh: '非常重视 - 积极整合并推广'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 50,
-        type: 'scale-question',
-        textEn: 'How much do you pay attention to the emotional well-being of working mothers around you?',
-        textZh: '您在多大程度上关注身边职场母亲的情绪状态？',
-        scaleLabels: {
-          minEn: 'Not at all -- I don\'t pay attention to this',
-          minZh: '完全不关注 - 不曾留意',
-          maxEn: 'Very much -- I actively offer support',
-          maxZh: '非常关注 - 会主动提供支持'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 51,
-        type: 'scale-question',
-        textEn: 'How equipped do you feel to recognize when a mother employee might be experiencing emotional difficulties due to life transitions?',
-        textZh: '您认为自己在识别职场母亲因生活转变（如生育、育儿压力）而产生情绪困难方面的能力如何？',
-        scaleLabels: {
-          minEn: 'Not equipped at all -- I never consider this',
-          minZh: '完全没有能力 - 从未考虑',
-          maxEn: 'Very equipped -- I can identify and address it appropriately',
-          maxZh: '非常有能力 - 能妥善应对'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 52,
-        type: 'scale-question',
-        textEn: 'How much do you feel that your mother\'s role influenced your early understanding of leadership or responsibility?',
-        textZh: '您认为您的母亲在多大程度上影响了童年时期您对领导力、责任感、同理心的认知？',
-        scaleLabels: {
-          minEn: 'Not at all',
-          minZh: '没有影响',
-          maxEn: 'Very strongly',
-          maxZh: '非常深远'
-        },
-        tags: ['自我意识']
-      }
-    ],
-    privacyStatement: {
-      titleEn: 'Privacy Statement',
-      titleZh: '隐私声明',
-      contentEn: '<strong style="font-size: 1.2em;">Data Usage and Privacy Statement</strong><br><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><strong style="font-size: 1.2em;">For Individual Participants</strong><br><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>',
-      contentZh: '<strong style="font-size: 1.2em;">数据使用与隐私声明</strong><br><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><strong style="font-size: 1.2em;">针对个人参与者</strong><br><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>'
-    },
-    uniqueIdMapping: {
-      "corporate 1": 1,
-      "corporate 2": 2,
-      "corporate 3": 3,
-      "corporate 4": 5,
-      "corporate 5": 6,
-      "corporate 6": 7,
-      "corporate 7": 8,
-      "corporate 8": 9,
-      "corporate 9": 10,
-      "corporate 10": 11,
-      "corporate 11": 12,
-      "corporate 12": 13,
-      "corporate 13": 14,
-      "corporate 14": 15,
-      "corporate 15": 16,
-      "corporate 16": 17,
-      "corporate 17": 18,
-      "corporate 18": 19,
-      "corporate 19": 20,
-      "corporate 20": 21,
-      "corporate 21": 22,
-      "corporate 22": 23,
-      "corporate 23": 24,
-      "corporate 24": 25,
-      "corporate 25": 26,
-      "corporate 26": 27,
-      "corporate 27": 28,
-      "corporate 28": 29,
-      "corporate 29": 30,
-      "corporate 30": 31,
-      "corporate 31": 32,
-      "corporate 32": 33,
-      "corporate 33": 34,
-      "corporate 34": 35,
-      "corporate 35": 36,
-      "corporate 36": 37,
-      "corporate 37": 38,
-      "corporate 38": 39,
-      "corporate 39": 40,
-      "corporate 40": 41,
-      "corporate 41": 42,
-      "corporate 42": 43,
-      "corporate 43": 44,
-      "corporate 44": 45,
-      "corporate 45": 46,
-      "corporate 46": 47,
-      "corporate 47": 48,
-      "corporate 48": 49,
-      "corporate 49": 50,
-      "corporate 50": 51,
-      "corporate 51": 52,
-      "corporate 52": 53
+      { id: 'A', textEn: '1–5 people', textZh: '1–5人' },
+      { id: 'B', textEn: '6–20 people', textZh: '6–20人' },
+      { id: 'C', textEn: '20–50 people', textZh: '20–50人' },
+      { id: 'D', textEn: '50+ people', textZh: '50人以上' }
+    ]
+  },
+  12: {
+    id: '12',
+    type: 'scale-question',
+    textEn: 'What\'s the decision-making structure in your company?',
+    textZh: '您如何描述贵公司的决策体系？',
+    scaleLabels: {
+      left: { en: 'Highly centralized', zh: '高度集中化' },
+      right: { en: 'Flexibly adaptive', zh: '灵活变通' }
     }
   },
-  other: {
-    type: 'other',
-    totalQuestions: 41,
-    questions: [
-      {
-        id: 1,
+  13: {
+    id: '13',
+        type: 'scale-question',
+    textEn: 'What should be the primary basis of authority in your company?',
+    textZh: '贵司的决策权应该如何决定？',
+        scaleLabels: {
+      left: { en: 'Policies & Command', zh: '政策和指挥' },
+      right: { en: 'Individual\'s ability', zh: '个人能力' }
+    }
+  },
+  14: {
+    id: '14',
+        type: 'scale-question',
+    textEn: 'How well-organized is your team structure?',
+    textZh: '您的团队结构有多高效？',
+        scaleLabels: {
+      left: { en: 'Not organized', zh: '缺乏组织性' },
+      right: { en: 'Very well-organized', zh: '组织性强' }
+    }
+  },
+  15: {
+    id: '15',
+        type: 'scale-question',
+    textEn: 'What\'s your team\'s level of communication and collaboration?',
+    textZh: '您的团队的沟通与协作水平如何？',
+        scaleLabels: {
+      left: { en: 'Very poor – Lack communication & efficiency', zh: '非常差 — 缺乏沟通和效率' },
+      right: { en: 'Excellent – Great communication & efficiency', zh: '非常好 — 极好的沟通并高效' }
+    }
+  },
+  16: {
+    id: '16',
+        type: 'scale-question',
+    textEn: 'What\'s your experience in establishing trust with business partners?',
+    textZh: '您与客户建立信任的经历如何？',
+        scaleLabels: {
+      left: { en: 'Very poor – significant challenges', zh: '非常差 – 极大挑战' },
+      right: { en: 'Excellent – effective and trusted', zh: '非常好 – 有效、可信' }
+    }
+  },
+  17: {
+    id: '17',
+        type: 'scale-question',
+    textEn: 'Is your team effective at understanding client or market needs?',
+    textZh: '贵司在理解客户或市场方面如何？',
+        scaleLabels: {
+      left: { en: 'Very poor – insufficient understanding', zh: '非常差 – 不充分了解' },
+      right: { en: 'Excellent – exceeds expectations', zh: '非常好 – 超出预期' }
+    }
+  },
+  18: {
+    id: '18',
+        type: 'scale-question',
+    textEn: 'Is responsibility important in business projects?',
+    textZh: '责任感对于商业项目重要吗？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Extremely important', zh: '极其重要' }
+    }
+  },
+  19: {
+    id: '19',
+        type: 'scale-question',
+    textEn: 'Are empathy and communication important in business relationships?',
+    textZh: '同理心和沟通能力在商业关系中重要吗？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Extremely important', zh: '极其重要' }
+    }
+  },
+  20: {
+    id: '20',
+        type: 'scale-question',
+    textEn: 'Does your company value "soft skills" of responsibility, empathy, and communication?',
+    textZh: '贵司认可软实力（例如责任心、同理心、沟通能力）吗？',
+        scaleLabels: {
+      left: { en: 'Not recognized at all', zh: '完全不认可' },
+      right: { en: 'Highly recognized and utilized', zh: '高度认可和利用' }
+    }
+  },
+  21: {
+    id: '21',
+        type: 'scale-question',
+    textEn: 'Are men and women equally supported in balancing work and family?',
+    textZh: '男性和女性是否在平衡工作与家庭方面得到了同等支持？',
+    scaleLabels: {
+      left: { en: 'No, one is significantly less supported', zh: '不是，其一得到的很少同等支持' },
+      right: { en: 'Yes, equally supported', zh: '是的，都得到了平等支持' }
+    }
+  },
+  22: {
+    id: '22',
+        type: 'scale-question',
+    textEn: 'Is providing support and social bonding for working mothers important?',
+    textZh: '为职场母亲提供情感和支持重要吗？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Very important', zh: '非常重要' }
+    }
+  },
+  23: {
+    id: '23',
+        type: 'scale-question',
+    textEn: 'How is your company\'s current support for working mothers?',
+    textZh: '贵司在您的领导下目前对职场母亲的支持程度是？',
+        scaleLabels: {
+      left: { en: 'Not supportive at all', zh: '完全不支持' },
+      right: { en: 'Highly supportive', zh: '高度支持' }
+    }
+  },
+  24: {
+    id: '24',
+        type: 'scale-question',
+    textEn: 'Do you use technology within your team?',
+    textZh: '您在团队里会常用科技工具吗？',
+        scaleLabels: {
+      left: { en: 'Not at all', zh: '完全不使用' },
+      right: { en: 'Very effectively', zh: '非常有效地使用' }
+    }
+  },
+  25: {
+    id: '25',
         type: 'multiple-choice',
-        textEn: "What's your biological sex?",
-        textZh: '您的性别是什么？',
+    textEn: 'For the personality test result, we ask you to imagine yourself as the god or goddess of the business world... If you could change or create one thing, what would it be?',
+    textZh: '关于性格测试结果，我们请您将自己想象成商界的创造神... 如果您可以创造或改变以下任何一件事，您会选择什么？',
         options: [
-          { id: 'A', textEn: 'Female', textZh: '女' },
-          { id: 'B', textEn: 'Male', textZh: '男' }
-        ]
-      },
-      {
-        id: 2,
+      { id: 'prometheus', textEn: 'Redistribute all corporate shares so that every individual owns a piece of every business', textZh: '重新分配所有企业股份，让每个人都拥有每家企业的一部分' },
+      { id: 'wukong', textEn: 'Create 72 versions of yourself, each mastering a different industry', textZh: '创造72个版本的自己，每个都精通不同的行业' },
+      { id: 'odin', textEn: 'Transform into an omnipotent prophet that predicts and controls moves of everyone in the business world', textZh: '转变为全能的预言家，预测并控制商界每个人的行动' },
+      { id: 'venus', textEn: 'Imbue every product with divine allure, making it irresistible to all', textZh: '为每个产品注入神圣的魅力，使其对所有人都有不可抗拒的吸引力' },
+      { id: 'nuwa', textEn: 'Reconstruct the entire economic system to achieve absolute perfection and sustainability', textZh: '重建整个经济体系，实现绝对的完美和可持续性' },
+      { id: 'athena', textEn: 'Ensure that no matter what happens, I can always come up with a plan to stay ahead and outmaneuver my competitors', textZh: '确保无论发生什么，我总能想出计划来保持领先并超越竞争对手' }
+    ]
+  },
+  26: {
+    id: '26',
+        type: 'scale-question',
+    textEn: 'Does logical thinking address emotional and life concerns?',
+    textZh: '逻辑思维是否解决情感和生活问题？',
+        scaleLabels: {
+      left: { en: 'Not well – no link with emotions', zh: '完全不行 – 毫无关系' },
+      right: { en: 'Extremely well – very effective', zh: '非常好 – 极其有效' }
+    }
+  },
+  27: {
+    id: '27',
+        type: 'scale-question',
+    textEn: 'Do self-love and care for others require objective reasoning?',
+    textZh: '自爱和关爱他人是否需要客观思维支持？',
+        scaleLabels: {
+      left: { en: 'Strongly disagree', zh: '非常不需要' },
+      right: { en: 'Strongly agree', zh: '非常需要' }
+    }
+  },
+  28: {
+    id: '28',
+        type: 'scale-question',
+    textEn: 'How valuable is it for working mothers to stay updated with their professional field?',
+    textZh: '职场母亲了解行业领域信息有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not valuable', zh: '毫无价值' },
+      right: { en: 'Extremely valuable', zh: '极具价值' }
+    }
+  },
+  29: {
+    id: '29',
+        type: 'scale-question',
+    textEn: 'How valuable is it for working mothers to post and access new business deals?',
+    textZh: '职场母亲发布和获取商业合作有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not valuable', zh: '毫无价值' },
+      right: { en: 'Highly valuable', zh: '极具价值' }
+    }
+  },
+  30: {
+    id: '30',
+        type: 'scale-question',
+    textEn: 'How valuable is it for working mothers to share maternal experiences and emotional support?',
+    textZh: '职场母亲分享育儿经验、提供情感支持有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not valuable', zh: '毫无价值' },
+      right: { en: 'Extremely beneficial', zh: '极其有益' }
+    }
+  },
+  31: {
+    id: '31',
+        type: 'scale-question',
+    textEn: 'How valuable is medical advice from healthcare professionals for working mothers?',
+    textZh: '外部医疗专业人士为职场母亲提供医学建议有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not valuable', zh: '毫无价值' },
+      right: { en: 'Extremely valuable', zh: '极具价值' }
+    }
+  },
+  32: {
+    id: '32',
+    type: 'scale-question',
+    textEn: 'How valuable are visuospatial and logical training?',
+    textZh: '视觉空间与逻辑训练有多大价值？',
+    scaleLabels: {
+      left: { en: 'Not valuable', zh: '毫无价值' },
+      right: { en: 'Extremely valuable', zh: '极具价值' }
+    }
+  },
+  33: {
+    id: '33',
+        type: 'scale-question',
+    textEn: 'How engaging are self-customized kids\' avatars and tokens for interactions?',
+    textZh: '促进互动的自定义儿童虚拟形象和代币有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not engaging', zh: '毫无价值' },
+      right: { en: 'Very engaging', zh: '极具价值' }
+    }
+  },
+  34: {
+    id: '34',
+        type: 'scale-question',
+    textEn: 'How important is mentorship matching for mothers of the same industry?',
+    textZh: '一个将业内母亲"导师匹配"的功能有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not important', zh: '毫无价值' },
+      right: { en: 'Extremely important', zh: '极具价值' }
+    }
+  },
+  35: {
+    id: '35',
+        type: 'scale-question',
+    textEn: 'How valuable is a company-specific AI for working mothers?',
+    textZh: '一个为每家公司定制的职场母亲专用人工智能模型有多大价值？',
+        scaleLabels: {
+      left: { en: 'Not valuable', zh: '毫无必要' },
+      right: { en: 'Extremely helpful', zh: '极具价值' }
+    }
+  },
+  36:{
+    id: '36',
+    type: 'scale-question',
+    textEn: 'How will AI support working parents in the next 5–10 years?',
+    textZh: '未来5–10年内，人工智能在职场父母方面的角色？',
+    scaleLabels: {
+      left: { en: 'AI brings new challenges ahead', zh: '带来全新挑战' },
+      right: { en: 'AI revolutionizes support for parents', zh: '革新对父母的支持' }
+    }
+  },
+  37:{
+    id: '37',
+    type: 'scale-question',
+    textEn: 'How will incorporating motherhood improve client relationships?',
+    textZh: '母亲这一身份的加入如何改善客户关系？',
+    scaleLabels: {
+      left: { en: 'Not beneficial', zh: '毫无价值' },
+      right: { en: 'Extremely beneficial', zh: '极具价值' }
+    }
+  },
+  38: {
+    id: '38',
+        type: 'scale-question',
+    textEn: 'Is a confidential child health-related record needed to verify mothers\' identity?',
+    textZh: '是否需要一份与儿童健康相关的保密记录来核实母亲的身份？',
+        scaleLabels: {
+      left: { en: 'Strongly oppose – utterly invasive', zh: '强烈反对 – 违反隐私' },
+      right: { en: 'Strongly support – ensures safety and trust', zh: '强烈支持 – 保障安全的基础' }
+    }
+  },
+  39: {
+    id: '39',
+        type: 'scale-question',
+    textEn: 'Does misuse by unintended users negatively affect trust?',
+    textZh: '非目标用户滥用该平台是否会对信任度产生负面影响？',
+        scaleLabels: {
+      left: { en: 'Definitely no – no trust risk', zh: '绝对不 – 完全无风险' },
+      right: { en: 'Definitely yes – severely undermines trust', zh: '绝对会 – 严重破坏信任' }
+    }
+  },
+  40: {
+    id: '40',
+        type: 'scale-question',
+    textEn: 'Should companies verify that this platform is for family members approved by working mothers?',
+    textZh: '公司是否应核实该平台供职场母亲允许的家庭成员使用？',
+        scaleLabels: {
+      left: { en: 'Strongly oppose', zh: '强烈反对' },
+      right: { en: 'Strongly support', zh: '强烈支持' }
+    }
+  },
+  41: {
+    id: '41',
+        type: 'scale-question',
+    textEn: 'How important are mothers\' empathy and selflessness in leadership?',
+    textZh: '母亲的同理心与无私对领导力有多重要？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Extremely important', zh: '极其重要' }
+    }
+  },
+  42: {
+    id: '42',
+        type: 'scale-question',
+    textEn: 'How important are mothers\' resilience and perseverance in leadership?',
+    textZh: '母亲的韧性和毅力对领导力有多重要？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Extremely important', zh: '极其重要' }
+    }
+  },
+  43: {
+    id: '43',
+        type: 'scale-question',
+    textEn: 'How important are mothers\' communication and listening in leadership?',
+    textZh: '母亲的沟通与倾听能力对领导力有多重要？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Extremely important', zh: '极其重要' }
+    }
+  },
+  44: {
+    id: '44',
+        type: 'scale-question',
+    textEn: 'How important are mothers\' responsibility and accountability in leadership?',
+    textZh: '母亲的责任感和担当对工作有多重要？',
+        scaleLabels: {
+      left: { en: 'Not important at all', zh: '完全不重要' },
+      right: { en: 'Extremely important', zh: '极其重要' }
+    }
+  },
+  45: {
+    id: '45',
+        type: 'scale-question',
+    textEn: 'Have you resolved challenges balancing leadership responsibilities with caregiving?',
+    textZh: '您是否解决过平衡领导责任与照护他人之间的挑战？',
+        scaleLabels: {
+      left: { en: 'Never', zh: '从未' },
+      right: { en: 'Yes, frequently', zh: '是的，经常' }
+    }
+  },
+  46: {
+    id: '46',
+        type: 'scale-question',
+    textEn: 'Has becoming a parent (or caregiver) influenced your leadership style?',
+    textZh: '成为家长或照顾者对您的工作处事风格有多大影响？',
+        scaleLabels: {
+      left: { en: 'No influence', zh: '没有影响' },
+      right: { en: 'Significantly changed it for the better', zh: '显著改善' }
+    }
+  },
+  47: {
+    id: '47',
+        type: 'scale-question',
+    textEn: 'How does motherhood impact leadership effectiveness in the workplace?',
+    textZh: '母亲身份如何影响职场中的领导效果？',
+        scaleLabels: {
+      left: { en: 'Negatively', zh: '负面影响' },
+      right: { en: 'Positively', zh: '积极影响' }
+    }
+  },
+  48: {
+    id: '48',
+    type: 'scale-question',
+    textEn: 'How does your company integrate mothers’ leadership qualities into its pipeline?',
+    textZh: '您所在的公司如何在建设中融入母亲的领导力特质？',
+    scaleLabels: {
+      left: { en: 'Poorly', zh: '不太融入' },
+      right: { en: 'Very well', zh: '非常融入' }
+    }
+  },
+  49: {
+    id: '49',
+    type: 'scale-question',
+    textEn: 'How much do you pay attention to the emotional well-being of working mothers around you?',
+    textZh: '您在多大程度上关注身边职场母亲的情绪状态？',
+    scaleLabels: {
+      left: { en: 'Not at all', zh: '完全不关注' },
+      right: { en: 'Very much', zh: '非常关注' }
+    }
+  },
+  50: {
+    id: '50',
+    type: 'scale-question',
+    textEn: 'Do you recognize when others experiences emotional difficulties?',
+    textZh: '您是否能识别他人情绪方面的困难？',
+    scaleLabels: {
+      left: { en: 'Not equipped at all', zh: '完全不识别' },
+      right: { en: 'Very equipped', zh: '非常识别' }
+    }
+  },
+  51: {
+    id: '51',
+    type: 'scale-question',
+    textEn: 'Does your mother’s role influence your understanding of leadership in childhood?',
+    textZh: '您的母亲是否影响了童年时期您对领导力的认知？',
+    scaleLabels: {
+      left: { en: 'Not at all', zh: '没有影响' },
+      right: { en: 'Very strongly', zh: '非常深远' }
+    }
+  },
+  52: {
+    id: '52',
+    type: 'searchable-dropdown',
+    textEn: 'How many children do you have or are expecting to have?',
+    textZh: '您有多少个孩子或即将拥有多少个孩子？',
+    options: [
+      { id: '1', textEn: '1', textZh: '1' },
+      { id: '2', textEn: '2', textZh: '2' },
+      { id: '3', textEn: '3', textZh: '3' },
+      { id: '4', textEn: '4', textZh: '4' },
+      { id: '5', textEn: '5', textZh: '5' },
+      { id: '6', textEn: '6', textZh: '6' },
+      { id: '7', textEn: '7', textZh: '7' },
+      { id: '8', textEn: '8', textZh: '8' },
+      { id: '9', textEn: '9', textZh: '9' },
+      { id: '10', textEn: '10', textZh: '10' },
+      { id: '10+', textEn: '10+', textZh: '10+' }
+    ]
+  },
+  53: {
+    id: '53',
         type: 'multiple-choice',
-        textEn: 'What is your age range?',
-        textZh: '您的年龄是？',
+    textEn: 'During which weeks of your pregnancy did you experience noticeable morning sickness?',
+    textZh: '在怀孕的哪些周数期间，您经历了明显的妊娠反应？',
         options: [
-          { id: 'A', textEn: 'Under 18', textZh: '18岁以下' },
-          { id: 'B', textEn: '18 - 24', textZh: '18 - 24' },
-          { id: 'C', textEn: '25 - 34', textZh: '25 - 34' },
-          { id: 'D', textEn: '35 - 44', textZh: '35 - 44' },
-          { id: 'E', textEn: '45 - 54', textZh: '45 - 54' },
-          { id: 'F', textEn: '55 - 64', textZh: '55 - 64' },
-          { id: 'G', textEn: '65 or above', textZh: '65岁及以上' }
-        ]
-      },
-      {
-        id: 3,
+      { id: 'A', textEn: 'I did not experience noticeable morning sickness', textZh: '我没有经历明显的妊娠反应' },
+      { id: 'B', textEn: 'Weeks 4–8', textZh: '第4至第8周' },
+      { id: 'C', textEn: 'Weeks 9–12', textZh: '第9至第12周' },
+      { id: 'D', textEn: 'Weeks 13–20', textZh: '第13至第20周' },
+      { id: 'E', textEn: 'Weeks 21–28', textZh: '第21至第28周' },
+      { id: 'F', textEn: 'Weeks 29–36', textZh: '第29至第36周' },
+      { id: 'G', textEn: 'Weeks 37–40', textZh: '第37至第40周' },
+      { id: 'H', textEn: 'I can\'t remember', textZh: '我记不清了' }
+    ]
+  },
+  54: {
+    id: '54',
+    type: 'text-with-unit',
+    textEn: 'What was your youngest child\'s birth weight?',
+    textZh: '您第一胎宝宝的出生体重是多少？',
+    options: [
+      { id: 'kg', textEn: 'kg', textZh: '千克' },
+      { id: 'lbs', textEn: 'lbs', textZh: '磅' }
+    ]
+  },
+  55: {
+    id: '55',
         type: 'multiple-choice',
-        textEn: 'Where are you currently based?',
-        textZh: '您目前所在的地区是？',
+    textEn: 'How long was your maternity leave?',
+    textZh: '您的产假有多长时间？',
         options: [
-          { id: 'A', textEn: 'Asia', textZh: '亚洲' },
-          { id: 'B', textEn: 'North America', textZh: '北美' },
-          { id: 'C', textEn: 'South America', textZh: '南美' },
-          { id: 'D', textEn: 'Europe', textZh: '欧洲' },
-          { id: 'E', textEn: 'Africa', textZh: '非洲' },
-          { id: 'F', textEn: 'Australia/Oceania', textZh: '澳大利亚/大洋洲' },
-        ]
-      },
-      {
-        id: 4,
+      { id: 'A', textEn: '<8 weeks', textZh: '少于8周' },
+      { id: 'B', textEn: '8–14 weeks', textZh: '8–14周' },
+      { id: 'C', textEn: '15–26 weeks', textZh: '15–26周' },
+      { id: 'D', textEn: '27–52 weeks', textZh: '27–52周' },
+      { id: 'E', textEn: '1 year', textZh: '超过1年' }
+    ]
+  },
+  56: {
+    id: '56',
         type: 'multiple-choice',
-        textEn: 'Have you worked in a for-profit corporate setting, currently or in the past?',
-        textZh: '您目前或过去是否曾在营利性企业环境中工作过？',
+    textEn: 'Did you receive postpartum care services?',
+    textZh: '您是否接受了产后护理或入住了月子中心？',
         options: [
           { id: 'A', textEn: 'Yes', textZh: '是' },
           { id: 'B', textEn: 'No', textZh: '否' }
         ]
       },
-      {
-        id: 5,
-        type: 'scale-question',
-        textEn: 'How supportive is your current company or team in fostering both professional growth and overall well-being?',
-        textZh: '您认为您所在的组织或团队在支持职业发展和身心健康双方面表现如何？',
-        scaleLabels: {
-          minEn: 'Not supportive at all',
-          minZh: '完全不重视',
-          maxEn: 'Very supportive',
-          maxZh: '非常重视'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 6,
-        type: 'scale-question',
-        textEn: 'How much opportunity do you have to build meaningful professional relationships within your organization?',
-        textZh: '您在组织或团队内建立有意义的合作关系的机会有多少？',
-        scaleLabels: {
-          minEn: 'None -- mostly isolated interactions',
-          minZh: '没有 -- 多为孤立互动',
-          maxEn: 'A lot -- strong connections',
-          maxZh: '很多 -- 多为良好关系'
-        },
-        tags: ['社交能力', '情商']
-      },
-      {
-        id: 7,
-        type: 'scale-question',
-        textEn: 'How important do you find emotional intelligence and soft skills (e.g., empathy, patience, communication, active listening) in your day-to-day collaboration with colleagues?',
-        textZh: '您觉得在日常协作中，情绪智慧和软实力（如同理心、耐心、倾听）有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极为重要'
-        },
-        tags: ['社交情商', '奉献精神']
-      },
-      {
-        id: 8,
-        type: 'scale-question',
-        textEn: 'How frequently do you experience acts of kindness or supportive behavior in your team or company culture?',
-        textZh: '您在团队中感受到来自同事的善意或支持行为有多频繁？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '从未',
-          maxEn: 'Very frequently',
-          maxZh: '非常频繁'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 9,
-        type: 'scale-question',
-        textEn: 'How would you describe your role of providing support or care to colleagues during team interactions or projects?',
-        textZh: '在团队合作或项目推进中，您通常会在多大程度上给予同事支持或关心？',
-        scaleLabels: {
-          minEn: 'Do not engage in offering support',
-          minZh: '基本不提供支持',
-          maxEn: 'Frequently offer support',
-          maxZh: '经常主动给予支持'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 10,
-        type: 'scale-question',
-        textEn: 'How much do you feel your contributions and perspectives are recognized and valued by your team?',
-        textZh: '您觉得自己在团队中的意见和贡献被认可的程度如何？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '几乎从未被采纳',
-          maxEn: 'Always',
-          maxZh: '总是被重视并采纳'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 11,
-        type: 'scale-question',
-        textEn: 'To what extent does your organization promote a culture of collaboration built on trust and mutual respect?',
-        textZh: '您认为团队在营造基于信任与相互尊重的合作氛围方面做得如何？',
-        scaleLabels: {
-          minEn: 'Does not at all',
-          minZh: '几乎没有相关文化',
-          maxEn: 'Strongly across all levels',
-          maxZh: '做得非常好，深入人心'
-        },
-        tags: ['客观能力', '奉献精神']
-      },
-      {
-        id: 12,
-        type: 'scale-question',
-        textEn: 'How comfortable are you with reaching out to colleagues or managers when facing challenges or seeking help?',
-        textZh: '面对困难或需要帮助时，您与同事或上级沟通的舒适度如何？',
-        scaleLabels: {
-          minEn: 'Very uncomfortable',
-          minZh: '很不愿意',
-          maxEn: 'Very comfortable',
-          maxZh: '非常自然'
-        },
-        tags: ['社交情商', '情绪调节']
-      },
-      {
-        id: 13,
-        type: 'scale-question',
-        textEn: 'How important do you think a people-centered work culture is for maintaining both productivity and team morale?',
-        textZh: '您觉得以人为本的企业文化对保持工作效率和团队凝聚力的重要性如何？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '几乎不重要',
-          maxEn: 'Extremely important',
-          maxZh: '非常重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 14,
-        type: 'scale-question',
-        textEn: 'How often do you feel that a sense of belonging or team care positively impacts your motivation and job satisfaction?',
-        textZh: '您怎么描述您因团队归属感或同事关怀提升工作积极性和满意度的频率？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '从未，无影响',
-          maxEn: 'Very often',
-          maxZh: '经常，重要动力'
-        },
-        tags: ['情绪调节']
-      },
-      {
-        id: 15,
-        type: 'scale-question',
-        textEn: 'What role does technology play in helping your team stay efficient and connected?',
-        textZh: '您认为技术工具（如协作平台、生产力应用）在提升团队效率与保持联系方面的作用如何？',
-        scaleLabels: {
-          minEn: 'No role',
-          minZh: '基本无作用',
-          maxEn: 'A critical role',
-          maxZh: '至关重要'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 16,
-        type: 'scale-question',
-        textEn: 'How well do you think enhanced abstract logical thinking would address emotional and life concerns?',
-        textZh: '您认为加强抽象逻辑思维对解决情感和生活问题有多大帮助？',
-        scaleLabels: {
-          minEn: 'Not well - no link with emotions',
-          minZh: '完全不行 - 毫无关系',
-          maxEn: 'Extremely well - very effective',
-          maxZh: '非常好 - 极其有效'
-        },
-        tags: ['客观能力', '情绪调节']
-      },
-      {
-        id: 17,
-        type: 'scale-question',
-        textEn: 'Do you believe that self-love and the ability to care for others require strong logic to navigate challenges in life?',
-        textZh: '你认为真正的自爱和关爱他人的能力在多大程度上需要强大的客观思维来解决生活中的挑战？',
-        scaleLabels: {
-          minEn: 'Strongly disagree',
-          minZh: '非常不同意',
-          maxEn: 'Strongly agree',
-          maxZh: '非常同意'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 18,
-        type: 'scale-question',
-        textEn: 'How valuable would you find a feature that helps working mothers in your team stay updated with trends and knowledge in their professional field?',
-        textZh: '您认为一个帮助职场母亲了解其行业领域最新动态的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 毫无益处',
-          maxEn: 'Extremely valuable',
-          maxZh: '极具价值 - 职业发展必备'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 19,
-        type: 'scale-question',
-        textEn: 'How valuable would a business opportunity board be, where working mothers on your team could post or access new projects and deals?',
-        textZh: '您认为一个帮助职场母亲发布和获取商业交易和商业合作的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Highly valuable',
-          maxZh: '极具价值 - 大幅提升发展'
-        }
-      },
-      {
-        id: 20,
-        type: 'scale-question',
-        textEn: 'How do you perceive the value of a forum where mothers can share maternal experiences and emotional support?',
-        textZh: '您认为一个帮助职场母亲分享育儿经验、获得情感支持的论坛有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely beneficial',
-          maxZh: '极其有益 - 非常重要的连接'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 21,
-        type: 'scale-question',
-        textEn: 'How valuable would direct access to external medical resouces for healthcare advice be within such an app?',
-        textZh: '您认为提供联系外部医疗专业人士获得医学建议的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely valuable',
-          maxZh: '极具价值 - 健康必备'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 22,
-        type: 'scale-question',
-        textEn: 'How beneficial would visuospatial and abstract logical training modules be for enhancing cognitive development?',
-        textZh: '您认为视觉空间与数学逻辑训练模块对抽象逻辑发展有多大用处？',
-        scaleLabels: {
-          minEn: 'Not beneficial',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely beneficial',
-          maxZh: '极具价值 - 提升效率'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 23,
-        type: 'scale-question',
-        textEn: 'How engaging do you think personalized profiles with interactive "electronic kids" avatars would be for promoting social interaction among working mothers?',
-        textZh: '您认为通过个人主页中使用"电子小孩"互动来促进职场母亲之间社交互动的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not engaging',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Very engaging',
-          maxZh: '极具价值 - 促进人性化连接'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 24,
-        type: 'scale-question',
-        textEn: 'How important would you find mentorship matching that connects new mothers with more experienced mothers within the same company or industry?',
-        textZh: '您认为一个将新晋母亲与同一公司或行业内有更多育儿经验的母亲相匹配的功能有多大用处？',
-        scaleLabels: {
-          minEn: 'Not important',
-          minZh: '毫无价值 - 完全不需要',
-          maxEn: 'Extremely important',
-          maxZh: '极具价值 - 促进人性化连接'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 25,
-        type: 'scale-question',
-        textEn: 'How would you evaluate a company-specific AI model offering work-related productivity features for working mothers?',
-        textZh: '您如何看待一个专门为每家公司定制的职场母亲专用人工智能模型？',
-        scaleLabels: {
-          minEn: 'Not valuable',
-          minZh: '毫无必要 - 完全不需要',
-          maxEn: 'Extremely helpful',
-          maxZh: '极具价值 - 提升效率'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 26,
-        type: 'scale-question',
-        textEn: 'How do you see the role of AI technology evolving to support working parents in the next 5-10 years?',
-        textZh: '您如何看待未来5-10年内，人工智能在职场父母方面的角色？',
-        scaleLabels: {
-          minEn: 'AI brings new challenges ahead',
-          minZh: '带来全新挑战',
-          maxEn: 'AI revolutionizes support for parents',
-          maxZh: '革新对父母的支持'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 27,
-        type: 'scale-question',
-        textEn: 'In your mind, how could an app that incorporates motherhood also serve as a tool for improving client relationships, customer satisfaction, or deal development?',
-        textZh: '在您看来，一款引进母亲这一身份的应用程序如何同时成为改善客户关系、提高客户满意度或促进交易发展的工具？',
-        scaleLabels: {
-          minEn: 'Not beneficial',
-          minZh: '毫无价值 - 母爱毫无用处',
-          maxEn: 'Extremely beneficial',
-          maxZh: '极具价值 - 母爱增进连接'
-        },
-        tags: ['情绪管理']
-      },
-      {
-        id: 28,
-        type: 'scale-question',
-        textEn: 'How do you feel about requiring users to submit a confidential child health-related record to verify that they are active caregivers before using this app?',
-        textZh: '您如何看待要求用户在使用本应用程序的某些功能之前提交与儿童健康相关的保密记录，以证实她们是儿童的母亲？',
-        scaleLabels: {
-          minEn: 'Strongly oppose -- utterly invasive',
-          minZh: '强烈反对 - 违反隐私',
-          maxEn: 'Strongly support -- ensures safety and trust',
-          maxZh: '强烈支持 - 保障安全的基础'
-        },
-        tags: ['客观能力']
-      },
-      {
-        id: 29,
-        type: 'scale-question',
-        textEn: 'Do you believe misuse by unintended users (including partners of pregnant women and mothers accessing accounts without permission) could negatively affect trust in the app?',
-        textZh: '您认为如果有非目标用户滥用该平台（包括孕妇以及母亲的生活伴侣未经允许访问账户等情况），是否会对本应用的信任度产生负面影响？',
-        scaleLabels: {
-          minEn: 'Definitely no -- no trust risk',
-          minZh: '绝对不 - 完全无风险',
-          maxEn: 'Definitely yes -- severely undermines trust',
-          maxZh: '绝对会 - 严重破坏信任'
-        }
-      },
-      {
-        id: 30,
-        type: 'scale-question',
-        textEn: 'How do you feel about companies verifying through HR that business updates and activities posted on this platform are genuinely from the intended mother users and not others misusing their accounts?',
-        textZh: '您如何看待由公司人力资源部门核查平台上的业务更新和动态确实由目标用户本人发布，而非他人滥用账户？',
-        scaleLabels: {
-          minEn: 'Strongly oppose',
-          minZh: '强烈反对',
-          maxEn: 'Strongly support',
-          maxZh: '强烈支持'
-        },
-        tags: ['自我意识']
-      },
-      {
-        id: 31,
-        type: 'scale-question',
-        textEn: 'How important are empathy, compassion, and selflessness associated with motherhood in work and life?',
-        textZh: '您认为母亲常体现出的同理心、关爱与无私，对成功的工作和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 32,
-        type: 'scale-question',
-        textEn: 'How important are resilience and perseverance associated with motherhood in work and life?',
-        textZh: '您认为母亲展现出的韧性和毅力对成功的工作和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely important',
-          maxZh: '极其重要'
-        },
-        tags: ['核心耐力']
-      },
-      {
-        id: 33,
-        type: 'scale-question',
-        textEn: 'How valuable are communication and listening associated with motherhood in work and life?',
-        textZh: '您认为母亲身上的沟通与倾听能力对成功的工作和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not valuable at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely valuable',
-          maxZh: '极其重要'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 34,
-        type: 'scale-question',
-        textEn: 'How crucial are responsibility and accountability associated with motherhood in work and life?',
-        textZh: '您认为母亲身上的责任感和担当对成功的工作和人生有多重要？',
-        scaleLabels: {
-          minEn: 'Not important at all',
-          minZh: '完全不重要',
-          maxEn: 'Extremely crucial',
-          maxZh: '极其重要'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 35,
-        type: 'scale-question',
-        textEn: 'Have you personally resolved challenges balancing leadership responsibilities with caregiving?',
-        textZh: '您是否曾面临平衡领导责任与照护他人之间的挑战？',
-        scaleLabels: {
-          minEn: 'Never',
-          minZh: '从未',
-          maxEn: 'Yes, frequently',
-          maxZh: '是的，经常'
-        },
-        tags: ['客观实力', '核心耐力']
-      },
-      {
-        id: 36,
-        type: 'scale-question',
-        textEn: 'How much has becoming a caregiver of any kind influenced your work style?',
-        textZh: '成为照护他人的人对您的工作处事风格有多大影响？',
-        scaleLabels: {
-          minEn: 'Negative impact',
-          minZh: '消极影响',
-          maxEn: 'Significantly improved',
-          maxZh: '积极改变'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 37,
-        type: 'scale-question',
-        textEn: 'How do you believe motherhood impacts leadership effectiveness in the workplace?',
-        textZh: '您认为母亲身份如何影响职场中的领导效果？',
-        scaleLabels: {
-          minEn: 'Negatively',
-          minZh: '消极影响',
-          maxEn: 'Positively',
-          maxZh: '积极影响'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 38,
-        type: 'scale-question',
-        textEn: 'How well does your organization integrate leadership traits developed through motherhood into its talent and leadership pipeline?',
-        textZh: '您认为您所在的公司是否在人才培养和领导梯队中，重视并融合了母亲所带来的领导力特质？',
-        scaleLabels: {
-          minEn: 'Poorly -- rarely or never considers them',
-          minZh: '不太重视 ------ 很少或从不考虑',
-          maxEn: 'Very well -- actively integrates and promotes',
-          maxZh: '非常重视 ------ 积极整合并推广'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 39,
-        type: 'scale-question',
-        textEn: 'How much do you pay attention to the emotional well-being of working mothers around you?',
-        textZh: '您在多大程度上关注身边职场母亲的情绪状态，特别是受到激素变化或产后抑郁等潜在挑战的影响时？',
-        scaleLabels: {
-          minEn: 'Not at all -- I don\'t pay attention to this',
-          minZh: '完全不关注 -- 不曾留意',
-          maxEn: 'Very much -- I actively offer support',
-          maxZh: '非常关注 -- 会主动提供支持'
-        },
-        tags: ['社交情商']
-      },
-      {
-        id: 40,
-        type: 'scale-question',
-        textEn: 'How equipped do you feel to recognize when a mother colleague might be experiencing emotional difficulties due to life transitions?',
-        textZh: '您认为自己在识别职场母亲因生活转变（如生育、育儿压力）而产生情绪困难方面的能力如何？',
-        scaleLabels: {
-          minEn: 'Not equipped at all -- I never consider this',
-          minZh: '完全没有能力 -- 从未考虑',
-          maxEn: 'Very equipped -- I can identify and address it appropriately',
-          maxZh: '非常有能力 -- 能妥善应对'
-        },
-        tags: ['奉献精神']
-      },
-      {
-        id: 41,
-        type: 'scale-question',
-        textEn: 'How much do you feel that your mother\'s role influenced your early understanding of leadership or responsibility?',
-        textZh: '您认为您的母亲在多大程度上影响了童年时期您对领导力、责任感、同理心的认知？',
-        scaleLabels: {
-          minEn: 'Not at all',
-          minZh: '没有影响',
-          maxEn: 'Very strongly',
-          maxZh: '非常深远'
-        },
-        tags: ['自我意识']
-      }
-    ],
-    privacyStatement: {
-      titleEn: 'Privacy Statement',
-      titleZh: '隐私声明',
-      contentEn: '<strong style="font-size: 1.2em;">Data Usage and Privacy Statement</strong><br><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><strong style="font-size: 1.2em;">For Individual Participants</strong><br><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>',
-      contentZh: '<strong style="font-size: 1.2em;">数据使用与隐私声明</strong><br><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><strong style="font-size: 1.2em;">针对个人参与者</strong><br><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>'
-    },
-    uniqueIdMapping: {
-      "other 1": 1,
-      "other 2": 2,
-      "other 3": 3,
-      "other 4": 4,
-      "other 5": 83,
-      "other 6": 84,
-      "other 7": 22,
-      "other 8": 85,
-      "other 9": 86,
-      "other 10": 87,
-      "other 11": 88,
-      "other 12": 89,
-      "other 13": 90,
-      "other 14": 91,
-      "other 15": 26,
-      "other 16": 28,
-      "other 17": 29,
-      "other 18": 30,
-      "other 19": 31,
-      "other 20": 32,
-      "other 21": 33,
-      "other 22": 34,
-      "other 23": 35,
-      "other 24": 36,
-      "other 25": 37,
-      "other 26": 38,
-      "other 27": 39,
-      "other 28": 40,
-      "other 29": 41,
-      "other 30": 42,
-      "other 31": 43,
-      "other 32": 44,
-      "other 33": 45,
-      "other 34": 46,
-      "other 35": 47,
-      "other 36": 48,
-      "other 37": 49,
-      "other 38": 50,
-      "other 39": 51,
-      "other 40": 52,
-      "other 41": 53
+  57: {
+    id: '57',
+    type: 'text-input',
+    textEn: 'Postpartum emotion in one word',
+    textZh: '一个词形容您的产后状态'
+  },
+  58: {
+    id: '58',
+    type: 'text-input',
+    textEn: 'Motherhood experience in one word',
+    textZh: '一个词形容您作为母亲的状态'
+  },
+  59: {
+    id: '59',
+    type: 'scale-question',
+    textEn: 'How involved are you with your previous social life from work?',
+    textZh: '自己与以往工作的社交联系程度如何？',
+    scaleLabels: {
+      left: { en: 'Not involved at all', zh: '完全无参与' },
+      right: { en: 'Very involved', zh: '非常投入' }
     }
   },
-  both: {
-      type: 'both',
-      totalQuestions: 66,
-      questions: [
-        // Page 1 - Corporate background
+  60: {
+    id: '60',
+    type: 'scale-question',
+    textEn: 'How well does your work arrangement support your needs?',
+    textZh: '您的工作安排对您有多大支持作用？',
+    scaleLabels: {
+      left: { en: 'Not supportive at all', zh: '完全不支持' },
+      right: { en: 'Extremely supportive', zh: '非常支持' }
+    }
+  },
+  61: {
+    id: '61',
+    type: 'scale-question',
+    textEn: 'How connected are you to your professional identity?',
+    textZh: '您对自己的职业身份感有多强？',
+    scaleLabels: {
+      left: { en: 'Not connected – motherhood is full priority', zh: '完全不强 – 母亲角色优先' },
+      right: { en: 'Very connected – profession is important', zh: '非常强 – 职业身份很重要' }
+    }
+  },
+  62: {
+    id: '62',
+        type: 'scale-question',
+    textEn: 'How has motherhood impacted your career progression?',
+    textZh: '母亲身份对您的职业发展或晋升机会有何影响？',
+        scaleLabels: {
+      left: { en: 'Very negative', zh: '非常负面' },
+      right: { en: 'Very positive', zh: '非常积极' }
+    }
+  },
+  63: {
+    id: '63',
+    type: 'scale-question',
+    textEn: 'How is your work-life balance supported by your company?',
+    textZh: '您的工作与生活平衡如何被贵司支持？',
+    scaleLabels: {
+      left: { en: 'Not capable of being supported', zh: '完全不能被支持' },
+      right: { en: 'Extremely supported', zh: '非常能被支持' }
+    }
+  },
+  64: {
+    id: '64',
+    type: 'scale-question',
+    textEn: 'How has motherhood influenced your leadership style?',
+    textZh: '母亲身份如何影响您的领导风格？',
+    scaleLabels: {
+      left: { en: 'Very negative', zh: '非常负面' },
+      right: { en: 'Very positive', zh: '非常积极' }
+    }
+  },
+  65: {
+    id: '65',
+    type: 'scale-question',
+    textEn: 'How has motherhood influenced your resilience against stress?',
+    textZh: '母亲身份如何影响您的抗压能力？',
+    scaleLabels: {
+      left: { en: 'Much less', zh: '抗压能力减弱' },
+      right: { en: 'Much more', zh: '抗压能力增强' }
+    }
+  },
+  66: {
+    id: '66',
+    type: 'scale-question',
+    textEn: 'How motivated do you feel to pursue career growth?',
+    textZh: '您职业发展动力有多强？',
+    scaleLabels: {
+      left: { en: 'Not motivated at all', zh: '完全没有' },
+      right: { en: 'Very motivated', zh: '非常强' }
+    }
+  },
+  67: {
+    id: '67',
+    type: 'scale-question',
+    textEn: 'How satisfied are you with your work-life balance?',
+    textZh: '您对您的工作与生活平衡是否满意？',
+    scaleLabels: {
+      left: { en: 'Very disatisfied', zh: '非常不满意' },
+      right: { en: 'Very satisfied', zh: '非常满意' }
+    }
+  },
+  68: {
+    id: '68',
+    type: 'scale-question',
+    textEn: 'Are your needs as a mother taken into account duirng workplace decisions?',
+    textZh: '您作为母亲的需求是否在职场决策中被考虑到？',
+    scaleLabels: {
+      left: { en: 'Never', zh: '从不' },
+      right: { en: 'Always', zh: '总是' }
+    }
+  },
+  69: {
+    id: '69',
+    type: 'scale-question',
+    textEn: 'How connected do you feel with other mothers through your work?',
+    textZh: '您在工作中与其他母亲的联系如何？',
+    scaleLabels: {
+      left: { en: 'Very disconnected', zh: '非常弱' },
+      right: { en: 'Very connected', zh: '非常强' }
+    }
+  },
+  70: {
+    id: '70',
+    type: 'scale-question',
+    textEn: 'Do you want to connect with other mothers through your profession?',
+    textZh: '您是否想与其他职场母亲建立联系？',
+    scaleLabels: {
+      left: { en: 'Never', zh: '从不' },
+      right: { en: 'Always', zh: '总是' }
+    }
+  },
+  71: {
+    id: '71',
+    type: 'scale-question',
+    textEn: 'How valuable is showcasing your previous work?',
+    textZh: '展示您以往的工作经历对您来说有多重要？',
+    scaleLabels: {
+      left: { en: 'Not valuable at all', zh: '毫无价值' },
+      right: { en: 'Extremely valuable', zh: '极具价值' }
+    }
+  }, 
+  72: {
+    id: '72',
+    type: 'scale-question',
+    textEn: 'How helpful is cognitive ability to enhance your problem-solving abilities? ',
+    textZh: '抽象逻辑能力对提升您解决问题的能力有多大帮助？',
+    scaleLabels: {
+      left: { en: 'Not helpful at all', zh: '毫无帮助' },
+      right: { en: 'Extremely helpful', zh: '极具帮助' }
+    }
+  },
+  73: {
+    id: '73',
+    type: 'scale-question',
+    textEn: 'Are you prepared for motherhood beforehand?',
+    textZh: '您成为母亲前心理准备如何？',
+    scaleLabels: {
+      left: { en: 'Not prepared at all', zh: '完全没有准备' },
+      right: { en: 'Very prepared', zh: '非常充分' }
+    }
+  },
+  74: {
+    id: '74',
+    type: 'scale-question',
+    textEn: 'Did motherhood change your personal values?',
+    textZh: '母亲身份是否改变了个人价值？',
+    scaleLabels: {
+      left: { en: 'A) Completely', zh: '完全改变' },
+      right: { en: 'E) No change', zh: '没有改变' }
+    }
+  },
+  75: {
+    id: '75',
+    type: 'scale-question',
+    textEn: 'Does your family or community support you in motherhood?',
+    textZh: '在成为母亲的过程中，家人或社群对您支持吗？',
+    scaleLabels: {
+      left: { en: 'A) Not supported at all', zh: '完全没有支持' },
+      right: { en: 'E) Extremely supported', zh: '非常支持' }
+    }
+  },
+  76: {
+    id: '76',
+    type: 'scale-question',
+    textEn: 'Did motherhood bring emotional fulfillment to your life?',
+    textZh: '母亲身份是否为您带来了情感满足？',
+    scaleLabels: {
+      left: { en: 'A) No emotion at all', zh: '完全没有支持' },
+      right: { en: 'E) Extremely fulfilling', zh: '非常满足' }
+    }
+  },
+  77: {
+    id: '77',
+    type: 'scale-question',
+    textEn: 'Did motherhood make you more emotionally strong?',
+    textZh: '母亲身份让你情绪上更坚韧了吗？',
+    scaleLabels: {
+      left: { en: 'A) Much weaker', zh: '明显减弱' },
+      right: { en: 'E) Much stronger', zh: '显著增强' }
+    }
+  },
+  78: {
+    id: '78',
+    type: 'scale-question',
+    textEn: 'Did motherhood change your ability to set boundaries?',
+    textZh: '母亲身份是否影响了您设定边界的能力？',
+    scaleLabels: {
+      left: { en: 'A) Significantly weakened', zh: '显著减弱' },
+      right: { en: 'E) Improved greatly', zh: '显著提升' }
+    }
+  },
+  79: {
+    id: '79',
+    type: 'scale-question',
+    textEn: 'Do you feel pressured to meet external expectations of motherhood?',
+    textZh: '您是否感受到外界对母亲身份的期待压力？',
+    scaleLabels: {
+      left: { en: 'A) Always', zh: '总是' },
+      right: { en: 'E) Never', zh: '从不' }
+    }
+  },
+  80: {
+    id: '80',
+    type: 'scale-question',
+    textEn: 'Are you satisfied with the balance between mother and self?',
+    textZh: '您对母亲身份与自我之间的平衡是否满意？',
+    scaleLabels: {
+      left: { en: 'A) Very dissatisfied', zh: '非常不满意' },
+      right: { en: 'E) Very satisfied', zh: '非常满意' }
+    }
+  },
+  81: {
+    id: '81',
+    type: 'scale-question',
+    textEn: 'Does your company foster professional growth and well-being?',
+    textZh: '贵司是否同时重视职业发展和身心健康？',
+    scaleLabels: {
+      left: { en: 'A) Not supportive at all', zh: '完全不重视' },
+      right: { en: 'E) Very supportive', zh: '非常重视' }
+    }
+  },
+  82: {
+    id: '82',
+    type: 'scale-question',
+    textEn: 'Do you build meaningful relationships through work?',
+    textZh: '您在工作中是否有建立有意义的关系的机会？',
+    scaleLabels: {
+      left: { en: 'A) None – mostly isolated interactions', zh: '没有 – 多为孤立互动' },
+      right: { en: 'E) A lot – strong connections', zh: '很多 – 多为良好关系' }
+    }
+  },
+  83: {
+    id: '83',
+    type: 'scale-question',
+    textEn: 'Do you experience acts of kindness in work?',
+    textZh: '您在工作中是否感受到他人的善意之举？',
+    scaleLabels: {
+      left: { en: 'A) Never', zh: '从未' },
+      right: { en: 'E) Very frequently', zh: '非常频繁' }
+    }
+  },
+  84: {
+    id: '84',
+    type: 'scale-question',
+    textEn: 'Do you support or care for colleagues?',
+    textZh: '您是否会给予同事支持或关心？',
+    scaleLabels: {
+      left: { en: 'A) Do not engage in offering support', zh: '基本不提供支持' },
+      right: { en: 'E) Frequently offer support', zh: '经常主动给予支持' }
+    }
+  },
+  85: {
+    id: '85',
+    type: 'scale-question',
+    textEn: 'Do you feel recognized and valued by your team?',
+    textZh: '您是否在团队中感觉到被认可？',
+    scaleLabels: {
+      left: { en: 'A) Never', zh: '几乎从未被认可' },
+      right: { en: 'E) Always', zh: '总是被认可' }
+    }
+  },
+  86: {
+    id: '86',
+    type: 'scale-question',
+    textEn: 'Does your company promote collaboration based on trust and respect?',
+    textZh: '贵司是否鼓励基于信任与相互尊重的合作？',
+    scaleLabels: {
+      left: { en: 'A) Does not at all', zh: '几乎没有' },
+      right: { en: 'E) Strongly across all levels', zh: '在所有层面都出色' }
+    }
+  },
+  87: {
+    id: '87',
+    type: 'scale-question',
+    textEn: 'Could you reach out to colleagues or managers when facing challenges?',
+    textZh: '面对困难或需要帮助时，您能否与同事或上级沟通？',
+    scaleLabels: {
+      left: { en: 'A) Very uncomfortable', zh: '很不愿意' },
+      right: { en: 'E) Very comfortable', zh: '非常自然' }
+    }
+  },
+  88: {
+    id: '88',
+    type: 'scale-question',
+    textEn: 'Is a people-centered work culture important?',
+    textZh: '以人为本的企业文化是否重要？',
+    scaleLabels: {
+      left: { en: 'A) Not important at all', zh: '几乎不重要' },
+      right: { en: 'E) Extremely important', zh: '非常重要' }
+    }
+  },
+  89: {
+    id: '89',
+    type: 'scale-question',
+    textEn: 'Do you feel motivated by a sense of belonging or team care?',
+    textZh: '您是否因团队归属感或同事关怀提升工作积极性？',
+    scaleLabels: {
+      left: { en: 'A) Never', zh: '从未' },
+      right: { en: 'E) Very often', zh: '经常' }
+    }
+  },
+};
+
+export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig> = {
+  mother: {
+    type: 'mother',
+    title: { en: 'Mother Questionnaire', zh: '母亲问卷' },
+    questionIds: [
+      2,   // mother 1
+      3,   // mother 2
+      4,   // mother 3
+      5,   // mother 4
+      52,  // mother 5
+      53,  // mother 6
+      54,  // mother 7
+      55,  // mother 8
+      56,  // mother 9
+      57,  // mother 10
+      58,  // mother 11
+      // Section I. About Work-Life Balance (if yes to mother 3) / About Life Balance (if no to mother 3)
+      59,  // mother 12
+      60,  // mother 13
+      61,  // mother 14
+      62,  // mother 15
+      63,  // mother 16
+      68,  // mother 17
+      64,  // mother 18
+      65,  // mother 19
+      66,  // mother 20
+      69,  // mother 21
+      70,  // mother 22
+      25,  // mother 23
+      // Section II. About Us, CHON
+      26,  // mother 24
+      27,  // mother 25
+      71,  // mother 26
+      29,  // mother 27
+      28,  // mother 28
+      31,  // mother 29
+      30,  // mother 30
+      32,  // mother 31
+      72,  // mother 32
+      33,  // mother 33
+      35,  // mother 34
+      38,  // mother 35
+      39,  // mother 36
+      40,  // mother 37
+      // Section III. About Motherhood
+      41,  // mother 38
+      42,  // mother 39
+      43,  // mother 40
+      44,  // mother 41
+      73,  // mother 42
+      74,  // mother 43
+      75,  // mother 44
+      76,  // mother 45
+      77,  // mother 46
+      78,  // mother 47
+      79,  // mother 48
+      80,  // mother 49
+      51   // mother 50
+    ],
+    sections: [
+      {
+        title: { en: 'Demographics & Background', zh: '人口统计与背景' },
+        startIndex: 0,
+        endIndex: 10
+      },
+      {
+        title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
+        startIndex: 11,
+        endIndex: 22
+      },
+      {
+        title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
+        startIndex: 23,
+        endIndex: 36
+      },
+      {
+        title: { en: 'About Motherhood', zh: '关于母亲身份' },
+        startIndex: 37,
+        endIndex: 49
+      }
+    ],
+    questionModifications: {
+      // Note: Questions 28 and 29 have conditional text based on question 4 answer
+      // If question 4 (mother 3 - corporate experience) is "No":
+      //   Q28: 'How valuable are you staying updated with interested fields?' / '您了解感兴趣领域有多大价值？'
+      //   Q29: 'How valuable are you sharing your life and accessing new opportunities?' / '您分享生活和了解新机会有多大价值？'
+      // If question 4 is "Yes", use the default modifications below
+      28: {
+        textEn: 'How valuable is it for you to stay updated with your professional field?',
+        textZh: '您了解行业领域信息有多大价值？'
+      },
+      29: {
+        textEn: 'How valuable is it for you to post and access new business deals?',
+        textZh: '您发布和获取商业合作有多大价值？'
+      },
+      30: {
+        textEn: 'How valuable is it for you to share maternal experiences and emotional support?',
+        textZh: '您分享育儿经验、提供情感支持有多大价值？'
+      },
+      31: {
+        textEn: 'How valuable is medical advice from healthcare professionals for you?',
+        textZh: '外部医疗专业人士为您提供医学建议有多大价值？'
+      },
+      35: {
+        textEn: 'How valuable is a company-specific AI for you?',
+        textZh: '一个为每家公司定制的您专用人工智能模型有多大价值？'
+      },
+      40: {
+        textEn: 'Should companies verify that this platform is for family members approved by you?',
+        textZh: '公司是否应核实该平台供您允许的家庭成员使用？'
+      }
+    },
+    conditionalModifications: {
+      28: [
         {
-          id: 1,
-          type: 'multiple-choice',
-          textEn: 'What is your current / most recent job position?',
-          textZh: '您目前的职位名称是什么？',
-          options: [
-            { id: 'A', textEn: 'Senior Manager', textZh: '高级经理' },
-            { id: 'B', textEn: 'Director', textZh: '总监' },
-            { id: 'C', textEn: 'Vice President', textZh: '副总裁' },
-            { id: 'D', textEn: 'Managing Director', textZh: '董事总经理' },
-            { id: 'E', textEn: 'Partner', textZh: '合伙人' },
-            { id: 'F', textEn: 'President', textZh: '总裁' },
-            { id: 'G', textEn: 'C-suite Executives (CEO, CFO, COO, etc)', textZh: 'C级高管 (CEO, CFO, COO等)' },
-            { id: 'H', textEn: 'Board of Directors', textZh: '董事会成员' }
-          ]
-        },
-        {
-          id: 2,
-          type: 'text-input',
-          textEn: 'What is your professional contact (e.g., email, LinkedIn)?',
-          textZh: '请问您的职业联系方式是什么（例如：邮箱、领英）？',
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          textEn: 'Which industry or business sector does your company operate in?',
-          textZh: '贵公司属于哪个行业或业务领域？',
-          options: [
-            { id: 'A', textEn: 'Consumer Goods & Retail', textZh: '消费品和零售' },
-            { id: 'B', textEn: 'Education & Business Professional Services', textZh: '教育和商业专业服务' },
-            { id: 'C', textEn: 'Energy & Utilities', textZh: '能源和公用事业' },
-            { id: 'D', textEn: 'Entertainment & Media', textZh: '娱乐和媒体' },
-            { id: 'E', textEn: 'Financial Services', textZh: '金融服务' },
-            { id: 'F', textEn: 'Government, Nonprofits & Public Services', textZh: '政府、非营利和公共服务' },
-            { id: 'G', textEn: 'Healthcare & Pharmaceuticals', textZh: '医疗保健和制药' },
-            { id: 'H', textEn: 'Industrial Production & Manufacturing', textZh: '工业生产和制造' },
-            { id: 'I', textEn: 'Real Estate & Construction', textZh: '房地产和建筑' },
-            { id: 'J', textEn: 'Technology & Telecommunications', textZh: '技术和电信' },
-            { id: 'K', textEn: 'Transportation & Logistics', textZh: '运输和物流' }
-          ]
-        },
-        {
-          id: 4,
-          type: 'multiple-choice',
-          textEn: 'How many years of experience do you have in a managerial or leadership role?',
-          textZh: '您在管理或领导岗位上有多少年的工作经验？',
-          options: [
-            { id: 'A', textEn: '1-3 years', textZh: '1-3年' },
-            { id: 'B', textEn: '4-6 years', textZh: '4-6年' },
-            { id: 'C', textEn: '7-9 years', textZh: '7-9年' },
-            { id: 'D', textEn: '10+ years', textZh: '10年以上' }
-          ]
-        },
-        {
-          id: 5,
-          type: 'text-input',
-          textEn: 'What is the approximate size of your direct span of control?',
-          textZh: '您的直接管理团队规模是多少？',
-        },
-        {
-          id: 6,
-          type: 'text-input',
-          textEn: 'What is the approximate size of your indirect span of control?',
-          textZh: '您间接管理多少人？',
-        },
-        {
-          id: 7,
-          type: 'text-input',
-          textEn: 'How would you describe the overall reporting structure look like within your team in ten words?',
-          textZh: '请在十字以内描述您团队中的整体报告结构',
-        },
-        // Page 2 - Mother background
-        {
-          id: 8,
-          type: 'multiple-choice',
-          textEn: 'How many children do you have or are expecting to have?',
-          textZh: '您有或预计有多少个孩子？',
-          options: [
-            { id: 'A', textEn: '1', textZh: '1 个' },
-            { id: 'B', textEn: '2', textZh: '2 个' },
-            { id: 'C', textEn: '3', textZh: '3 个' },
-            { id: 'D', textEn: '4 or more', textZh: '4 个或更多' },
-          ]
-        },
-        {
-          id: 9,
-          type: 'text-input',
-          textEn: 'Which hospital did you use for prenatal care services?',
-          textZh: '您在哪家医院进行了产检服务？',
-        },
-        {
-          id: 10,
-          type: 'multiple-choice',
-          textEn: 'How many trimesters did you experience noticeable morning sickness?',
-          textZh: '您经历了几个妊娠期有明显的孕吐反应？',
-          options: [
-            { id: 'A', textEn: 'None', textZh: '无' },
-            { id: 'B', textEn: '1 trimester', textZh: '1个妊娠期' },
-            { id: 'C', textEn: '2 trimesters', textZh: '2个妊娠期' },
-            { id: 'D', textEn: 'Entire pregnancy', textZh: '整个孕期' },
-          ]
-        },
-        {
-          id: 11,
-          type: 'text-input',
-          textEn: 'What was your youngest child\'s birth weight?',
-          textZh: '您第一胎宝宝的出生体重是多少？',
-        },
-        {
-          id: 12,
-          type: 'multiple-choice',
-          textEn: 'How long was your maternity leave?',
-          textZh: '您的产假有多长时间？',
-          options: [
-            { id: 'A', textEn: '<8 weeks', textZh: '少于8周' },
-            { id: 'B', textEn: '8-14 weeks', textZh: '8-14周' },
-            { id: 'C', textEn: '15-26 weeks', textZh: '15-26周' },
-            { id: 'D', textEn: '27-52 weeks', textZh: '27-52周' },
-            { id: 'E', textEn: '>1 year', textZh: '超过1年' }
-          ]
-        },
-        {
-          id: 13,
-          type: 'multiple-choice',
-          textEn: 'Did you receive postpartum care services?',
-          textZh: '您是否接受了产后护理或入住了月子中心？',
-          options: [
-            { id: 'A', textEn: 'Yes', textZh: '是' },
-            { id: 'B', textEn: 'No', textZh: '否' },
-          ]
-        },
-        {
-          id: 14,
-          type: 'text-input',
-          textEn: 'Describe your postpartum emotions in one word',
-          textZh: '用十个词形容您的产后状态',
-        },
-        {
-          id: 15,
-          type: 'text-input',
-          textEn: 'Describe your motherhood experience in ten words',
-          textZh: '用十个词形容您作为母亲的状态吗？',
-        },
-        // Page 3 - Leadership
-        {
-          id: 16,
-          type: 'scale-question',
-          textEn: 'How would you describe the decision-making structure in your organization?',
-          textZh: '您如何描述贵公司决策体系的运作方式？',
-          scaleLabels: {
-            minEn: 'Highly centralized',
-            minZh: '高度集中化',
-            maxEn: 'Flexibly adaptive',
-            maxZh: '灵活变通'
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How valuable are you staying updated with interested fields?',
+            textZh: '您了解感兴趣领域有多大价值？'
           }
-        },
-        {
-          id: 17,
-          type: 'scale-question',
-          textEn: 'In your opinion, what should be the primary basis of decision-making authority in your organization?',
-          textZh: '在您看来，贵司的决策权应该主要基于什么？',
-          scaleLabels: {
-            minEn: 'Rigid policies & Top-down command',
-            minZh: '严格的政策和自上而下的指挥',
-            maxEn: 'Entirely based on individual\'s ability',
-            maxZh: '完全基于个人能力'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 18,
-          type: 'scale-question',
-          textEn: 'How well-organized would you say your team structure is under your leadership?',
-          textZh: '您认为在您的领导下，您的团队结构有多有序和高效？',
-          scaleLabels: {
-            minEn: 'Not organized',
-            minZh: '缺乏组织性',
-            maxEn: 'Very well-organized',
-            maxZh: '组织性非常强'
-          },
-          tags: ['客观能力', '核心耐力']
-        },
-        {
-          id: 19,
-          type: 'scale-question',
-          textEn: 'How would you rate your team\'s level of communication and collaboration under your leadership?',
-          textZh: '您认为在您的领导下，您的团队的沟通与协作水平如何？',
-          scaleLabels: {
-            minEn: 'Very poor – Lack communication & efficiency',
-            minZh: '非常差 —— 缺乏沟通和效率',
-            maxEn: 'Excellent – Great communication & efficiency',
-            maxZh: '非常好 —— 极好的沟通和效率'
-          },
-          tags: ['客观能力', '社交情商']
-        },
-        {
-          id: 20,
-          type: 'scale-question',
-          textEn: 'How would you rate your experience in communicating and establishing trust with clients or business partners?',
-          textZh: '您如何评价自己在与客户或业务伙伴沟通及建立信任方面的经验？',
-          scaleLabels: {
-            minEn: 'Very poor – significant challenges',
-            minZh: '非常差 – 极大挑战',
-            maxEn: 'Excellent – effective and trusted',
-            maxZh: '非常好 – 有效、可信'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 21,
-          type: 'scale-question',
-          textEn: 'How effective do you believe your organization is at understanding client or market needs?',
-          textZh: '您认为贵司在理解客户或市场需求方面的效果如何？',
-          scaleLabels: {
-            minEn: 'Very poor – insufficient understanding',
-            minZh: '非常差 – 不充分了解',
-            maxEn: 'Excellent – exceeds expectations',
-            maxZh: '非常好 – 超出预期'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 22,
-          type: 'scale-question',
-          textEn: 'How important do you think responsibility is in building successful business projects?',
-          textZh: '您认为责任感对商业项目的成功有多重要？',
-          scaleLabels: {
-            minEn: 'Not important at all',
-            minZh: '完全不重要',
-            maxEn: 'Extremely important',
-            maxZh: '极其重要'
-          },
-          tags: ['客观能力', '奉献精神']
-        },
-        {
-          id: 23,
-          type: 'scale-question',
-          textEn: 'How important do you think empathy and communication are in building successful business relationships?',
-          textZh: '您认为同理心和沟通能力在建立成功的商业关系中有多重要？',
-          scaleLabels: {
-            minEn: 'Not important at all',
-            minZh: '完全不重要',
-            maxEn: 'Extremely important',
-            maxZh: '极其重要'
-          },
-          tags: ['奉献精神', '社交情商']
-        },
-        {
-          id: 24,
-          type: 'scale-question',
-          textEn: 'How would you describe the current recognition and utilization of the "soft skills" of kindness, responsibility, empathy, and communication in your company?',
-          textZh: '您如何描述贵司目前对"软实力"（善良、责任心、同理心、沟通能力）的认可和使用情况？',
-          scaleLabels: {
-            minEn: 'Not recognized at all',
-            minZh: '完全不认可',
-            maxEn: 'Highly recognized and utilized',
-            maxZh: '高度认可和利用'
-          },
-          tags: ['奉献精神']
-        },
-        {
-          id: 25,
-          type: 'scale-question',
-          textEn: 'Do you think men and women are equally supported in your industry when it comes to balancing work and family?',
-          textZh: '在您的行业中, 您认为男性和女性是否在平衡工作与家庭方面得到了同等支持？',
-          scaleLabels: {
-            minEn: 'No, one is significantly less supported',
-            minZh: '不是，其一得到的很少同等支持',
-            maxEn: 'Yes, equally supported',
-            maxZh: '是的，两种性别都得到了平等支持'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 26,
-          type: 'scale-question',
-          textEn: 'In your opinion, how important is it for your organization to provide resources in the form of support and social bonding for working mothers?',
-          textZh: '在您看来，公司为职场母亲提供情感支持和社交的资源有多重要？',
-          scaleLabels: {
-            minEn: 'Not important at all',
-            minZh: '完全不重要',
-            maxEn: 'Very important',
-            maxZh: '非常重要'
-          },
-          tags: ['奉献精神', '自我意识']
-        },
-        {
-          id: 27,
-          type: 'scale-question',
-          textEn: 'How would you describe your organization\'s current approach to supporting working mothers under your leadership?',
-          textZh: '您如何描述贵司在您的领导下目前对职场母亲的支持程度？',
-          scaleLabels: {
-            minEn: 'Not supportive at all',
-            minZh: '完全不支持',
-            maxEn: 'Highly supportive with clear policies and resources',
-            maxZh: '高度支持，有明确的政策和资源'
-          },
-          tags: ['奉献精神', '自我意识']
-        },
-        {
-          id: 28,
-          type: 'scale-question',
-          textEn: 'How effectively do you use technology to support collaboration and productivity within your team?',
-          textZh: '您在团队协作和生产力提升方面对科技的使用程度如何？',
-          scaleLabels: {
-            minEn: 'Not at all',
-            minZh: '完全不使用',
-            maxEn: 'Very effectively',
-            maxZh: '非常有效地使用'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 29,
-          type: 'multiple-choice',
-          textEn: 'If you were the god or goddess of the business world and could change or create one thing from the following, what would it be?',
-          textZh: '如果您是商业世界的创造神，并且可以创造或改变以下任何一件事，您会选择什么？',
-          options: [
-            { id: 'A', textEn: 'Redistribute corporate shares so that every individual owns a piece of every business', textZh: '重新分配公司股份，让每个人都能在每家企业中分一杯羹' },
-            { id: 'B', textEn: 'Create 72 versions of yourself, each mastering a different industry', textZh: '创造72个化身，每个精通一个不同的行业' },
-            { id: 'C', textEn: 'Transform into an all-knowing prophet that oversees and predicts moves of everyone in the business world', textZh: '化身为全知预言家，精准观测并预测商业世界中每个人的行动' },
-            { id: 'D', textEn: 'Imbue every product with divine allure, making it irresistible to all', textZh: '赋予所有产品神圣吸引力，让所有人都无法抗拒' },
-            { id: 'E', textEn: 'Reconstruct the entire economic system to achieve absolute perfection and sustainability', textZh: '重塑所有经济体系，实现绝对完美与可持续发展' },
-            { id: 'F', textEn: 'Ensure that no matter what happens, my business always stays ahead and outmaneuvers my competitors', textZh: '确保无论发生什么，我的企业始终超越我的竞争对手' }
-          ]
-        },
-        {
-          id: 30,
-          type: 'scale-question',
-          textEn: 'How involved do you feel you are with your previous social life from work after pregnancy?',
-          textZh: '您觉得怀孕后自己与以往工作的社交联系程度如何？',
-          scaleLabels: {
-            minEn: 'Not involved at all',
-            minZh: '完全未参与',
-            maxEn: 'Very involved',
-            maxZh: '非常投入'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 31,
-          type: 'scale-question',
-          textEn: 'How well does your work arrangement after pregnancy support your needs as a working mother?',
-          textZh: '您怀孕后的工作安排对作为职场母亲的您有多大支持作用？',
-          scaleLabels: {
-            minEn: 'Not supportive at all',
-            minZh: '完全不支持',
-            maxEn: 'Extremely supportive',
-            maxZh: '非常支持'
-          }
-        },
-        {
-          id: 32,
-          type: 'scale-question',
-          textEn: 'How connected do you feel to your professional identity since becoming a mother?',
-          textZh: '自成为母亲后，您对自己的职业身份感有多强？',
-          scaleLabels: {
-            minEn: 'Not connected – motherhood is full priority',
-            minZh: '完全不强 – 母亲角色优先',
-            maxEn: 'Very connected – profession is important',
-            maxZh: '非常强 – 职业身份很重要'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 33,
-          type: 'scale-question',
-          textEn: 'How has motherhood impacted your career progression or promotion opportunities?',
-          textZh: '母亲身份对您的职业发展或晋升机会有何影响？',
-          scaleLabels: {
-            minEn: 'Very negative – significantly hindered',
-            minZh: '非常负面 – 明显阻碍',
-            maxEn: 'Very positive – enhanced opportunities',
-            maxZh: '非常积极 – 提升机会'
-          }
-        },
-        {
-          id: 34,
-          type: 'scale-question',
-          textEn: 'How capable are you with the current support your employer provides in balancing work and motherhood?',
-          textZh: '您如何评价您运用公司提供的兼顾工作和育儿的支持的能力？',
-          scaleLabels: {
-            minEn: 'Not capable of being supported',
-            minZh: '完全不能被支持',
-            maxEn: 'Extremely supported',
-            maxZh: '非常能被支持'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 35,
-          type: 'scale-question',
-          textEn: 'How has motherhood influenced your leadership or management style at work?',
-          textZh: '母亲身份如何影响了您在工作中的领导或管理风格？',
-          scaleLabels: {
-            minEn: 'Negative – worse at communication',
-            minZh: '消极影响 – 降低沟通能力',
-            maxEn: 'Positive – better at communication',
-            maxZh: '积极影响 – 提升沟通能力'
-          },
-          tags: ['情绪调节']
-        },
-        {
-          id: 36,
-          type: 'scale-question',
-          textEn: 'How effective are you at managing work-related stress since becoming a mother?',
-          textZh: '自成为母亲后，您应对工作压力的能力如何？',
-          scaleLabels: {
-            minEn: 'Much less – harder to manage stress now',
-            minZh: '更低效 – 更难应对压力',
-            maxEn: 'Much more – strengthened my resilience',
-            maxZh: '更有效 – 增强了韧性'
-          },
-          tags: ['核心耐力', '情绪调节']
-        },
-        {
-          id: 37,
-          type: 'scale-question',
-          textEn: 'How motivated do you feel to pursue career growth since becoming a mother?',
-          textZh: '自成为母亲后，您在职业发展方面的动力有多强？',
-          scaleLabels: {
-            minEn: 'Not motivated at all',
-            minZh: '完全没有',
-            maxEn: 'Very motivated',
-            maxZh: '非常强'
-          },
-          tags: ['核心耐力']
-        },
-        {
-          id: 38,
-          type: 'scale-question',
-          textEn: 'How would your satisfaction level with your ability to maintain work-life balance be?',
-          textZh: '您对您目前工作与生活平衡的能力感到满意吗？',
-          scaleLabels: {
-            minEn: 'Very dissatisfied',
-            minZh: '非常不满意',
-            maxEn: 'Very satisfied',
-            maxZh: '非常满意'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 39,
-          type: 'scale-question',
-          textEn: 'How often do you feel your needs as a mother are taken into account during important workplace decisions?',
-          textZh: '在重要的职场决策中，您觉得作为职场母亲的需求被考虑的频率如何？',
-          scaleLabels: {
-            minEn: 'Never – completely overlooked',
-            minZh: '从未 – 完全未被考虑',
-            maxEn: 'Always – consistently considered',
-            maxZh: '总是 – 经常被考虑'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 40,
-          type: 'scale-question',
-          textEn: 'How connected do you feel with other mothers through your work?',
-          textZh: '您在工作中与其他母亲的联系如何？',
-          scaleLabels: {
-            minEn: 'Very disconnected — no connection',
-            minZh: '非常弱 – 没有联系',
-            maxEn: 'Very connected – strong networks',
-            maxZh: '非常强 – 紧密网络'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 41,
-          type: 'scale-question',
-          textEn: 'Are you actively seeking more opportunities to connect with other mothers through your profession?',
-          textZh: '您是否主动在工作中寻求更多与其他职场母亲建立联系的机会？',
-          scaleLabels: {
-            minEn: 'Never',
-            minZh: '从不',
-            maxEn: 'Always',
-            maxZh: '经常'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 42,
-          type: 'scale-question',
-          textEn: 'How well do you think enhanced abstract logical thinking would address emotional and life concerns?',
-          textZh: '您认为加强抽象逻辑思维对解决情感和生活问题有多大帮助？',
-          scaleLabels: {
-            minEn: 'Not well - No link with emotions',
-            minZh: '完全不行 – 毫无关系',
-            maxEn: 'Extremely well - Very effective',
-            maxZh: '非常好 – 极其有效'
-          },
-          tags: ['客观能力', '情绪调节']
-        },
-        {
-          id: 43,
-          type: 'scale-question',
-          textEn: 'Do you believe that self-love and the ability to care for others require strong logic to navigate challenges in life?',
-          textZh: '你认为真正的自爱和关爱他人的能力在多大程度上需要强大的客观思维来解决生活中的挑战？',
-          scaleLabels: {
-            minEn: 'Strongly disagree',
-            minZh: '非常不同意',
-            maxEn: 'Strongly agree',
-            maxZh: '非常同意'
-          }
-        },
-        {
-          id: 44,
-          type: 'scale-question',
-          textEn: 'How valuable do you find having a professional page within the app to showcase your previous work?',
-          textZh: '您觉得在应用内拥有一个用于展示以往工作的职业页面有多大价值？',
-          scaleLabels: {
-            minEn: 'Not valuable at all',
-            minZh: '完全没有价值',
-            maxEn: 'Extremely valuable',
-            maxZh: '非常有价值'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 45,
-          type: 'scale-question',
-          textEn: 'How likely are you to use this app to share completed projects or achievements for deal sourcing or client acquisition?',
-          textZh: '您有多大可能使用该应用分享完成的商业项目或工作成就，以寻找合作机会或获取客户？',
-          scaleLabels: {
-            minEn: 'Very unlikely',
-            minZh: '完全不可能',
-            maxEn: 'Very likely',
-            maxZh: '非常可能'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 46,
-          type: 'scale-question',
-          textEn: 'How valuable would you find a feature that helps working mothers stay updated with trends and knowledge in their professional field?',
-          textZh: '您认为一个帮助职场母亲了解其行业领域最新动态的功能有多大用处？',
-          scaleLabels: {
-            minEn: 'Not valuable',
-            minZh: '毫无价值 – 毫无益处',
-            maxEn: 'Extremely valuable',
-            maxZh: '极具价值 – 职业发展必备'
-          },
-          tags: ['奉献精神']
-        },
-        {
-          id: 47,
-          type: 'scale-question',
-          textEn: 'How likely are you to use the forum to connect with other mothers for emotional or medical support?',
-          textZh: '您有多大可能使用该论坛与其他母亲建立联系，获取情感或医疗方面的支持？',
-          scaleLabels: {
-            minEn: 'Very unlikely',
-            minZh: '完全不可能',
-            maxEn: 'Very likely',
-            maxZh: '非常可能'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 48,
-          type: 'scale-question',
-          textEn: 'How valuable do you think this forum could be in helping you feel less isolated as a working mother?',
-          textZh: '您认为该论坛在帮助您增进作为职场母亲与别人连接方面有多大价值？',
-          scaleLabels: {
-            minEn: 'Not valuable at all',
-            minZh: '完全没有价值',
-            maxEn: 'Extremely valuable',
-            maxZh: '非常有价值'
-          },
-          tags: ['自我意识', '社交情商']
-        },
-        {
-          id: 49,
-          type: 'scale-question',
-          textEn: 'How motivated are you to use visuospatial and logical training modules within the app to strengthen abstract cognitive skills?',
-          textZh: '您有多大动力使用应用内的视觉空间和逻辑训练模块？',
-          scaleLabels: {
-            minEn: 'Not motivated at all',
-            minZh: '完全没有动力',
-            maxEn: 'Very motivated',
-            maxZh: '非常有动力'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 50,
-          type: 'scale-question',
-          textEn: 'How helpful do you think cognitive training would be in enhancing your problem-solving abilities?',
-          textZh: '您认为抽象逻辑训练对提升您解决问题的能力有多大帮助？',
-          scaleLabels: {
-            minEn: 'Not helpful at all',
-            minZh: '完全无帮助',
-            maxEn: 'Extremely helpful',
-            maxZh: '非常有帮助'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 51,
-          type: 'scale-question',
-          textEn: 'How engaging do you think it would be to create and interact with a self-designed electronic child avatar in your personal profile?',
-          textZh: '您觉得在个人主页中创建并与自定义的"电子小孩"虚拟形象互动的这个功能有多大吸引力？',
-          scaleLabels: {
-            minEn: 'Not engaging at all',
-            minZh: '完全无吸引力',
-            maxEn: 'Very engaging',
-            maxZh: '非常有吸引力'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 52,
-          type: 'scale-question',
-          textEn: 'How would you evaluate a company-specific AI model offering work-related productivity features for you and other mothers?',
-          textZh: '您如何看待一个专门为每家公司定制的职场母亲专用人工智能模型？',
-          scaleLabels: {
-            minEn: 'Not valuable – completely unnecessary',
-            minZh: '毫无必要 – 完全不需要',
-            maxEn: 'Extremely helpful – enhances efficiency',
-            maxZh: '极具价值 – 提升效率'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 53,
-          type: 'scale-question',
-          textEn: 'How do you feel about requiring you to submit a confidential child health-related record to verify that you and other users are active caregivers?',
-          textZh: '您如何看待要求您在使用本应用程序之前提交与儿童健康相关的保密记录，以证实您是孩子的照顾者？',
-          scaleLabels: {
-            minEn: 'Strongly oppose – utterly invasive',
-            minZh: '强烈反对 - 违反隐私',
-            maxEn: 'Strongly support – ensures safety and trust',
-            maxZh: '强烈支持 - 保障安全的基础'
-          },
-          tags: ['客观能力']
-        },
-        {
-          id: 54,
-          type: 'scale-question',
-          textEn: 'Do you believe misuse by unintended users (including your partner accessing accounts without permission) could negatively affect trust in the app?',
-          textZh: '您认为如果有非目标用户滥用该平台（包括您的生活伴侣未经允许访问账户等情况），是否会对用户对本应用的信任度产生负面影响？',
-          scaleLabels: {
-            minEn: 'Definitely no – no trust risk',
-            minZh: '绝对不 – 完全无风险',
-            maxEn: 'Definitely yes – severely undermines trust',
-            maxZh: '绝对会 – 严重破坏信任'
-          }
-        },
-        {
-          id: 55,
-          type: 'scale-question',
-          textEn: 'How do you feel about your company occasionally verifying through HR that business updates and activities posted on this platform are genuinely by yourself and other mother users, not others misusing their accounts?',
-          textZh: '您如何看待由公司人力资源部门核查平台上的业务更新和动态确实由目标用户本人发布，而非他人滥用账户？',
-          scaleLabels: {
-            minEn: 'Strongly oppose',
-            minZh: '强烈反对',
-            maxEn: 'Strongly support',
-            maxZh: '强烈支持'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 56,
-          type: 'scale-question',
-          textEn: 'How prepared did you feel for motherhood before becoming a mother?',
-          textZh: '在成为母亲之前，您觉得自己对母亲这一角色的准备程度如何？',
-          scaleLabels: {
-            minEn: 'Not prepared at all',
-            minZh: '完全没有准备',
-            maxEn: 'Very prepared',
-            maxZh: '非常充分'
-          },
-          tags: ['核心耐力']
-        },
-        {
-          id: 57,
-          type: 'scale-question',
-          textEn: 'How much has motherhood changed your personal values or priorities?',
-          textZh: '母亲身份对您的个人价值观或人生优先事项改变有多大？',
-          scaleLabels: {
-            minEn: 'No change',
-            minZh: '没有改变',
-            maxEn: 'Completely',
-            maxZh: '完全改变'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 58,
-          type: 'scale-question',
-          textEn: 'How supported do you feel by your family or community in your motherhood journey?',
-          textZh: '在做母亲的过程中，您觉得家人或社群对您的支持程度如何？',
-          scaleLabels: {
-            minEn: 'Not supported at all',
-            minZh: '完全没有支持',
-            maxEn: 'Extremely supported',
-            maxZh: '非常支持'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 59,
-          type: 'scale-question',
-          textEn: 'How confident are you in your ability to balance motherhood with your personal goals (e.g., hobbies, self-care)?',
-          textZh: '您在平衡母亲角色与个人目标方面有多大信心？',
-          scaleLabels: {
-            minEn: 'Not confident at all',
-            minZh: '完全没有信心',
-            maxEn: 'Very confident',
-            maxZh: '非常有信心'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 60,
-          type: 'scale-question',
-          textEn: 'How much emotional fulfillment has motherhood brought to your life?',
-          textZh: '母亲身份为您的生活带来了多少情感满足感？',
-          scaleLabels: {
-            minEn: 'No emotion at all',
-            minZh: '完全没有情感',
-            maxEn: 'Extremely fulfilling',
-            maxZh: '非常满足'
-          },
-          tags: ['奉献精神']
-        },
-        {
-          id: 61,
-          type: 'scale-question',
-          textEn: 'How much do you feel that motherhood has made you more resilient or emotionally strong?',
-          textZh: '母亲身份是否让您变得更有韧性或情绪更强大？',
-          scaleLabels: {
-            minEn: 'Much weaker',
-            minZh: '明显减弱',
-            maxEn: 'Much stronger',
-            maxZh: '显著增强'
-          },
-          tags: ['情绪调节', '核心耐力']
-        },
-        {
-          id: 62,
-          type: 'scale-question',
-          textEn: 'How has motherhood affected your ability to set boundaries (e.g., with work, family, or friends) in life?',
-          textZh: '母亲身份对您设定边界（如与工作、家庭或朋友）能力的影响如何？',
-          scaleLabels: {
-            minEn: 'Significantly weakened',
-            minZh: '显著减弱',
-            maxEn: 'Improved greatly',
-            maxZh: '显著提升'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 63,
-          type: 'scale-question',
-          textEn: 'How often do you feel pressure to meet external expectations of motherhood (e.g., societal, cultural, or family expectations)?',
-          textZh: '您多久感受到来自外界对母亲角色（如社会、文化或家庭）的期待压力？',
-          scaleLabels: {
-            minEn: 'Never',
-            minZh: '从不',
-            maxEn: 'Always',
-            maxZh: '总是'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 64,
-          type: 'scale-question',
-          textEn: 'How satisfied are you with the balance between your motherhood role and your sense of self outside of being a mother?',
-          textZh: '您对自己平衡母亲这一身份与作为母亲之外的自我身份有多满意？',
-          scaleLabels: {
-            minEn: 'Very dissatisfied',
-            minZh: '非常不满意',
-            maxEn: 'Very satisfied',
-            maxZh: '非常满意'
-          },
-          tags: ['自我意识']
-        },
-        {
-          id: 65,
-          type: 'scale-question',
-          textEn: 'How important is it for you to connect with other mothers who share similar experiences?',
-          textZh: '与有类似经历的其他母亲建立联系对您来说有多重要？',
-          scaleLabels: {
-            minEn: 'Not important at all',
-            minZh: '完全不重要',
-            maxEn: 'Extremely important',
-            maxZh: '非常重要'
-          },
-          tags: ['社交情商']
-        },
-        {
-          id: 66,
-          type: 'scale-question',
-          textEn: 'How much do you feel that your own mother\'s role influenced your early understanding of leadership or responsibility?',
-          textZh: '您认为您的母亲在多大程度上影响了童年时期您对领导力或责任感的认知？',
-          scaleLabels: {
-            minEn: 'Not at all',
-            minZh: '没有影响',
-            maxEn: 'Very strongly',
-            maxZh: '非常深远'
-          },
-          tags: ['自我意识']
         }
       ],
-      privacyStatement: {
-        titleEn: 'Privacy Statement',
-        titleZh: '隐私声明',
-        contentEn: '<strong style="font-size: 1.2em;">Data Usage and Privacy Statement</strong><br><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><strong style="font-size: 1.2em;">For Individual Participants</strong><br><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>',
-        contentZh: '<strong style="font-size: 1.2em;">数据使用与隐私声明</strong><br><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><strong style="font-size: 1.2em;">针对个人参与者</strong><br><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>'
+      29: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How valuable are you sharing your life and accessing new opportunities?',
+            textZh: '您分享生活和了解新机会有多大价值？'
+          }
+        }
+      ],
+      59: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How involved are you with your previous social life?',
+            textZh: '自己与以往的社交联系程度如何？'
+          }
+        }
+      ],
+      60: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How well does your life arrangement support your needs?',
+            textZh: '您的生活安排对您有多大支持作用？'
+          }
+        }
+      ],
+      61: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How connected are you to your personal identity?',
+            textZh: '您对自己的个人身份感有多强？'
+          }
+        }
+      ],
+      62: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How has motherhood impacted your personal development?',
+            textZh: '母亲身份对您的个人发展有何影响？'
+          }
+        }
+      ],
+      63: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How is your life balance supported by your community?',
+            textZh: '您的生活平衡如何被社区支持？'
+          }
+        }
+      ],
+      66: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How motivated do you feel to pursue personal growth?',
+            textZh: '您个人发展的动力有多强？'
+          }
+        }
+      ],
+      67: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How satisfied are you with your life balance?',
+            textZh: '您对您的生活平衡满意吗？'
+          }
+        }
+      ],
+      68: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'Are your needs as a mother taken into account during community decisions?',
+            textZh: '您作为母亲的需求是否在社区决策中被考虑到？'
+          }
+        }
+      ],
+      69: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'How connected do you feel with other mothers through your life?',
+            textZh: '您在生活中与其他母亲的联系如何？'
+          }
+        }
+      ],
+      70: [
+        {
+          condition: {
+            questionId: 4,
+            answer: 'B' // No corporate experience
+          },
+          modifications: {
+            textEn: 'Do you want to connect with other mothers through your lifestyle?',
+            textZh: '您是否想在生活中与其他母亲建立联系？'
+          }
+        }
+      ]
+    },
+    totalQuestions: 50
+  },
+  corporate: {
+    type: 'corporate',
+    title: { en: 'Corporate Manager Questionnaire', zh: '企业管理者问卷' },
+    questionIds: [
+      6,   // corporate manager 1
+      1,   // corporate manager 2
+      2,   // corporate manager 3
+      3,   // corporate manager 4
+      5,   // corporate manager 5
+      7,   // corporate manager 6
+      8,   // corporate manager 7
+      9,   // corporate manager 8
+      10,  // corporate manager 9
+      11,  // corporate manager 10
+      // Section I. About Your Leadership
+      12,  // corporate manager 11
+      13,  // corporate manager 12
+      14,  // corporate manager 13
+      15,  // corporate manager 14
+      16,  // corporate manager 15
+      17,  // corporate manager 16
+      18,  // corporate manager 17
+      19,  // corporate manager 18
+      20,  // corporate manager 19
+      21,  // corporate manager 20
+      22,  // corporate manager 21
+      23,  // corporate manager 22
+      24,  // corporate manager 23
+      25,  // corporate manager 24
+      // Section II. About Us, CHON
+      26,  // corporate manager 25
+      27,  // corporate manager 26
+      28,  // corporate manager 27
+      29,  // corporate manager 28
+      30,  // corporate manager 29
+      31,  // corporate manager 30
+      32,  // corporate manager 31
+      33,  // corporate manager 32
+      34,  // corporate manager 33
+      35,  // corporate manager 34
+      36,  // corporate manager 35
+      37,  // corporate manager 36
+      38,  // corporate manager 37
+      39,  // corporate manager 38
+      40,  // corporate manager 39
+      // Section III. About Motherhood
+      41,  // corporate manager 40
+      42,  // corporate manager 41
+      43,  // corporate manager 42
+      44,  // corporate manager 43
+      45,  // corporate manager 44
+      46,  // corporate manager 45
+      47,  // corporate manager 46
+      48,  // corporate manager 47
+      49,  // corporate manager 48
+      50,  // corporate manager 49
+      51   // corporate manager 50
+    ],
+    sections: [
+      {
+        title: { en: 'Demographics & Professional Background', zh: '人口统计与职业背景' },
+        startIndex: 0,
+        endIndex: 9
+      },
+      {
+        title: { en: 'About Your Leadership', zh: '关于您的领导力' },
+        startIndex: 10,
+        endIndex: 23
+      },
+      {
+        title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
+        startIndex: 24,
+        endIndex: 38
+      },
+      {
+        title: { en: 'About Motherhood', zh: '关于母亲身份' },
+        startIndex: 39,
+        endIndex: 49
       }
+    ],
+    questionModifications: {},
+    totalQuestions: 50
+  },
+  other: {
+    type: 'other',
+    title: { en: 'General Questionnaire', zh: '通用问卷' },
+    questionIds: [
+      1,   // others 1
+      2,   // others 2
+      3,   // others 3
+      4,   // others 4
+      5,   // others 5
+      // Section I. About Professional Work (if yes to others 3) / About Teamwork (if no to others 3)
+      81,  // others 6
+      82,  // others 7
+      20,  // others 8
+      83,  // others 9
+      84,  // others 10
+      85,  // others 11
+      86,  // others 12
+      87,  // others 13
+      88,  // others 14
+      89,  // others 15
+      24,  // others 16
+      // Section II. About Us, CHON
+      26,  // others 17
+      27,  // others 18
+      28,  // others 19
+      29,  // others 20
+      30,  // others 21
+      31,  // others 22
+      32,  // others 23
+      33,  // others 24
+      34,  // others 25
+      35,  // others 26
+      36,  // others 27
+      37,  // others 28
+      38,  // others 29
+      39,  // others 30
+      40,  // others 31
+      // Section III. About Motherhood
+      41,  // others 32
+      42,  // others 33
+      43,  // others 34
+      44,  // others 35
+      45,  // others 36
+      46,  // others 37
+      47,  // others 38
+      48,  // others 39
+      49,  // others 40
+      50,  // others 41
+      51   // others 42
+    ],
+    sections: [
+      {
+        title: { en: 'Demographics & Background', zh: '人口统计与背景' },
+        startIndex: 0,
+        endIndex: 4
+      },
+      {
+        title: { en: 'About Professional Work & Teamwork', zh: '关于专业工作与团队合作' },
+        startIndex: 5,
+        endIndex: 15
+      },
+      {
+        title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
+        startIndex: 16,
+        endIndex: 30
+      },
+      {
+        title: { en: 'About Motherhood', zh: '关于母亲身份' },
+        startIndex: 31,
+        endIndex: 41
+      }
+    ],
+    questionModifications: {},
+    totalQuestions: 42
+  },
+  both: {
+    type: 'both',
+    title: { en: 'Mother + Corporate Manager Questionnaire', zh: '母亲+企业管理者问卷' },
+    questionIds: [
+      6,   // both 1
+      2,   // both 2
+      3,   // both 3
+      5,   // both 4
+      52,  // both 5
+      53,  // both 6
+      54,  // both 7
+      55,  // both 8
+      56,  // both 9
+      57,  // both 10
+      58,  // both 11
+      5,   // both 12
+      7,   // both 13
+      8,   // both 14
+      9,   // both 15
+      10,  // both 16
+      11,  // both 17
+      // Section I. About Your Leadership
+      12,  // both 18
+      13,  // both 19
+      14,  // both 20
+      15,  // both 21
+      16,  // both 22
+      17,  // both 23
+      18,  // both 24
+      19,  // both 25
+      20,  // both 26
+      21,  // both 27
+      22,  // both 28
+      23,  // both 29
+      24,  // both 30
+      25,  // both 31
+      // Section II. About Work-Life Balance
+      59,  // both 32
+      60,  // both 33
+      61,  // both 34
+      62,  // both 35
+      63,  // both 36
+      68,  // both 37
+      64,  // both 38
+      65,  // both 39
+      66,  // both 40
+      69,  // both 41
+      70,  // both 42
+      // Section III. About Us, CHON
+      26,  // both 43
+      27,  // both 44
+      71,  // both 45
+      29,  // both 46
+      28,  // both 47
+      31,  // both 48
+      30,  // both 49
+      32,  // both 50
+      72,  // both 51
+      33,  // both 52
+      35,  // both 53
+      38,  // both 54
+      39,  // both 55
+      40,  // both 56
+      // Section IV. About Motherhood
+      41,  // both 57
+      42,  // both 58
+      43,  // both 59
+      44,  // both 60
+      73,  // both 61
+      74,  // both 62
+      75,  // both 63
+      76,  // both 64
+      77,  // both 65
+      78,  // both 66
+      79,  // both 67
+      80,  // both 68
+      51   // both 69
+    ],
+    sections: [
+      {
+        title: { en: 'Demographics & Background', zh: '人口统计与背景' },
+        startIndex: 0,
+        endIndex: 16
+      },
+      {
+        title: { en: 'About Your Leadership', zh: '关于您的领导力' },
+        startIndex: 17,
+        endIndex: 30
+      },
+      {
+        title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
+        startIndex: 31,
+        endIndex: 41
+      },
+      {
+        title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
+        startIndex: 42,
+        endIndex: 55
+      },
+      {
+        title: { en: 'About Motherhood', zh: '关于母亲身份' },
+        startIndex: 56,
+        endIndex: 68
+      }
+    ],
+    questionModifications: {
+      28: {
+        textEn: 'How valuable is it for you to stay updated with your professional field?',
+        textZh: '您了解行业领域信息有多大价值？'
+      },
+      29: {
+        textEn: 'How valuable is it for you to post and access new business deals?',
+        textZh: '您发布和获取商业合作有多大价值？'
+      },
+      30: {
+        textEn: 'How valuable is it for you to share maternal experiences and emotional support?',
+        textZh: '您分享育儿经验、提供情感支持有多大价值？'
+      },
+      31: {
+        textEn: 'How valuable is medical advice from healthcare professionals for you?',
+        textZh: '外部医疗专业人士为您提供医学建议有多大价值？'
+      },
+      35: {
+        textEn: 'How valuable is a company-specific AI for you?',
+        textZh: '一个为每家公司定制的您专用人工智能模型有多大价值？'
+      },
+      40: {
+        textEn: 'Should companies verify that this platform is for family members approved by you?',
+        textZh: '公司是否应核实该平台供您允许的家庭成员使用？'
+      }
+    },
+    totalQuestions: 69
+  }
+};
+
+export const getQuestionnaire = (type: QuestionnaireType): QuestionnaireContext => {
+  const config = questionnaireConfigs[type];
+  const questions: Question[] = config.questionIds.map((questionId, index) => {
+    const baseQuestion = unifiedQuestions[questionId];
+    if (!baseQuestion) {
+      throw new Error(`Question ID ${questionId} not found in unified questions`);
     }
+    
+    // Create a copy of the question with local ID
+    const question: Question = {
+      ...baseQuestion,
+      id: `${type}_${index + 1}`, // Local questionnaire ID
+      unifiedId: questionId // Keep track of unified question ID for conditional logic
+    };
+    
+    // Apply modifications if they exist
+    const modifications = config.questionModifications?.[questionId];
+    if (modifications) {
+      if (modifications.textEn) question.textEn = modifications.textEn;
+      if (modifications.textZh) question.textZh = modifications.textZh;
+    }
+    
+    return question;
+  });
+
+  return {
+    type: config.type,
+    title: config.title,
+    questions,
+      privacyStatement: {
+      titleEn: 'Data Usage and Privacy Statement',
+      titleZh: '数据使用与隐私声明',
+      contentEn: '<strong style="font-size: 1.2em;">Data Usage and Privacy Statement</strong><br><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><br><strong style="font-size: 1.2em;">For Individual Participants</strong><br><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>',
+      contentZh: '<strong style="font-size: 1.2em;">数据使用与隐私声明</strong><br><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><br><strong style="font-size: 1.2em;">针对个人参与者</strong><br><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>'
+    },
+    totalQuestions: config.totalQuestions
+  };
+};
+
+export const questionnaires: Record<QuestionnaireType, QuestionnaireContext> = {
+  mother: getQuestionnaire('mother'),
+  corporate: getQuestionnaire('corporate'),
+  other: getQuestionnaire('other'),
+  both: getQuestionnaire('both')
   };

@@ -213,7 +213,8 @@
   }
   
   .molecule-background {
-    opacity: 0.06;
+    width: 100%;
+    opacity: 0.08;
   }
   
   .hexagon-pattern {

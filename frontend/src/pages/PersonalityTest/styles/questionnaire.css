@@ -587,6 +587,7 @@
   background-color: transparent;
   margin-bottom: 0.5rem;
   color: #333;
+  font-family: 'Kaiser Decol', 'Times New Roman', serif;
 }
 
 .text-answer-input:focus {
@@ -597,6 +598,29 @@
 .text-answer-input::placeholder {
   color: #aaa;
   font-style: italic;
+}
+
+/* Text with Unit Styles */
+.text-with-unit-container {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.text-with-unit-input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.unit-selector {
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.unit-selector .searchable-dropdown {
+  width: 100%;
 }
 
 /* Navigation Buttons */

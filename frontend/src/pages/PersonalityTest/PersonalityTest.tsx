@@ -4,9 +4,11 @@ import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import LanguageSelector from '../../components/LanguageSelector/LanguageSelector.tsx';
 import './PersonalityTest.css';
 import BothQuestionnaire from './BothQuestionnaire.tsx';
+import SearchableDropdown from './SearchableDropdown.tsx';
 import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
-import { questionnaires, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
+import { questionnaires, questionnaireConfigs, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
+import './styles/searchable-dropdown.css';
 
 // API Configuration
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
@@ -46,7 +48,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [step, setStep] = useState<TestStep>('intro');
   const [userChoice, setUserChoice] = useState<string | null>(null);
   const [selectedIdentities, setSelectedIdentities] = useState<Set<IdentityType>>(new Set());
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [typingText, setTypingText] = useState<string>('');
   const [isTyping, setIsTyping] = useState<boolean>(false);
   // Identity roles expansion for corporate
@@ -81,8 +83,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   // Add state to track if we're showing the primary or secondary questionnaire
   const [showingPrimaryQuestionnaire, setShowingPrimaryQuestionnaire] = useState(true);
   // Add state to track primary answers separately from secondary
-  const [primaryAnswers, setPrimaryAnswers] = useState<Record<number, string>>({});
-  const [secondaryAnswers, setSecondaryAnswers] = useState<Record<number, string>>({});
+  const [primaryAnswers, setPrimaryAnswers] = useState<Record<string, string>>({});
+  const [secondaryAnswers, setSecondaryAnswers] = useState<Record<string, string>>({});
   // 添加标签得分计算相关的状态
   const [tagScores, setTagScores] = useState<Record<string, number[]>>({});
   
@@ -229,7 +231,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   }, [step, onWhiteThemeChange]);
 
-  // Typing animation effect for privacy statement
+  // Privacy statement content (no animation)
   useEffect(() => {
     if (step === 'privacy') {
       const currentQuestionnaire = getCurrentQuestionnaire();
@@ -243,21 +245,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         ? currentQuestionnaire.privacyStatement?.contentEn || privacyTextEn
         : currentQuestionnaire.privacyStatement?.contentZh || privacyTextZh;
 
-      setTypingText('');
-      setIsTyping(true);
-      
-      let currentIndex = 0;
-      const typingInterval = setInterval(() => {
-        if (currentIndex < fullText.length) {
-          setTypingText(fullText.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          setIsTyping(false);
-          clearInterval(typingInterval);
-        }
-      }, 30); // Adjust speed as needed
-
-      return () => clearInterval(typingInterval);
+      setTypingText(fullText);
+      setIsTyping(false);
     }
   }, [step, language]);
 
@@ -439,15 +428,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   // Handle answer selection for multiple choice questions
-  const handleMultipleChoiceAnswer = (questionId: number, optionId: string) => {
+  const handleMultipleChoiceAnswer = (questionId: string, optionId: string) => {
     const currentAnswers = getCurrentAnswers();
     setCurrentAnswers({
       ...currentAnswers,
       [questionId]: optionId
     });
     
-    // Add branching logic for specific question (e.g., question 6)
-    if (questionId === 6) {
+    // Add branching logic for specific question (e.g., corporate manager question 1)
+    if (questionId === 'corporate_1') {
       setHasBranchingQuestion(true);
       if (optionId === 'A') { // Yes
         setBranchingPath('yes-path');
@@ -466,7 +455,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   // Handle text input for free text questions
-  const handleTextAnswer = (questionId: number, text: string) => {
+  const handleTextAnswer = (questionId: string, text: string) => {
     const currentAnswers = getCurrentAnswers();
     // Only update answer when there's text content
     if (text.trim()) {
@@ -483,7 +472,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   // Handle scale question answer
-  const handleScaleAnswer = (questionId: number, value: string) => {
+  const handleScaleAnswer = (questionId: string, value: string) => {
     const currentAnswers = getCurrentAnswers();
     setCurrentAnswers({
       ...currentAnswers,
@@ -499,8 +488,32 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }, 100);
   };
 
+  // Handle multi-select answer (stores comma-separated option ids)
+  const handleMultiSelectAnswer = (questionId: string, values: string[]) => {
+    const currentAnswers = getCurrentAnswers();
+    if (values.length > 0) {
+      setCurrentAnswers({
+        ...currentAnswers,
+        [questionId]: values.join(',')
+      });
+    } else {
+      const newAnswers = { ...currentAnswers };
+      delete newAnswers[questionId];
+      setCurrentAnswers(newAnswers);
+    }
+  };
+
+  // Handle searchable dropdown answer
+  const handleSearchableDropdownAnswer = (questionId: string, optionId: string) => {
+    const currentAnswers = getCurrentAnswers();
+    setCurrentAnswers({
+      ...currentAnswers,
+      [questionId]: optionId
+    });
+  };
+
   // Helper to get current answers based on which questionnaire is active
-  const getCurrentAnswers = (): Record<number, string> => {
+  const getCurrentAnswers = (): Record<string, string> => {
     // When both mother and corporate are selected or 'both' questionnaire is active
     if ((selectedIdentities.has('mother') && selectedIdentities.has('corporate')) || activeQuestionnaire === 'both') {
       return showingPrimaryQuestionnaire ? primaryAnswers : secondaryAnswers;
@@ -509,7 +522,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   // Helper to set current answers based on which questionnaire is active
-  const setCurrentAnswers = (newAnswers: Record<number, string>) => {
+  const setCurrentAnswers = (newAnswers: Record<string, string>) => {
     // When both mother and corporate are selected or 'both' questionnaire is active
     if ((selectedIdentities.has('mother') && selectedIdentities.has('corporate')) || activeQuestionnaire === 'both') {
       if (showingPrimaryQuestionnaire) {
@@ -624,9 +637,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 母亲问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: 根据分支逻辑获取问题
+            // 第1页: Demographics & Background (questions 1-11 including 58)
             <div className="first-page-questions first-page-true">
-              {getQuestionsForCurrentPage(0, 10).map((question) => (
+              {getQuestionsForCurrentPage(0, 11).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -655,6 +668,86 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'text-with-unit' && (
+                    <div className="text-with-unit-container">
+                      <input
+                        type="text"
+                        className="text-answer-input text-with-unit-input"
+                        value={getCurrentAnswers()[question.id]?.split('_')[0] || ''}
+                        onChange={(e) => {
+                          const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
+                          handleTextAnswer(question.id, `${e.target.value}_${unit}`);
+                        }}
+                        placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
+                      />
+                      <div className="unit-selector">
+                        <SearchableDropdown
+                          question={{
+                            ...question,
+                            id: `${question.id}_unit`
+                          }}
+                          selectedValue={getCurrentAnswers()[question.id]?.split('_')[1] || 'kg'}
+                          onSelect={(unitId) => {
+                            const value = getCurrentAnswers()[question.id]?.split('_')[0] || '';
+                            handleTextAnswer(question.id, `${value}_${unitId}`);
+                          }}
+                          language={language}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {question.type === 'multi-select' && (
+                    <div className="text-input-container">
+                      <select
+                        multiple
+                        className="text-answer-input"
+                        value={(getCurrentAnswers()[question.id]?.split(',') ?? [])}
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                          handleMultiSelectAnswer(question.id, selected);
+                        }}
+                      >
+                        {question.options?.map(option => (
+                          <option key={option.id} value={option.id}>
+                            {language === 'en' ? option.textEn : option.textZh}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {question.type === 'searchable-dropdown' && (
+                    <div className="searchable-dropdown-container">
+                      <SearchableDropdown
+                        question={question}
+                        selectedValue={getCurrentAnswers()[question.id] || ''}
+                        onSelect={(optionId) => handleSearchableDropdownAnswer(question.id, optionId)}
+                        language={language}
+                      />
+                    </div>
+                  )}
+
+                  {question.type === 'multi-select' && (
+                    <div className="text-input-container">
+                      <select
+                        multiple
+                        className="text-answer-input"
+                        value={(getCurrentAnswers()[question.id]?.split(',') ?? [])}
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                          handleMultiSelectAnswer(question.id, selected);
+                        }}
+                      >
+                        {question.options?.map(option => (
+                          <option key={option.id} value={option.id}>
+                            {language === 'en' ? option.textEn : option.textZh}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -674,13 +767,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -699,22 +792,31 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 1 && parseInt(id) <= 8).length < 8}
+                  disabled={Object.keys(getCurrentAnswers()).length < 8}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showThirdPage ? (
-            // 第2页: 根据分支逻辑获取问题
+            // 第2页: About Work-Life Balance / About Life Balance (questions 12-23)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'I. About Work-Life Balance' 
-                  : 'I. 关于工作与生活的平衡'}
+                {(() => {
+                  const hasCorporateExperience = getCurrentAnswers()['mother_3'] === 'A';
+                  if (language === 'en') {
+                    return hasCorporateExperience 
+                      ? 'I. About Work-Life Balance' 
+                      : 'I. About Life Balance';
+                  } else {
+                    return hasCorporateExperience 
+                      ? 'I. 关于工作与生活的平衡' 
+                      : 'I. 关于生活平衡';
+                  }
+                })()}
               </h1>
               
-              {getQuestionsForCurrentPage(10, 23).map((question) => (
+              {getQuestionsForCurrentPage(11, 23).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -762,13 +864,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -798,14 +900,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 9 && parseInt(id) <= 21).length < 13}
+                  disabled={Object.keys(getCurrentAnswers()).length < 13}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showFourthPage ? (
-            // 第3页: ID 22-35，标题"II. About Us, CHON / 关于我们"
+            // 第3页: About Us, CHON (questions 25-38)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -813,7 +915,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'II. 关于我们'}
               </h1>
               
-              {getQuestionsForCurrentPage(23, 37).map((question) => (
+              {getQuestionsForCurrentPage(24, 38).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -861,13 +963,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -897,14 +999,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 22 && parseInt(id) <= 35).length < 14}
+                  disabled={Object.keys(getCurrentAnswers()).length < 14}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showFifthPage ? (
-            // 第4页: ID 36-48，标题"III. About Motherhood"
+            // 第4页: About Motherhood (questions 39-50)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -912,7 +1014,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'III. 关于母亲'}
               </h1>
               
-              {getQuestionsForCurrentPage(37, 50).map((question) => (
+              {getQuestionsForCurrentPage(38, 50).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -960,13 +1062,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -994,7 +1096,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 完成问卷并跳转到结果页面
                     finishQuestionnaire();
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 36 && parseInt(id) <= 48).length < 13}
+                  disabled={Object.keys(getCurrentAnswers()).length < 13}
                 >
                   {language === 'en' ? 'Finish' : '完成'}
                 </button>
@@ -1044,9 +1146,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 企业问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: ID 1-12，无标题
+            // 第1页: Demographics & Professional Background (questions 1-10)
             <div className="first-page-questions first-page-true">
-              {questions.slice(0, 12).map((question) => (
+              {questions.slice(0, 10).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1075,6 +1177,46 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'text-with-unit' && (
+                    <div className="text-with-unit-container">
+                      <input
+                        type="text"
+                        className="text-answer-input text-with-unit-input"
+                        value={getCurrentAnswers()[question.id]?.split('_')[0] || ''}
+                        onChange={(e) => {
+                          const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
+                          handleTextAnswer(question.id, `${e.target.value}_${unit}`);
+                        }}
+                        placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
+                      />
+                      <div className="unit-selector">
+                        <SearchableDropdown
+                          question={{
+                            ...question,
+                            id: `${question.id}_unit`
+                          }}
+                          selectedValue={getCurrentAnswers()[question.id]?.split('_')[1] || 'kg'}
+                          onSelect={(unitId) => {
+                            const value = getCurrentAnswers()[question.id]?.split('_')[0] || '';
+                            handleTextAnswer(question.id, `${value}_${unitId}`);
+                          }}
+                          language={language}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {question.type === 'searchable-dropdown' && (
+                    <div className="searchable-dropdown-container">
+                      <SearchableDropdown
+                        question={question}
+                        selectedValue={getCurrentAnswers()[question.id] || ''}
+                        onSelect={(optionId) => handleSearchableDropdownAnswer(question.id, optionId)}
+                        language={language}
+                      />
+                    </div>
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -1094,13 +1236,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1118,14 +1260,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 1 && parseInt(id) <= 7).length < 7}
+                  disabled={Object.keys(getCurrentAnswers()).length < 7}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showSecondPage ? (
-            // 第2页: ID 8-21，标题"I. 关于您的领导力 / About Your Leadership"
+            // 第2页: About Your Leadership (questions 11-24)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -1133,7 +1275,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'I. 关于您的领导力'}
               </h1>
               
-              {questions.slice(12, 26).map((question) => (
+              {questions.slice(10, 24).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1181,13 +1323,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1217,14 +1359,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 8 && parseInt(id) <= 21).length < 14}
+                  disabled={Object.keys(getCurrentAnswers()).length < 14}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showThirdPage ? (
-            // 第3页: ID 22-36，标题"II. About Us, CHON / 关于我们"
+            // 第3页: About Us, CHON (questions 25-39)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -1232,7 +1374,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'II. 关于我们'}
               </h1>
               
-              {questions.slice(26, 41).map((question) => (
+              {questions.slice(24, 39).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1280,13 +1422,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1316,14 +1458,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 22 && parseInt(id) <= 36).length < 15}
+                  disabled={Object.keys(getCurrentAnswers()).length < 15}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showFourthPage ? (
-            // 第4页: ID 37-47，标题"III. About Motherhood 关于母亲"
+            // 第4页: About Motherhood (questions 40-50)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -1331,7 +1473,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'III. 关于母亲'}
               </h1>
               
-              {questions.slice(41, 52).map((question) => (
+              {questions.slice(39, 50).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1379,13 +1521,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1413,7 +1555,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 完成问卷并跳转到结果页面
                     finishQuestionnaire();
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 32 && parseInt(id) <= 42).length < 11}
+                  disabled={Object.keys(getCurrentAnswers()).length < 11}
                 >
                   {language === 'en' ? 'Finish' : '完成'}
                 </button>
@@ -1441,9 +1583,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 其他问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: ID 1-4，无标题
+            // 第1页: Demographics & Background (questions 1-5)
             <div className="first-page-questions first-page-true">
-              {questions.slice(0, 4).map((question) => (
+              {questions.slice(0, 5).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1472,6 +1614,35 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'text-with-unit' && (
+                    <div className="text-with-unit-container">
+                      <input
+                        type="text"
+                        className="text-answer-input text-with-unit-input"
+                        value={getCurrentAnswers()[question.id]?.split('_')[0] || ''}
+                        onChange={(e) => {
+                          const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
+                          handleTextAnswer(question.id, `${e.target.value}_${unit}`);
+                        }}
+                        placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
+                      />
+                      <div className="unit-selector">
+                        <SearchableDropdown
+                          question={{
+                            ...question,
+                            id: `${question.id}_unit`
+                          }}
+                          selectedValue={getCurrentAnswers()[question.id]?.split('_')[1] || 'kg'}
+                          onSelect={(unitId) => {
+                            const value = getCurrentAnswers()[question.id]?.split('_')[0] || '';
+                            handleTextAnswer(question.id, `${value}_${unitId}`);
+                          }}
+                          language={language}
+                        />
+                      </div>
+                    </div>
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -1491,16 +1662,27 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {question.type === 'searchable-dropdown' && (
+                    <div className="searchable-dropdown-container">
+                      <SearchableDropdown
+                        question={question}
+                        selectedValue={getCurrentAnswers()[question.id] || ''}
+                        onSelect={(optionId) => handleSearchableDropdownAnswer(question.id, optionId)}
+                        language={language}
+                      />
                     </div>
                   )}
                 </div>
@@ -1515,22 +1697,22 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 1 && parseInt(id) <= 4).length < 4}
+                  disabled={Object.keys(getCurrentAnswers()).length < 4}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showSecondPage ? (
-            // 第2页: ID 5-15，标题"I. About Professional Work / 关于职业工作"
+            // 第2页: About Professional Work & Teamwork (questions 6-16)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
-                  ? 'I. About Professional Work' 
-                  : 'I. 关于职业工作'}
+                  ? 'I. About Professional Work & Teamwork' 
+                  : 'I. 关于职业工作与团队合作'}
               </h1>
               
-              {questions.slice(4, 15).map((question) => (
+              {questions.slice(5, 16).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1578,13 +1760,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1614,14 +1796,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 5 && parseInt(id) <= 15).length < 11}
+                  disabled={Object.keys(getCurrentAnswers()).length < 11}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showThirdPage ? (
-            // 第3页: ID 16-30，标题"II. About Us, CHON / 关于我们"
+            // 第3页: About Us, CHON (questions 17-31)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -1629,7 +1811,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'II. 关于我们'}
               </h1>
               
-              {questions.slice(15, 30).map((question) => (
+              {questions.slice(16, 31).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1677,13 +1859,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1713,14 +1895,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 添加自动滚动功能
                     setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 16 && parseInt(id) <= 30).length < 15}
+                  disabled={Object.keys(getCurrentAnswers()).length < 15}
                 >
                   {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
             </div>
           ) : showFourthPage ? (
-            // 第4页: ID 31-41，标题"III. About Motherhood / 关于母亲"
+            // 第4页: About Motherhood (questions 32-42)
             <div className="first-page-questions">
               <h1 className="section-title">
                 {language === 'en' 
@@ -1728,7 +1910,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'III. 关于母亲'}
               </h1>
               
-              {questions.slice(30, 41).map((question) => (
+              {questions.slice(31, 42).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1776,13 +1958,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         <div className="scale-extreme-labels">
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.minEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.minZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                           <span className="scale-extreme-label">
                             {language === 'en' 
-                              ? question.scaleLabels?.maxEn.split(' – ').map((part, i) => <span key={i}>{part}</span>) 
-                              : question.scaleLabels?.maxZh.split(' – ').map((part, i) => <span key={i}>{part}</span>)}
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
                           </span>
                         </div>
                       </div>
@@ -1810,7 +1992,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     // 完成问卷并跳转到结果页面
                     finishQuestionnaire();
                   }}
-                  disabled={Object.keys(getCurrentAnswers()).filter(id => parseInt(id) >= 31 && parseInt(id) <= 41).length < 11}
+                  disabled={Object.keys(getCurrentAnswers()).length < 11}
                 >
                   {language === 'en' ? 'Finish' : '完成'}
                 </button>
@@ -1868,12 +2050,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       // 对于单一问卷
       const questions = questionnaires[activeQuestionnaire].questions;
       const currentQuestionnaire = questionnaires[activeQuestionnaire];
-      // 使用uniqueIdMapping（如果存在）
+      // 直接使用问题ID，无需映射
       allResponses = prepareQuestionResponses(
         activeQuestionnaire, 
         questions, 
-        answers,
-        currentQuestionnaire.uniqueIdMapping
+        answers
       );
     }
     
@@ -2114,16 +2295,45 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
 
   // 在多个地方复用的问题文本渲染函数
   const renderQuestionText = (question: Question) => {
+    // Apply conditional modifications if they exist
+    let questionText = language === 'en' ? question.textEn : question.textZh;
+    
+    // Check for conditional modifications in mother questionnaire
+    if (activeQuestionnaire === 'mother' && question.unifiedId) {
+      const config = questionnaireConfigs.mother;
+      const conditionalMods = config.conditionalModifications?.[question.unifiedId];
+      
+      if (conditionalMods) {
+        // Check each conditional modification
+        for (const condMod of conditionalMods) {
+          // Find the local question ID for the condition question
+          const conditionQuestionIndex = config.questionIds.indexOf(condMod.condition.questionId);
+          if (conditionQuestionIndex !== -1) {
+            const conditionQuestionId = `mother_${conditionQuestionIndex + 1}`;
+            const userAnswer = getCurrentAnswers()[conditionQuestionId];
+            
+            // If condition matches, apply the modification
+            if (userAnswer === condMod.condition.answer) {
+              questionText = language === 'en' 
+                ? condMod.modifications.textEn || questionText
+                : condMod.modifications.textZh || questionText;
+              break; // Use first matching condition
+            }
+          }
+        }
+      }
+    }
+    
     return (
       <h2 className="question-text">
-        {language === 'en' ? question.textEn : question.textZh}
+        {questionText}
         {/* 标签不再前端显示，但数据仍保留在question对象中用于后续分析 */}
       </h2>
     );
   };
 
   // 当用户回答问题时，更新相应标签的得分
-  const updateTagScores = (questionId: number, value: string) => {
+  const updateTagScores = (questionId: string, value: string) => {
     const question = getCurrentQuestions().find(q => q.id === questionId);
     if (!question || !question.tags || question.tags.length === 0) return;
     
@@ -2151,7 +2361,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     const newTagScores = {...tagScores};
     
     // 创建问题ID到分数的映射
-    const questionScoreMap: Record<string, Record<number, number>> = {};
+    const questionScoreMap: Record<string, Record<string, number>> = {};
     
     // 从localStorage加载现有的问题ID-分数映射
     question.tags.forEach(tag => {

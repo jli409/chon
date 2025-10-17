@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 // 问卷类型定义
 export type QuestionnaireType = 'mother' | 'corporate' | 'other' | 'both';
-export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question';
+export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question' | 'multi-select' | 'searchable-dropdown' | 'text-with-unit';
 
 // 回答格式定义
 export interface QuestionResponse {
@@ -80,27 +80,22 @@ export const saveAllQuestionResponses = async (responses: QuestionResponse[]): P
  */
 export const prepareQuestionResponses = (
   questionnaireType: QuestionnaireType,
-  questions: Array<{id: number, type: QuestionType}>,
-  answers: Record<number, string>,
-  uniqueIdMapping?: Record<string, number>
+  questions: Array<{id: string, type: QuestionType}>,
+  answers: Record<string, string>
 ): QuestionResponse[] => {
   const responses: QuestionResponse[] = [];
   
   for (const [questionId, value] of Object.entries(answers)) {
     // 查找问题以获取其类型
-    const question = questions.find(q => q.id === parseInt(questionId));
+    const question = questions.find(q => q.id === questionId);
     if (question) {
-      // 使用uniqueIdMapping如果存在
-      let mappingKey = `${questionnaireType} ${questionId}`;
+      // 从问题ID中提取数字部分作为原始问题ID
+      const originalQuestionId = parseInt(questionId.split('_')[1]) || 0;
       
-      const mappedId = uniqueIdMapping ? 
-        uniqueIdMapping[mappingKey] || parseInt(questionId) :
-        parseInt(questionId);
-        
       responses.push({
         questionnaire_type: questionnaireType,
-        question_id: mappedId,
-        original_question_id: parseInt(questionId),
+        question_id: questionId,
+        original_question_id: originalQuestionId,
         question_type: question.type,
         response_value: value
       });
