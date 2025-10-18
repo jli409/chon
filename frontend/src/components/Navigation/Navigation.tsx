@@ -1,10 +1,11 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import routes from '../../router.ts';
 import './Navigation.css';
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const { t } = useLanguage();
 
@@ -28,6 +29,23 @@ const Navigation = () => {
     return currentPath === path || currentPath.startsWith(`${path}/`);
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string, routeName: string) => {
+    // If clicking on Personality Test and results exist, go to Results page instead
+    if (routeName === 'PERSONALITY TEST') {
+      const hasResults = localStorage.getItem('tagStats');
+      console.log('Navigation clicked: Personality Test');
+      console.log('Checking for test results:', hasResults ? 'Found' : 'Not found');
+      console.log('localStorage tagStats:', hasResults);
+      if (hasResults) {
+        console.log('Redirecting to results page...');
+        e.preventDefault();
+        navigate('/results');
+        return;
+      }
+      console.log('No results found, proceeding to personality test');
+    }
+  };
+
   const navRoutes = routes.filter(route => route.showInNav !== false);
 
   return (
@@ -37,6 +55,7 @@ const Navigation = () => {
           key={route.path}
           to={route.path}
           className={`nav-link ${isActive(route.path) ? 'active' : ''}`}
+          onClick={(e) => handleNavClick(e, route.path, route.name)}
         >
           {getTranslatedName(route.name)}
         </Link>

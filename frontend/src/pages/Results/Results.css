@@ -406,6 +406,50 @@
   font-weight: bold;
 }
 
+/* Floating Create Account Button */
+.floating-create-account-button {
+  position: fixed;
+  bottom: 7rem;
+  left: 50%;
+  transform: translateX(-50%) !important;
+  padding: 0.7rem 1.75rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  font-family: 'Kaisei Decol', serif;
+  color: white;
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 999;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  animation: slideInUp 0.8s ease-out 2s forwards;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.floating-create-account-button:hover {
+  background-color: #F0BDC0;
+  color: black;
+  border-color: #F0BDC0;
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+
+.floating-create-account-button:active {
+  background-color: white;
+  color: black;
+  border-color: white;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+/* 中文文本的按钮样式 */
+.floating-create-account-button:lang(zh) {
+  font-family: 'Alike Angular', serif !important;
+  letter-spacing: 2px;
+}
+
 /* 底部的dock样式 */
 .character-cards-dock {
   position: fixed !important;
@@ -701,11 +745,11 @@
   }
 
   .character-portrait {
-    max-width: 150px;
+    max-width: 280px;
   }
   
   .svg-hexagon-chart {
-    max-width: 300px;
+    max-width: 200px;
     padding: 0.6rem;
   }
 
@@ -733,6 +777,13 @@
   .result-value {
     font-size: 0.8rem;
     width: 35px;
+  }
+  
+  .floating-create-account-button {
+    bottom: 5rem;
+    padding: 0.56rem 1.05rem;
+    font-size: 0.63rem;
+    letter-spacing: 0.2em;
   }
 
   .character-name {
@@ -1077,6 +1128,7 @@
 
 @media (max-width: 480px) {
   .svg-hexagon-chart {
+    max-width: 200px;
     padding: 0.5rem;
     margin-top: 2rem;
     margin-bottom: 2rem;

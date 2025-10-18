@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './Results.css';
 
@@ -487,6 +488,7 @@ const FancyLoader: React.FC = () => {
 
 const Results: React.FC = () => {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [tagScores, setTagScores] = useState<Record<string, number>>({});
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [cards, setCards] = useState<CardData[]>([]);
@@ -941,6 +943,14 @@ const Results: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Floating Create Account Button */}
+      <button 
+        className="floating-create-account-button"
+        onClick={() => navigate('/login', { state: { mode: 'register' } })}
+      >
+        {language === 'en' ? 'Create Account' : '创建账户'}
+      </button>
       
       {/* 将角色卡片Dock作为独立元素，不嵌套在其他容器中 */}
       <div id="character-dock-container" style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 1000, pointerEvents: 'none' }}>

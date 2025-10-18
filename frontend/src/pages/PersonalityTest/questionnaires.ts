@@ -26,6 +26,10 @@ export interface Question {
   options?: Option[];
   scaleLabels?: ScaleLabels;
   tags?: string[];
+  conditionalTags?: {
+    male?: string[];
+    female?: string[];
+  };
   multiple?: boolean;
   unifiedId?: number; // Reference to the unified question ID for conditional logic
 }
@@ -440,7 +444,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Policies & Command', zh: '政策和指挥' },
       right: { en: 'Individual\'s ability', zh: '个人能力' }
-    }
+    },
+    tags: ['objectivity']
   },
   14: {
     id: '14',
@@ -450,7 +455,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not organized', zh: '缺乏组织性' },
       right: { en: 'Very well-organized', zh: '组织性强' }
-    }
+    },
+    tags: ['objectivity']
   },
   15: {
     id: '15',
@@ -460,7 +466,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Very poor – Lack communication & efficiency', zh: '非常差 — 缺乏沟通和效率' },
       right: { en: 'Excellent – Great communication & efficiency', zh: '非常好 — 极好的沟通并高效' }
-    }
+    },
+    tags: ['objectivity', 'socialIntelligence']
   },
   16: {
     id: '16',
@@ -470,7 +477,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Very poor – significant challenges', zh: '非常差 – 极大挑战' },
       right: { en: 'Excellent – effective and trusted', zh: '非常好 – 有效、可信' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   17: {
     id: '17',
@@ -480,7 +488,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Very poor – insufficient understanding', zh: '非常差 – 不充分了解' },
       right: { en: 'Excellent – exceeds expectations', zh: '非常好 – 超出预期' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   18: {
     id: '18',
@@ -490,7 +499,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Extremely important', zh: '极其重要' }
-    }
+    },
+    tags: ['objectivity', 'dedication']
   },
   19: {
     id: '19',
@@ -500,7 +510,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Extremely important', zh: '极其重要' }
-    }
+    },
+    tags: ['socialIntelligence', 'dedication']
   },
   20: {
     id: '20',
@@ -510,7 +521,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not recognized at all', zh: '完全不认可' },
       right: { en: 'Highly recognized and utilized', zh: '高度认可和利用' }
-    }
+    },
+    tags: ['dedication']
   },
   21: {
     id: '21',
@@ -520,6 +532,10 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'No, one is significantly less supported', zh: '不是，其一得到的很少同等支持' },
       right: { en: 'Yes, equally supported', zh: '是的，都得到了平等支持' }
+    },
+    conditionalTags: {
+      male: ['objectivity'],
+      female: ['selfAwareness']
     }
   },
   22: {
@@ -530,6 +546,10 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Very important', zh: '非常重要' }
+    },
+    conditionalTags: {
+      male: ['dedication'],
+      female: ['selfAwareness']
     }
   },
   23: {
@@ -540,6 +560,10 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not supportive at all', zh: '完全不支持' },
       right: { en: 'Highly supportive', zh: '高度支持' }
+    },
+    conditionalTags: {
+      male: ['dedication'],
+      female: ['selfAwareness']
     }
   },
   24: {
@@ -550,7 +574,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not at all', zh: '完全不使用' },
       right: { en: 'Very effectively', zh: '非常有效地使用' }
-    }
+    },
+    tags: ['objectivity']
   },
   25: {
     id: '25',
@@ -574,7 +599,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not well – no link with emotions', zh: '完全不行 – 毫无关系' },
       right: { en: 'Extremely well – very effective', zh: '非常好 – 极其有效' }
-    }
+    },
+    tags: ['objectivity', 'emotionalRegulation']
   },
   27: {
     id: '27',
@@ -584,7 +610,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Strongly disagree', zh: '非常不需要' },
       right: { en: 'Strongly agree', zh: '非常需要' }
-    }
+    },
+    tags: ['objectivity']
   },
   28: {
     id: '28',
@@ -594,7 +621,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not valuable', zh: '毫无价值' },
       right: { en: 'Extremely valuable', zh: '极具价值' }
-    }
+    },
+    tags: ['dedication']
   },
   29: {
     id: '29',
@@ -604,7 +632,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not valuable', zh: '毫无价值' },
       right: { en: 'Highly valuable', zh: '极具价值' }
-    }
+    },
+    tags: ['dedication']
   },
   30: {
     id: '30',
@@ -614,7 +643,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not valuable', zh: '毫无价值' },
       right: { en: 'Extremely beneficial', zh: '极其有益' }
-    }
+    },
+    tags: ['dedication']
   },
   31: {
     id: '31',
@@ -624,7 +654,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not valuable', zh: '毫无价值' },
       right: { en: 'Extremely valuable', zh: '极具价值' }
-    }
+    },
+    tags: ['dedication']
   },
   32: {
     id: '32',
@@ -634,7 +665,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not valuable', zh: '毫无价值' },
       right: { en: 'Extremely valuable', zh: '极具价值' }
-    }
+    },
+    tags: ['objectivity']
   },
   33: {
     id: '33',
@@ -644,7 +676,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not engaging', zh: '毫无价值' },
       right: { en: 'Very engaging', zh: '极具价值' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   34: {
     id: '34',
@@ -654,7 +687,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important', zh: '毫无价值' },
       right: { en: 'Extremely important', zh: '极具价值' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   35: {
     id: '35',
@@ -664,7 +698,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not valuable', zh: '毫无必要' },
       right: { en: 'Extremely helpful', zh: '极具价值' }
-    }
+    },
+    tags: ['dedication']
   },
   36:{
     id: '36',
@@ -674,7 +709,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'AI brings new challenges ahead', zh: '带来全新挑战' },
       right: { en: 'AI revolutionizes support for parents', zh: '革新对父母的支持' }
-    }
+    },
+    tags: ['objectivity']
   },
   37:{
     id: '37',
@@ -684,7 +720,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not beneficial', zh: '毫无价值' },
       right: { en: 'Extremely beneficial', zh: '极具价值' }
-    }
+    },
+    tags: ['emotionalRegulation']
   },
   38: {
     id: '38',
@@ -694,7 +731,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Strongly oppose – utterly invasive', zh: '强烈反对 – 违反隐私' },
       right: { en: 'Strongly support – ensures safety and trust', zh: '强烈支持 – 保障安全的基础' }
-    }
+    },
+    tags: ['objectivity']
   },
   39: {
     id: '39',
@@ -714,7 +752,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Strongly oppose', zh: '强烈反对' },
       right: { en: 'Strongly support', zh: '强烈支持' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   41: {
     id: '41',
@@ -724,7 +763,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Extremely important', zh: '极其重要' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   42: {
     id: '42',
@@ -734,7 +774,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Extremely important', zh: '极其重要' }
-    }
+    },
+    tags: ['coreEndurance']
   },
   43: {
     id: '43',
@@ -744,7 +785,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Extremely important', zh: '极其重要' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   44: {
     id: '44',
@@ -754,7 +796,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Not important at all', zh: '完全不重要' },
       right: { en: 'Extremely important', zh: '极其重要' }
-    }
+    },
+    tags: ['objectivity', 'dedication']
   },
   45: {
     id: '45',
@@ -764,7 +807,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Never', zh: '从未' },
       right: { en: 'Yes, frequently', zh: '是的，经常' }
-    }
+    },
+    tags: ['objectivity', 'dedication']
   },
   46: {
     id: '46',
@@ -774,7 +818,8 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'No influence', zh: '没有影响' },
       right: { en: 'Significantly changed it for the better', zh: '显著改善' }
-    }
+    },
+    tags: ['dedication']
   },
   47: {
     id: '47',
@@ -784,17 +829,19 @@ export const unifiedQuestions: Record<number, Question> = {
         scaleLabels: {
       left: { en: 'Negatively', zh: '负面影响' },
       right: { en: 'Positively', zh: '积极影响' }
-    }
+    },
+    tags: ['dedication']
   },
   48: {
     id: '48',
     type: 'scale-question',
-    textEn: 'How does your company integrate mothers’ leadership qualities into its pipeline?',
+    textEn: 'How does your company integrate mothers\' leadership qualities into its pipeline?',
     textZh: '您所在的公司如何在建设中融入母亲的领导力特质？',
     scaleLabels: {
       left: { en: 'Poorly', zh: '不太融入' },
       right: { en: 'Very well', zh: '非常融入' }
-    }
+    },
+    tags: ['dedication']
   },
   49: {
     id: '49',
@@ -804,7 +851,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not at all', zh: '完全不关注' },
       right: { en: 'Very much', zh: '非常关注' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   50: {
     id: '50',
@@ -814,17 +862,19 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not equipped at all', zh: '完全不识别' },
       right: { en: 'Very equipped', zh: '非常识别' }
-    }
+    },
+    tags: ['emotionalRegulation', 'dedication']
   },
   51: {
     id: '51',
     type: 'scale-question',
-    textEn: 'Does your mother’s role influence your understanding of leadership in childhood?',
+    textEn: 'Does your mother\'s role influence your understanding of leadership in childhood?',
     textZh: '您的母亲是否影响了童年时期您对领导力的认知？',
     scaleLabels: {
       left: { en: 'Not at all', zh: '没有影响' },
       right: { en: 'Very strongly', zh: '非常深远' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   52: {
     id: '52',
@@ -914,7 +964,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not involved at all', zh: '完全无参与' },
       right: { en: 'Very involved', zh: '非常投入' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   60: {
     id: '60',
@@ -934,7 +985,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not connected – motherhood is full priority', zh: '完全不强 – 母亲角色优先' },
       right: { en: 'Very connected – profession is important', zh: '非常强 – 职业身份很重要' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   62: {
     id: '62',
@@ -954,7 +1006,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not capable of being supported', zh: '完全不能被支持' },
       right: { en: 'Extremely supported', zh: '非常能被支持' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   64: {
     id: '64',
@@ -964,7 +1017,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Very negative', zh: '非常负面' },
       right: { en: 'Very positive', zh: '非常积极' }
-    }
+    },
+    tags: ['emotionalRegulation']
   },
   65: {
     id: '65',
@@ -974,7 +1028,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Much less', zh: '抗压能力减弱' },
       right: { en: 'Much more', zh: '抗压能力增强' }
-    }
+    },
+    tags: ['emotionalRegulation']
   },
   66: {
     id: '66',
@@ -984,7 +1039,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not motivated at all', zh: '完全没有' },
       right: { en: 'Very motivated', zh: '非常强' }
-    }
+    },
+    tags: ['coreEndurance']
   },
   67: {
     id: '67',
@@ -994,7 +1050,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Very disatisfied', zh: '非常不满意' },
       right: { en: 'Very satisfied', zh: '非常满意' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   68: {
     id: '68',
@@ -1004,7 +1061,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Never', zh: '从不' },
       right: { en: 'Always', zh: '总是' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   69: {
     id: '69',
@@ -1014,7 +1072,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Very disconnected', zh: '非常弱' },
       right: { en: 'Very connected', zh: '非常强' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   70: {
     id: '70',
@@ -1024,7 +1083,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Never', zh: '从不' },
       right: { en: 'Always', zh: '总是' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   71: {
     id: '71',
@@ -1034,7 +1094,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not valuable at all', zh: '毫无价值' },
       right: { en: 'Extremely valuable', zh: '极具价值' }
-    }
+    },
+    tags: ['selfAwareness']
   }, 
   72: {
     id: '72',
@@ -1044,7 +1105,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not helpful at all', zh: '毫无帮助' },
       right: { en: 'Extremely helpful', zh: '极具帮助' }
-    }
+    },
+    tags: ['objectivity']
   },
   73: {
     id: '73',
@@ -1054,7 +1116,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'Not prepared at all', zh: '完全没有准备' },
       right: { en: 'Very prepared', zh: '非常充分' }
-    }
+    },
+    tags: ['coreEndurance']
   },
   74: {
     id: '74',
@@ -1064,7 +1127,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Completely', zh: '完全改变' },
       right: { en: 'E) No change', zh: '没有改变' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   75: {
     id: '75',
@@ -1074,7 +1138,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Not supported at all', zh: '完全没有支持' },
       right: { en: 'E) Extremely supported', zh: '非常支持' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   76: {
     id: '76',
@@ -1084,7 +1149,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) No emotion at all', zh: '完全没有支持' },
       right: { en: 'E) Extremely fulfilling', zh: '非常满足' }
-    }
+    },
+    tags: ['dedication']
   },
   77: {
     id: '77',
@@ -1094,7 +1160,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Much weaker', zh: '明显减弱' },
       right: { en: 'E) Much stronger', zh: '显著增强' }
-    }
+    },
+    tags: ['emotionalRegulation']
   },
   78: {
     id: '78',
@@ -1104,7 +1171,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Significantly weakened', zh: '显著减弱' },
       right: { en: 'E) Improved greatly', zh: '显著提升' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   79: {
     id: '79',
@@ -1114,7 +1182,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Always', zh: '总是' },
       right: { en: 'E) Never', zh: '从不' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   80: {
     id: '80',
@@ -1124,7 +1193,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Very dissatisfied', zh: '非常不满意' },
       right: { en: 'E) Very satisfied', zh: '非常满意' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   81: {
     id: '81',
@@ -1134,7 +1204,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Not supportive at all', zh: '完全不重视' },
       right: { en: 'E) Very supportive', zh: '非常重视' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   82: {
     id: '82',
@@ -1154,7 +1225,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Never', zh: '从未' },
       right: { en: 'E) Very frequently', zh: '非常频繁' }
-    }
+    },
+    tags: ['dedication']
   },
   84: {
     id: '84',
@@ -1164,7 +1236,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Do not engage in offering support', zh: '基本不提供支持' },
       right: { en: 'E) Frequently offer support', zh: '经常主动给予支持' }
-    }
+    },
+    tags: ['dedication']
   },
   85: {
     id: '85',
@@ -1174,7 +1247,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Never', zh: '几乎从未被认可' },
       right: { en: 'E) Always', zh: '总是被认可' }
-    }
+    },
+    tags: ['selfAwareness']
   },
   86: {
     id: '86',
@@ -1184,7 +1258,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Does not at all', zh: '几乎没有' },
       right: { en: 'E) Strongly across all levels', zh: '在所有层面都出色' }
-    }
+    },
+    tags: ['objectivity', 'dedication']
   },
   87: {
     id: '87',
@@ -1194,7 +1269,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Very uncomfortable', zh: '很不愿意' },
       right: { en: 'E) Very comfortable', zh: '非常自然' }
-    }
+    },
+    tags: ['emotionalRegulation', 'socialIntelligence']
   },
   88: {
     id: '88',
@@ -1204,7 +1280,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Not important at all', zh: '几乎不重要' },
       right: { en: 'E) Extremely important', zh: '非常重要' }
-    }
+    },
+    tags: ['socialIntelligence']
   },
   89: {
     id: '89',
@@ -1214,7 +1291,8 @@ export const unifiedQuestions: Record<number, Question> = {
     scaleLabels: {
       left: { en: 'A) Never', zh: '从未' },
       right: { en: 'E) Very often', zh: '经常' }
-    }
+    },
+    tags: ['emotionalRegulation']
   },
 };
 
