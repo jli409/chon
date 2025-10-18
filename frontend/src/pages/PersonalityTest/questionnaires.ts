@@ -456,7 +456,7 @@ export const unifiedQuestions: Record<number, Question> = {
       left: { en: 'Not organized', zh: '缺乏组织性' },
       right: { en: 'Very well-organized', zh: '组织性强' }
     },
-    tags: ['objectivity']
+    tags: ['objectivity', 'coreEndurance']
   },
   15: {
     id: '15',
@@ -464,8 +464,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'What\'s your team\'s level of communication and collaboration?',
     textZh: '您的团队的沟通与协作水平如何？',
         scaleLabels: {
-      left: { en: 'Very poor – Lack communication & efficiency', zh: '非常差 — 缺乏沟通和效率' },
-      right: { en: 'Excellent – Great communication & efficiency', zh: '非常好 — 极好的沟通并高效' }
+      left: { en: 'Very poor', zh: '非常差' },
+      right: { en: 'Excellent', zh: '非常好' }
     },
     tags: ['objectivity', 'socialIntelligence']
   },
@@ -475,8 +475,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'What\'s your experience in establishing trust with business partners?',
     textZh: '您与客户建立信任的经历如何？',
         scaleLabels: {
-      left: { en: 'Very poor – significant challenges', zh: '非常差 – 极大挑战' },
-      right: { en: 'Excellent – effective and trusted', zh: '非常好 – 有效、可信' }
+      left: { en: 'Very poor', zh: '非常差' },
+      right: { en: 'Excellent', zh: '非常好' }
     },
     tags: ['socialIntelligence']
   },
@@ -486,8 +486,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Is your team effective at understanding client or market needs?',
     textZh: '贵司在理解客户或市场方面如何？',
         scaleLabels: {
-      left: { en: 'Very poor – insufficient understanding', zh: '非常差 – 不充分了解' },
-      right: { en: 'Excellent – exceeds expectations', zh: '非常好 – 超出预期' }
+      left: { en: 'Very poor', zh: '非常差' },
+      right: { en: 'Excellent', zh: '非常好' }
     },
     tags: ['socialIntelligence']
   },
@@ -583,12 +583,12 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'For the personality test result, we ask you to imagine yourself as the god or goddess of the business world... If you could change or create one thing, what would it be?',
     textZh: '关于性格测试结果，我们请您将自己想象成商界的创造神... 如果您可以创造或改变以下任何一件事，您会选择什么？',
         options: [
-      { id: 'prometheus', textEn: 'Redistribute all corporate shares so that every individual owns a piece of every business', textZh: '重新分配所有企业股份，让每个人都拥有每家企业的一部分' },
-      { id: 'wukong', textEn: 'Create 72 versions of yourself, each mastering a different industry', textZh: '创造72个版本的自己，每个都精通不同的行业' },
-      { id: 'odin', textEn: 'Transform into an omnipotent prophet that predicts and controls moves of everyone in the business world', textZh: '转变为全能的预言家，预测并控制商界每个人的行动' },
-      { id: 'venus', textEn: 'Imbue every product with divine allure, making it irresistible to all', textZh: '为每个产品注入神圣的魅力，使其对所有人都有不可抗拒的吸引力' },
-      { id: 'nuwa', textEn: 'Reconstruct the entire economic system to achieve absolute perfection and sustainability', textZh: '重建整个经济体系，实现绝对的完美和可持续性' },
-      { id: 'athena', textEn: 'Ensure that no matter what happens, I can always come up with a plan to stay ahead and outmaneuver my competitors', textZh: '确保无论发生什么，我总能想出计划来保持领先并超越竞争对手' }
+      { id: 'A', textEn: 'Redistribute all corporate shares so that every individual owns a piece of every business', textZh: '重新分配所有企业股份，让每个人都拥有每家企业的一部分' },
+      { id: 'B', textEn: 'Create 72 versions of yourself, each mastering a different industry', textZh: '创造72个版本的自己，每个都精通不同的行业' },
+      { id: 'C', textEn: 'Transform into an omnipotent prophet that predicts and controls moves of everyone in the business world', textZh: '转变为全能的预言家，预测并控制商界每个人的行动' },
+      { id: 'D', textEn: 'Imbue every product with divine allure, making it irresistible to all', textZh: '为每个产品注入神圣的魅力，使其对所有人都有不可抗拒的吸引力' },
+      { id: 'E', textEn: 'Reconstruct the entire economic system to achieve absolute perfection and sustainability', textZh: '重建整个经济体系，实现绝对的完美和可持续性' },
+      { id: 'F', textEn: 'Ensure that no matter what happens, I can always come up with a plan to stay ahead and outmaneuver my competitors', textZh: '确保无论发生什么，我总能想出计划来保持领先并超越竞争对手' }
     ]
   },
   26: {
@@ -597,8 +597,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Does logical thinking address emotional and life concerns?',
     textZh: '逻辑思维是否解决情感和生活问题？',
         scaleLabels: {
-      left: { en: 'Not well – no link with emotions', zh: '完全不行 – 毫无关系' },
-      right: { en: 'Extremely well – very effective', zh: '非常好 – 极其有效' }
+      left: { en: 'Not well', zh: '完全不行' },
+      right: { en: 'Extremely well', zh: '非常好' }
     },
     tags: ['objectivity', 'emotionalRegulation']
   },
@@ -729,8 +729,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Is a confidential child health-related record needed to verify mothers\' identity?',
     textZh: '是否需要一份与儿童健康相关的保密记录来核实母亲的身份？',
         scaleLabels: {
-      left: { en: 'Strongly oppose – utterly invasive', zh: '强烈反对 – 违反隐私' },
-      right: { en: 'Strongly support – ensures safety and trust', zh: '强烈支持 – 保障安全的基础' }
+      left: { en: 'Strongly oppose', zh: '强烈反对' },
+      right: { en: 'Strongly support', zh: '强烈支持' }
     },
     tags: ['objectivity']
   },
@@ -740,8 +740,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Does misuse by unintended users negatively affect trust?',
     textZh: '非目标用户滥用该平台是否会对信任度产生负面影响？',
         scaleLabels: {
-      left: { en: 'Definitely no – no trust risk', zh: '绝对不 – 完全无风险' },
-      right: { en: 'Definitely yes – severely undermines trust', zh: '绝对会 – 严重破坏信任' }
+      left: { en: 'Definitely no', zh: '绝对不' },
+      right: { en: 'Definitely yes', zh: '绝对会' }
     }
   },
   40: {
@@ -983,8 +983,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'How connected are you to your professional identity?',
     textZh: '您对自己的职业身份感有多强？',
     scaleLabels: {
-      left: { en: 'Not connected – motherhood is full priority', zh: '完全不强 – 母亲角色优先' },
-      right: { en: 'Very connected – profession is important', zh: '非常强 – 职业身份很重要' }
+      left: { en: 'Not connected', zh: '完全不强' },
+      right: { en: 'Very connected', zh: '非常强' }
     },
     tags: ['selfAwareness']
   },
@@ -1029,7 +1029,7 @@ export const unifiedQuestions: Record<number, Question> = {
       left: { en: 'Much less', zh: '抗压能力减弱' },
       right: { en: 'Much more', zh: '抗压能力增强' }
     },
-    tags: ['emotionalRegulation']
+    tags: ['emotionalRegulation', 'coreEndurance']
   },
   66: {
     id: '66',
@@ -1161,7 +1161,7 @@ export const unifiedQuestions: Record<number, Question> = {
       left: { en: 'A) Much weaker', zh: '明显减弱' },
       right: { en: 'E) Much stronger', zh: '显著增强' }
     },
-    tags: ['emotionalRegulation']
+    tags: ['emotionalRegulation', 'coreEndurance']
   },
   78: {
     id: '78',
@@ -1213,9 +1213,10 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you build meaningful relationships through work?',
     textZh: '您在工作中是否有建立有意义的关系的机会？',
     scaleLabels: {
-      left: { en: 'A) None – mostly isolated interactions', zh: '没有 – 多为孤立互动' },
-      right: { en: 'E) A lot – strong connections', zh: '很多 – 多为良好关系' }
-    }
+      left: { en: 'A) None', zh: '没有' },
+      right: { en: 'E) A lot', zh: '很多' }
+    },
+    tags: ['socialIntelligence']
   },
   83: {
     id: '83',

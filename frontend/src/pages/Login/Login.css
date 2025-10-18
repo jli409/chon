@@ -219,6 +219,19 @@
   font-family: 'Alike Angular', serif;
 }
 
+.signup-link {
+  display: inline;
+}
+
+.signup-line1::after {
+  content: ' ';
+}
+
+.signup-line1,
+.signup-line2 {
+  display: inline;
+}
+
 @media (max-width: 1200px) {
   .login-container {
     padding: 3rem 4rem;
@@ -310,6 +323,16 @@
   .registration-form {
     max-width: 400px;
     gap: 0.8rem;
+  }
+  
+  .signup-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  
+  .signup-line1::after {
+    content: '';
   }
   
   .login-container .molecule-background {

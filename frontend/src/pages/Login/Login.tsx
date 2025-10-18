@@ -170,7 +170,7 @@ const Login = () => {
               </a>
               <a 
                 href="/personality-test" 
-                className="link-text"
+                className="link-text signup-link"
                 onClick={(e) => {
                   const hasResults = localStorage.getItem('tagStats');
                   if (hasResults) {
@@ -179,7 +179,12 @@ const Login = () => {
                   }
                 }}
               >
-                {language === 'en' ? "Don't have an account? Take the personality test" : '还没有账户？参加性格测试'}
+                <span className="signup-line1">
+                  {language === 'en' ? "Don't have an account?" : '还没有账户？'}
+                </span>
+                <span className="signup-line2">
+                  {language === 'en' ? "Take the personality test" : '参加性格测试'}
+                </span>
               </a>
             </div>
           ) : null}

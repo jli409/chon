@@ -972,6 +972,11 @@ const Results: React.FC = () => {
               <span className="dock-card-name">
                 {language === 'en' ? card.name.en : card.name.zh}
               </span>
+              {index === 0 && (
+                <span className="dock-card-you-label">
+                  {language === 'en' ? 'You' : '您'}
+                </span>
+              )}
             </div>
           ))}
         </div>

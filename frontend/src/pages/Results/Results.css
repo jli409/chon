@@ -69,11 +69,9 @@
   width: 100%;
   max-width: 400px;
   aspect-ratio: 1 / 1;
-  margin: 3rem auto;
+  margin: 0 auto;
   position: relative;
   padding: 1rem;
-  background-color: rgba(20, 20, 20, 0.5);
-  border-radius: 8px;
   animation: fadeInUp 0.8s ease-out 0.3s forwards;
   opacity: 0;
 }
@@ -409,7 +407,7 @@
 /* Floating Create Account Button */
 .floating-create-account-button {
   position: fixed;
-  bottom: 7rem;
+  bottom: 9rem;
   left: 50%;
   transform: translateX(-50%) !important;
   padding: 0.7rem 1.75rem;
@@ -422,7 +420,7 @@
   border-radius: 2px;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 999;
+  z-index: 1001;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   animation: slideInUp 0.8s ease-out 2s forwards;
@@ -547,6 +545,21 @@
   text-align: center;
   white-space: nowrap;
   pointer-events: none;
+}
+
+.dock-card-you-label {
+  font-size: 0.65rem;
+  color: #F0BDC0;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 0.2rem;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.dock-card-you-label:lang(zh) {
+  font-family: 'Alike Angular', serif;
 }
 
 /* 响应式设计 */
@@ -748,9 +761,15 @@
     max-width: 280px;
   }
   
+  .hexagon-chart {
+    max-width: 200px;
+    padding: 0.3rem;
+    margin: 1rem auto;
+  }
+  
   .svg-hexagon-chart {
     max-width: 200px;
-    padding: 0.6rem;
+    padding: 0.3rem;
   }
 
   .character-cards-dock {
@@ -780,7 +799,7 @@
   }
   
   .floating-create-account-button {
-    bottom: 5rem;
+    bottom: 6.5rem;
     padding: 0.56rem 1.05rem;
     font-size: 0.63rem;
     letter-spacing: 0.2em;
