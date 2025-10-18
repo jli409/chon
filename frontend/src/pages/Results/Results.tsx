@@ -793,6 +793,27 @@ const Results: React.FC = () => {
       }
     });
 
+    // 核心耐力单独计算
+    const otherTags = ['selfAwareness', 'dedication', 'socialIntelligence', 'emotionalRegulation', 'objectivity'];
+    const validScores = otherTags.map(tag => userScores[tag]).filter(v => typeof v === 'number');
+    if (validScores.length === 5) {
+      const avg = validScores.reduce((a, b) => a + b, 0) / 5;  // 平均百分比
+      const coreStat = stats['核心耐力'];
+      if (!coreStat || typeof coreStat.scorePercentage !== 'number' || isNaN(coreStat.scorePercentage)) {
+        console.error('Invalid core endurance score detected:', coreStat);
+        return; // stop further processing
+      }
+      const baseCore = coreStat.scorePercentage;
+      let adjustedCore = baseCore;
+      
+      // 仅当平均值超过60时才增加核心耐力分数，每增加5点平均值，核心耐力加5点
+      if (avg > 60) {
+        adjustedCore += (avg - 60);
+      }
+      adjustedCore = Math.min(100, Math.max(0, adjustedCore)); // <= 100
+      userScores['coreEndurance'] = adjustedCore;
+    }
+
     setTagScores(userScores);
 
     // 匹配最佳符合的卡片并按匹配度排序
