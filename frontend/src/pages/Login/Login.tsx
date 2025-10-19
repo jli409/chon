@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import './Login.css';
@@ -19,6 +19,148 @@ const Login = () => {
     password: '',
     confirmPassword: ''
   });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mostFittedCharacter, setMostFittedCharacter] = useState<any>(null);
+
+  // Check if user is logged in and get most fitted character
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const hasAccount = localStorage.getItem('userAccount');
+      const hasResults = localStorage.getItem('tagStats');
+      
+      if (hasAccount && hasResults) {
+        setIsLoggedIn(true);
+        
+        // Get the most fitted character from results
+        const tagStats = JSON.parse(hasResults);
+        const cardsData = [
+          {
+            id: 'odin',
+            name: { en: 'Odin', zh: '奥丁' },
+            image: '/images/characters/odin.jpg',
+            tagRanges: {
+              selfAwareness: [80, 100],
+              dedication: [20, 50],
+              socialIntelligence: [30, 60],
+              emotionalRegulation: [20, 50],
+              objectivity: [60, 80],
+              coreEndurance: [0, 60]
+            }
+          },
+          {
+            id: 'wukong',
+            name: { en: 'Wukong', zh: '大圣' },
+            image: '/images/characters/wukong.jpg',
+            tagRanges: {
+              selfAwareness: [40, 60],
+              dedication: [0, 40],
+              socialIntelligence: [40, 70],
+              emotionalRegulation: [80, 100],
+              objectivity: [40, 60],
+              coreEndurance: [40, 60]
+            }
+          },
+          {
+            id: 'prometheus',
+            name: { en: 'Prometheus', zh: '普罗米修斯' },
+            image: '/images/characters/prometheus.jpg',
+            tagRanges: {
+              selfAwareness: [0, 40],
+              dedication: [80, 100],
+              socialIntelligence: [30, 60],
+              emotionalRegulation: [10, 50],
+              objectivity: [30, 70],
+              coreEndurance: [60, 80]
+            }
+          },
+          {
+            id: 'nuwa',
+            name: { en: 'Nüwa', zh: '女娲' },
+            image: '/images/characters/nuwa.jpg',
+            tagRanges: {
+              selfAwareness: [0, 40],
+              dedication: [50, 80],
+              socialIntelligence: [40, 60],
+              emotionalRegulation: [60, 80],
+              objectivity: [40, 60],
+              coreEndurance: [80, 100]
+            }
+          },
+          {
+            id: 'athena',
+            name: { en: 'Athena', zh: '雅典娜' },
+            image: '/images/characters/athena.jpg',
+            tagRanges: {
+              selfAwareness: [60, 80],
+              dedication: [0, 40],
+              socialIntelligence: [50, 70],
+              emotionalRegulation: [40, 60],
+              objectivity: [70, 100],
+              coreEndurance: [40, 60]
+            }
+          },
+          {
+            id: 'venus',
+            name: { en: 'Venus', zh: '维纳斯' },
+            image: '/images/characters/venus.jpg',
+            tagRanges: {
+              selfAwareness: [60, 80],
+              dedication: [40, 60],
+              socialIntelligence: [80, 100],
+              emotionalRegulation: [40, 70],
+              objectivity: [30, 60],
+              coreEndurance: [20, 50]
+            }
+          }
+        ];
+
+        // Calculate user scores and find best match
+        const tagMapping: Record<string, string> = {
+          '自我意识': 'selfAwareness',
+          '奉献精神': 'dedication',
+          '社交情商': 'socialIntelligence',
+          '情绪调节': 'emotionalRegulation',
+          '客观能力': 'objectivity',
+          '核心耐力': 'coreEndurance'
+        };
+
+        const userScores: Record<string, number> = {};
+        Object.keys(tagStats).forEach(tag => {
+          if (tagStats[tag] && typeof tagStats[tag].scorePercentage === 'number') {
+            const engKey = tagMapping[tag] || tag;
+            userScores[engKey] = tagStats[tag].scorePercentage;
+          }
+        });
+
+        // Find best match
+        let bestMatch = cardsData[0];
+        let bestScore = 0;
+
+        cardsData.forEach(card => {
+          let matchScore = 0;
+          Object.entries(card.tagRanges).forEach(([tag, range]) => {
+            const userScore = userScores[tag];
+            if (userScore !== undefined) {
+              if (userScore >= range[0] && userScore <= range[1]) {
+                matchScore++;
+              }
+            }
+          });
+          if (matchScore > bestScore) {
+            bestScore = matchScore;
+            bestMatch = card;
+          }
+        });
+
+        setMostFittedCharacter(bestMatch);
+      } else {
+        setIsLoggedIn(false);
+        setMostFittedCharacter(null);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -80,21 +222,94 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // TODO: Submit form data to backend
+      // Save account data to localStorage
+      localStorage.setItem('userAccount', JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        createdAt: new Date().toISOString()
+      }));
+      
       console.log('Form submitted:', formData);
       alert(language === 'en' ? 'Account created successfully!' : '账户创建成功！');
+      
+      // Redirect to results if test has been taken
+      const hasResults = localStorage.getItem('tagStats');
+      if (hasResults) {
+        navigate('/results');
+      } else {
+        navigate('/personality-test');
+      }
     }
+  };
+
+  const handleLogout = () => {
+    // Clear all user data
+    localStorage.removeItem('userAccount');
+    localStorage.removeItem('tagStats');
+    localStorage.removeItem('tagScores');
+    
+    // Clear question scores for all tags
+    const chineseTags = ['自我意识', '奉献精神', '社交情商', '情绪调节', '客观能力', '核心耐力'];
+    chineseTags.forEach(tag => {
+      localStorage.removeItem(`questionScores_${tag}`);
+    });
+    
+    setIsLoggedIn(false);
+    setMostFittedCharacter(null);
+    
+    // Redirect to personality test to restart
+    navigate('/personality-test');
   };
   
   return (
     <div className="login-container" lang={language}>
       <div className="molecule-background"></div>
       <div className="hexagon-pattern"></div>
-      <h1 lang={language}>
-        {mode === 'register' 
-          ? (language === 'en' ? 'Create Account' : '创建账户')
-          : (language === 'en' ? 'Login' : '登录')}
-      </h1>
+      
+      {isLoggedIn ? (
+        // Logged in state - show character and logout
+        <>
+          <h1 lang={language}>
+            {language === 'en' ? 'Welcome Back!' : '欢迎回来！'}
+          </h1>
+          <div className="login-content logged-in-content" lang={language}>
+            <div className="character-display">
+              <img 
+                src={mostFittedCharacter?.image} 
+                alt={language === 'en' ? mostFittedCharacter?.name?.en : mostFittedCharacter?.name?.zh}
+                className="character-image"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/images/characters/odin.jpg'; // fallback
+                }}
+              />
+              <h2 className="character-name">
+                {language === 'en' ? mostFittedCharacter?.name?.en : mostFittedCharacter?.name?.zh}
+              </h2>
+              <p className="character-description">
+                {language === 'en' 
+                  ? 'Your most fitted character from the personality test'
+                  : '您在性格测试中最匹配的角色'
+                }
+              </p>
+            </div>
+            <button 
+              type="button" 
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              {language === 'en' ? 'Logout' : '退出登录'}
+            </button>
+          </div>
+        </>
+      ) : (
+        // Not logged in state - show login/register form
+        <>
+          <h1 lang={language}>
+            {mode === 'register' 
+              ? (language === 'en' ? 'Create Account' : '创建账户')
+              : (language === 'en' ? 'Login' : '登录')}
+          </h1>
       <div className="login-content" lang={language}>
         <form className="registration-form" onSubmit={handleSubmit}>
           {/* Email Field */}
@@ -190,6 +405,8 @@ const Login = () => {
           ) : null}
         </form>
       </div>
+        </>
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { toEnglishTag, REVERSE_TAG_MAPPING } from '../../utils/tagUtils';
 import './Results.css';
 
 interface TagScore {
@@ -771,24 +772,14 @@ const Results: React.FC = () => {
       };
     };
 
-    // 中文标签映射到英文
-    const tagMapping: Record<string, string> = {
-      '自我意识': 'selfAwareness',
-      '奉献精神': 'dedication',
-      '社交情商': 'socialIntelligence',
-      '情绪调节': 'emotionalRegulation',
-      '客观能力': 'objectivity',
-      '核心耐力': 'coreEndurance'
-    };
-
     // 处理标签得分
     const stats = getTagStats();
     const userScores: Record<string, number> = {};
     
-    // 转换分数为百分比
+    // 使用集中定义的标签映射
     Object.keys(stats).forEach(tag => {
       if (stats[tag] && typeof stats[tag].scorePercentage === 'number') {
-        const engKey = tagMapping[tag] || tag;
+        const engKey = toEnglishTag(tag);
         userScores[engKey] = stats[tag].scorePercentage;
       }
     });

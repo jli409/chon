@@ -8,6 +8,14 @@ import SearchableDropdown from './SearchableDropdown.tsx';
 import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
 import { questionnaires, questionnaireConfigs, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
+import { 
+  scaleValueToPercentage, 
+  toChineseTag, 
+  calculateTagStats, 
+  countQuestionsPerTag,
+  CHINESE_TAGS,
+  type TagStats 
+} from '../../utils/tagUtils';
 import './styles/searchable-dropdown.css';
 
 // API Configuration
@@ -2342,16 +2350,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     // 对于量表问题，处理分数转换
     let score: number;
     if (question.type === 'scale-question') {
-      if (['A', 'B', 'C', 'D', 'E'].includes(value)) {
-        // 从"A"到"E"映射为1到5的分数
-        const scoreMap: Record<string, number> = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5};
-        score = scoreMap[value] || 0;
-      } else {
-        // 直接将数字字符串转换为数字
-        score = parseInt(value, 10) || 0;
-      }
-      
-      console.log(`问题 ${questionId} 的分数已转换: ${value} -> ${score}`);
+      score = scaleValueToPercentage(value);
+      console.log(`问题 ${questionId} 的分数已转换: ${value} -> ${score}%`);
     } else {
       // 对于多选题，暂时只记录选择了哪个选项，不计算分数
       score = 0;
@@ -2364,36 +2364,39 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     const questionScoreMap: Record<string, Record<string, number>> = {};
     
     // 从localStorage加载现有的问题ID-分数映射
-    question.tags.forEach(tag => {
-      const savedMap = localStorage.getItem(`questionScores_${tag}`);
+    question.tags.forEach(englishTag => {
+      const chineseTag = toChineseTag(englishTag);
+      if (!chineseTag) return;
+      
+      const savedMap = localStorage.getItem(`questionScores_${chineseTag}`);
       if (savedMap) {
         try {
-          questionScoreMap[tag] = JSON.parse(savedMap);
+          questionScoreMap[chineseTag] = JSON.parse(savedMap);
         } catch (e) {
-          console.error(`解析标签 ${tag} 的问题分数映射出错:`, e);
-          questionScoreMap[tag] = {};
+          console.error(`解析标签 ${chineseTag} 的问题分数映射出错:`, e);
+          questionScoreMap[chineseTag] = {};
         }
       } else {
-        questionScoreMap[tag] = {};
+        questionScoreMap[chineseTag] = {};
       }
       
       // 更新当前问题的分数
-      questionScoreMap[tag][questionId] = score;
+      questionScoreMap[chineseTag][questionId] = score;
       
       // 保存更新后的映射
-      localStorage.setItem(`questionScores_${tag}`, JSON.stringify(questionScoreMap[tag]));
+      localStorage.setItem(`questionScores_${chineseTag}`, JSON.stringify(questionScoreMap[chineseTag]));
       
       // 将所有问题的分数转换为数组
-      if (!newTagScores[tag]) {
-        newTagScores[tag] = [];
+      if (!newTagScores[chineseTag]) {
+        newTagScores[chineseTag] = [];
       }
       
       // 将问题分数映射的值填入数组
-      const scoreArray = Object.values(questionScoreMap[tag]);
-      newTagScores[tag] = scoreArray;
+      const scoreArray = Object.values(questionScoreMap[chineseTag]);
+      newTagScores[chineseTag] = scoreArray;
       
-      console.log(`更新标签 ${tag} 的分数，问题 ${questionId}: ${score}`);
-      console.log(`标签 ${tag} 的问题-分数映射:`, questionScoreMap[tag]);
+      console.log(`更新标签 ${chineseTag} 的分数，问题 ${questionId}: ${score}`);
+      console.log(`标签 ${chineseTag} 的问题-分数映射:`, questionScoreMap[chineseTag]);
     });
     
     setTagScores(newTagScores);
@@ -2409,53 +2412,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
 
   // 计算并保存每个标签的统计数据（总分、平均分、比例等）
   const calculateAndSaveTagStats = (currentTagScores: Record<string, number[]>) => {
-    // 定义标签统计数据结构
-    interface TagStats {
-      userScore: number;      // 用户实际得分
-      totalPossibleScore: number; // 标签总满分
-      scorePercentage: number;   // 得分比例
-      averageScore: number;    // 平均分
-      answeredQuestions: number; // 已回答问题数
-    }
-    
-    const tagStats: Record<string, TagStats> = {};
-    const allTags = ['自我意识', '奉献精神', '社交情商', '情绪调节', '客观能力', '核心耐力'];
-    
-    // 计算每个标签下有多少量表问题
-    const tagQuestionCounts: Record<string, number> = {};
     const questions = getCurrentQuestions();
     
-    questions.forEach(question => {
-      if (question.type === 'scale-question' && question.tags) {
-        question.tags.forEach(tag => {
-          if (!tagQuestionCounts[tag]) {
-            tagQuestionCounts[tag] = 0;
-          }
-          tagQuestionCounts[tag] += 1;
-        });
-      }
-    });
+    // 计算每个标签下有多少量表问题
+    const tagQuestionCounts = countQuestionsPerTag(questions);
     
     // 计算每个标签的统计数据
-    allTags.forEach(tag => {
-      const scores = currentTagScores[tag] || [];
-      // 只计算有效分数（大于0的分数）
-      const validScores = scores.filter(score => score > 0);
-      const userScore = validScores.reduce((sum, score) => sum + score, 0);
-      const answeredQuestions = validScores.length;
-      const totalPossibleQuestions = tagQuestionCounts[tag] || 0;
-      const totalPossibleScore = totalPossibleQuestions * 5; // 每个问题最高5分
-      const scorePercentage = totalPossibleScore > 0 ? (userScore / totalPossibleScore) * 100 : 0;
-      const averageScore = answeredQuestions > 0 ? userScore / answeredQuestions : 0;
-      
-      tagStats[tag] = {
-        userScore,
-        totalPossibleScore,
-        scorePercentage,
-        averageScore,
-        answeredQuestions
-      };
-    });
+    const tagStats = calculateTagStats(currentTagScores, tagQuestionCounts);
     
     // 保存标签统计数据到本地存储
     localStorage.setItem('tagStats', JSON.stringify(tagStats));
@@ -2483,12 +2446,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
 
   // 在useEffect中添加从localStorage读取标签得分和统计数据的代码
   useEffect(() => {
-    // 定义所有标签
-    const allTags = ['自我意识', '奉献精神', '社交情商', '情绪调节', '客观能力', '核心耐力'];
+    // 使用集中定义的标签
     const loadedTagScores: Record<string, number[]> = {};
     
     // 从问题分数映射中加载标签分数
-    allTags.forEach(tag => {
+    CHINESE_TAGS.forEach(tag => {
       const savedMap = localStorage.getItem(`questionScores_${tag}`);
       if (savedMap) {
         try {

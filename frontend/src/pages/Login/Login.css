@@ -2,8 +2,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 3rem 5rem;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   font-family: 'Kaisei Decol', 'Alike Angular', serif;
   position: relative;
@@ -62,6 +63,8 @@
   z-index: 1;
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.03);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .login-content p {
@@ -69,13 +72,78 @@
   line-height: 1.5;
 }
 
-/* Registration Form Styles */
+/* Logged In State Styles */
+.logged-in-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.character-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.character-image {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.character-name {
+  font-size: 2rem;
+  color: #F0BDC0;
+  margin: 0;
+  text-align: center;
+}
+
+.character-description {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin: 0;
+  max-width: 300px;
+}
+
+.logout-button {
+  padding: 0.7rem 1.75rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  font-family: 'Kaisei Decol', serif;
+  color: white;
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.logout-button:hover {
+  background-color: rgba(240, 189, 192, 0.1);
+  border-color: #F0BDC0;
+  color: #F0BDC0;
+}
+
+.logout-button:active {
+  background-color: rgba(240, 189, 192, 0.2);
+  border-color: #F0BDC0;
+  color: #F0BDC0;
+}
 .registration-form {
-  max-width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group {
@@ -199,7 +267,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  margin-top: 1.5rem;
+  margin-top: 0.8rem;
   align-items: center;
 }
 
@@ -284,7 +352,7 @@
   }
   
   .registration-form {
-    max-width: 600px;
+    max-width: 100%;
     gap: 1rem;
   }
 }
@@ -321,7 +389,7 @@
   }
   
   .registration-form {
-    max-width: 400px;
+    max-width: 100%;
     gap: 0.8rem;
   }
   

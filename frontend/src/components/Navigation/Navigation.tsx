@@ -30,19 +30,33 @@ const Navigation = () => {
   };
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string, routeName: string) => {
-    // If clicking on Personality Test and results exist, go to Results page instead
+    // If clicking on Personality Test, check user status
     if (routeName === 'PERSONALITY TEST') {
+      const hasAccount = localStorage.getItem('userAccount');
       const hasResults = localStorage.getItem('tagStats');
+      
       console.log('Navigation clicked: Personality Test');
+      console.log('Checking for user account:', hasAccount ? 'Found' : 'Not found');
       console.log('Checking for test results:', hasResults ? 'Found' : 'Not found');
-      console.log('localStorage tagStats:', hasResults);
-      if (hasResults) {
-        console.log('Redirecting to results page...');
+      
+      // If has account (logged in), go to results page
+      if (hasAccount) {
+        console.log('User has account, redirecting to results page...');
         e.preventDefault();
         navigate('/results');
         return;
       }
-      console.log('No results found, proceeding to personality test');
+      
+      // If has results but no account, go to results page (can't create account yet)
+      if (hasResults) {
+        console.log('User has results but no account, redirecting to results page...');
+        e.preventDefault();
+        navigate('/results');
+        return;
+      }
+      
+      // If no account and no results, proceed to personality test to start
+      console.log('Complete new user, proceeding to personality test');
     }
   };
 
