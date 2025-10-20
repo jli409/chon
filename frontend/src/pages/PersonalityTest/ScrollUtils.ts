@@ -1,3 +1,6 @@
+// Track if we're in an auto-scroll to prevent manual scroll handler
+let isAutoScrolling = false;
+
 /**
  * 滚动到下一个问题元素
  * @param currentQuestionId 当前问题的ID
@@ -27,16 +30,88 @@ export const scrollToNextQuestion = (currentQuestionId: string): void => {
     }
   }
   
-  // If found, scroll to the next question element
+  // If found, scroll to the next question element and manage visibility
   if (nextQuestionElement) {
+    // Set auto-scroll flag
+    isAutoScrolling = true;
+    
     // Use a small delay to ensure DOM is updated
     setTimeout(() => {
+      // Hide all questions first
+      const allQuestions = document.querySelectorAll('.question-container');
+      allQuestions.forEach(q => {
+        q.classList.remove('question-visible');
+        q.classList.add('question-hidden');
+      });
+      
+      // Show only the next question
+      nextQuestionElement?.classList.remove('question-hidden');
+      nextQuestionElement?.classList.add('question-visible');
+      
+      // Scroll to the next question
       nextQuestionElement?.scrollIntoView({ 
         behavior: 'smooth', 
         block: 'center'
       });
-    }, 50);
+      
+      // Clear auto-scroll flag after animation completes
+      setTimeout(() => {
+        isAutoScrolling = false;
+      }, 800);
+    }, 100);
   }
+};
+
+/**
+ * Show all questions when user manually scrolls
+ */
+export let hasUserScrolled = false;
+let lastScrollY = 0;
+let scrollHandlerInitialY = 0;
+
+export const resetUserScroll = () => {
+  hasUserScrolled = false;
+  lastScrollY = 0;
+  scrollHandlerInitialY = window.scrollY;
+};
+
+export const showAllQuestionsOnScroll = (): void => {
+  scrollHandlerInitialY = window.scrollY;
+  
+  const handleScroll = () => {
+    // Ignore scroll events during auto-scroll
+    if (isAutoScrolling) {
+      return;
+    }
+    
+    // If user hasn't scrolled yet, check if they are now
+    if (!hasUserScrolled) {
+      // Detect actual user scroll from initial position
+      const currentScrollY = window.scrollY;
+      const scrollDelta = Math.abs(currentScrollY - scrollHandlerInitialY);
+      
+      // Trigger if there's significant scroll movement (>50px from start)
+      if (scrollDelta > 50) {
+        hasUserScrolled = true;
+        
+        // Show all questions when user scrolls
+        const allQuestions = document.querySelectorAll('.question-container');
+        allQuestions.forEach(q => {
+          q.classList.remove('question-hidden');
+          q.classList.add('question-visible');
+        });
+        
+        // Show continue button too
+        const continueButton = document.querySelector('.question-navigation');
+        if (continueButton) {
+          continueButton.classList.remove('button-hidden');
+          continueButton.classList.add('button-visible');
+        }
+      }
+    }
+  };
+  
+  window.addEventListener('scroll', handleScroll, { passive: true });
 };
 
 /**

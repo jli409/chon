@@ -448,6 +448,82 @@
   letter-spacing: 2px;
 }
 
+/* Create Account Button - Desktop (below hexagon) */
+.create-account-button-desktop {
+  display: block;
+  margin: 2rem auto 0;
+  padding: 0.7rem 1.75rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  font-family: 'Kaisei Decol', serif;
+  color: white;
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+}
+
+.create-account-button-desktop:hover {
+  background-color: #F0BDC0;
+  color: black;
+  border-color: #F0BDC0;
+  transform: translateY(-2px);
+}
+
+.create-account-button-desktop:active {
+  background-color: white;
+  color: black;
+  border-color: white;
+  transform: translateY(0);
+}
+
+.create-account-button-desktop:lang(zh) {
+  font-family: 'Alike Angular', serif !important;
+  letter-spacing: 0.2em;
+}
+
+/* Create Account Button - Mobile (at bottom of content) */
+.create-account-button-mobile {
+  display: none;
+  margin: 2rem auto 8rem;
+  padding: 0.7rem 1.75rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  font-family: 'Kaisei Decol', serif;
+  color: white;
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+}
+
+.create-account-button-mobile:hover {
+  background-color: #F0BDC0;
+  color: black;
+  border-color: #F0BDC0;
+  transform: translateY(-2px);
+}
+
+.create-account-button-mobile:active {
+  background-color: white;
+  color: black;
+  border-color: white;
+  transform: translateY(0);
+}
+
+.create-account-button-mobile:lang(zh) {
+  font-family: 'Alike Angular', serif !important;
+  letter-spacing: 0.2em;
+}
+
 /* 底部的dock样式 */
 .character-cards-dock {
   position: fixed !important;
@@ -798,8 +874,13 @@
     width: 35px;
   }
   
-  .floating-create-account-button {
-    bottom: 6.5rem;
+  /* Hide desktop button, show mobile button */
+  .create-account-button-desktop {
+    display: none;
+  }
+  
+  .create-account-button-mobile {
+    display: block;
     padding: 0.56rem 1.05rem;
     font-size: 0.63rem;
     letter-spacing: 0.2em;

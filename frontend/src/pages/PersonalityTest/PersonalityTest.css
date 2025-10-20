@@ -90,6 +90,8 @@
   position: relative;
   min-height: 100vh;
   box-sizing: border-box;
+  overflow: hidden;
+  height: 100%;
 }
 
 .personality-test-container[lang="zh"],

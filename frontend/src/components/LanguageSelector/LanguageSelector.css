@@ -98,4 +98,11 @@
 
 .lang-button:hover {
   color: #F0BDC0;
+}
+
+/* Ensure language selector is above character dock on mobile */
+@media (max-width: 480px) {
+  .language-selector {
+    z-index: 1001;
+  }
 } 

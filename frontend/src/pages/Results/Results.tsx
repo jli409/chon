@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toEnglishTag, REVERSE_TAG_MAPPING } from '../../utils/tagUtils';
+import { sortCharactersByMatch } from '../../utils/characterMatching';
 import './Results.css';
 
 interface TagScore {
@@ -402,7 +403,7 @@ const HexagonChart: React.FC<{
                 fontSize={fontSize}
                 fontWeight="bold"
               >
-                {item.score}%
+                {Math.round(item.score)}%
               </text>
             </g>
           );
@@ -807,49 +808,16 @@ const Results: React.FC = () => {
 
     setTagScores(userScores);
 
-    // 匹配最佳符合的卡片并按匹配度排序
+    // 匹配最佳符合的卡片并按匹配度排序（使用sum of squares）
     if (Object.keys(userScores).length > 0) {
-      const sortedCards = findBestMatchAndSort(userScores);
+      const sortedCards = sortCharactersByMatch(userScores, cardsData);
       setCards(sortedCards);
+      setActiveCardIndex(0);
+      setMatchedCard(sortedCards[0]);
     } else {
       setCards(cardsData);
     }
   }, []);
-
-  // 寻找最佳匹配的卡片并按匹配度排序（从高到低）
-  const findBestMatchAndSort = (userScores: Record<string, number>) => {
-    // 计算每个卡片的匹配分数
-    const cardsWithScores = cardsData.map((card, index) => {
-      let matchScore = 0;
-      
-      // 计算每个标签的匹配分数
-      Object.entries(card.tagRanges).forEach(([tag, range]) => {
-        const userScore = userScores[tag];
-        if (userScore !== undefined) {
-          // 如果用户分数在范围内，增加匹配分数
-          if (userScore >= range[0] && userScore <= range[1]) {
-            matchScore++;
-          }
-        }
-      });
-
-      return {
-        card,
-        matchScore,
-        originalIndex: index
-      };
-    });
-
-    // 按匹配分数从高到低排序
-    const sorted = cardsWithScores.sort((a, b) => b.matchScore - a.matchScore);
-    
-    // 设置最佳匹配为第一个（匹配度最高的）
-    setActiveCardIndex(0);
-    setMatchedCard(sorted[0].card);
-    
-    // 返回排序后的卡片数组
-    return sorted.map(item => item.card);
-  };
 
   const handleCardClick = (index: number) => {
     if (index !== activeCardIndex) {
@@ -908,6 +876,14 @@ const Results: React.FC = () => {
               characterRanges={matchedCard.tagRanges}
             />
           </div>
+          
+          {/* Create Account Button - Below hexagon on desktop */}
+          <button 
+            className="create-account-button-desktop"
+            onClick={() => navigate('/login', { state: { mode: 'register' } })}
+          >
+            {language === 'en' ? 'Create Account' : '创建账户'}
+          </button>
         </div>
         
         <div className="results-right">
@@ -948,21 +924,21 @@ const Results: React.FC = () => {
                       } as React.CSSProperties}
                     ></div>
                   </div>
-                  <span className="result-value">{score}%</span>
+                  <span className="result-value">{Math.round(score)}%</span>
                 </div>
               ))}
             </div>
           </div>
+          
+          {/* Create Account Button - At bottom on mobile */}
+          <button 
+            className="create-account-button-mobile"
+            onClick={() => navigate('/login', { state: { mode: 'register' } })}
+          >
+            {language === 'en' ? 'Create Account' : '创建账户'}
+          </button>
         </div>
       </div>
-      
-      {/* Floating Create Account Button */}
-      <button 
-        className="floating-create-account-button"
-        onClick={() => navigate('/login', { state: { mode: 'register' } })}
-      >
-        {language === 'en' ? 'Create Account' : '创建账户'}
-      </button>
       
       {/* 将角色卡片Dock作为独立元素，不嵌套在其他容器中 */}
       <div id="character-dock-container" style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 1000, pointerEvents: 'none' }}>

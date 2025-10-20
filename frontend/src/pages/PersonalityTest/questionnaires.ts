@@ -1125,8 +1125,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Did motherhood change your personal values?',
     textZh: '母亲身份是否改变了个人价值？',
     scaleLabels: {
-      left: { en: 'A) Completely', zh: '完全改变' },
-      right: { en: 'E) No change', zh: '没有改变' }
+      left: { en: 'Completely', zh: '完全改变' },
+      right: { en: 'No change', zh: '没有改变' }
     },
     tags: ['selfAwareness']
   },
@@ -1136,8 +1136,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Does your family or community support you in motherhood?',
     textZh: '在成为母亲的过程中，家人或社群对您支持吗？',
     scaleLabels: {
-      left: { en: 'A) Not supported at all', zh: '完全没有支持' },
-      right: { en: 'E) Extremely supported', zh: '非常支持' }
+      left: { en: 'Not supported at all', zh: '完全没有支持' },
+      right: { en: 'Extremely supported', zh: '非常支持' }
     },
     tags: ['socialIntelligence']
   },
@@ -1147,8 +1147,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Did motherhood bring emotional fulfillment to your life?',
     textZh: '母亲身份是否为您带来了情感满足？',
     scaleLabels: {
-      left: { en: 'A) No emotion at all', zh: '完全没有支持' },
-      right: { en: 'E) Extremely fulfilling', zh: '非常满足' }
+      left: { en: 'No emotion at all', zh: '完全没有支持' },
+      right: { en: 'Extremely fulfilling', zh: '非常满足' }
     },
     tags: ['dedication']
   },
@@ -1158,8 +1158,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Did motherhood make you more emotionally strong?',
     textZh: '母亲身份让你情绪上更坚韧了吗？',
     scaleLabels: {
-      left: { en: 'A) Much weaker', zh: '明显减弱' },
-      right: { en: 'E) Much stronger', zh: '显著增强' }
+      left: { en: 'Much weaker', zh: '明显减弱' },
+      right: { en: 'Much stronger', zh: '显著增强' }
     },
     tags: ['emotionalRegulation', 'coreEndurance']
   },
@@ -1169,8 +1169,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Did motherhood change your ability to set boundaries?',
     textZh: '母亲身份是否影响了您设定边界的能力？',
     scaleLabels: {
-      left: { en: 'A) Significantly weakened', zh: '显著减弱' },
-      right: { en: 'E) Improved greatly', zh: '显著提升' }
+      left: { en: 'Significantly weakened', zh: '显著减弱' },
+      right: { en: 'Improved greatly', zh: '显著提升' }
     },
     tags: ['selfAwareness']
   },
@@ -1180,8 +1180,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you feel pressured to meet external expectations of motherhood?',
     textZh: '您是否感受到外界对母亲身份的期待压力？',
     scaleLabels: {
-      left: { en: 'A) Always', zh: '总是' },
-      right: { en: 'E) Never', zh: '从不' }
+      left: { en: 'Always', zh: '总是' },
+      right: { en: 'Never', zh: '从不' }
     },
     tags: ['selfAwareness']
   },
@@ -1191,8 +1191,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Are you satisfied with the balance between mother and self?',
     textZh: '您对母亲身份与自我之间的平衡是否满意？',
     scaleLabels: {
-      left: { en: 'A) Very dissatisfied', zh: '非常不满意' },
-      right: { en: 'E) Very satisfied', zh: '非常满意' }
+      left: { en: 'Very dissatisfied', zh: '非常不满意' },
+      right: { en: 'Very satisfied', zh: '非常满意' }
     },
     tags: ['selfAwareness']
   },
@@ -1202,8 +1202,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Does your company foster professional growth and well-being?',
     textZh: '贵司是否同时重视职业发展和身心健康？',
     scaleLabels: {
-      left: { en: 'A) Not supportive at all', zh: '完全不重视' },
-      right: { en: 'E) Very supportive', zh: '非常重视' }
+      left: { en: 'Not supportive at all', zh: '完全不重视' },
+      right: { en: 'Very supportive', zh: '非常重视' }
     },
     tags: ['selfAwareness']
   },
@@ -1213,8 +1213,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you build meaningful relationships through work?',
     textZh: '您在工作中是否有建立有意义的关系的机会？',
     scaleLabels: {
-      left: { en: 'A) None', zh: '没有' },
-      right: { en: 'E) A lot', zh: '很多' }
+      left: { en: 'None', zh: '没有' },
+      right: { en: 'A lot', zh: '很多' }
     },
     tags: ['socialIntelligence']
   },
@@ -1224,8 +1224,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you experience acts of kindness in work?',
     textZh: '您在工作中是否感受到他人的善意之举？',
     scaleLabels: {
-      left: { en: 'A) Never', zh: '从未' },
-      right: { en: 'E) Very frequently', zh: '非常频繁' }
+      left: { en: 'Never', zh: '从未' },
+      right: { en: 'Very frequently', zh: '非常频繁' }
     },
     tags: ['dedication']
   },
@@ -1235,8 +1235,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you support or care for colleagues?',
     textZh: '您是否会给予同事支持或关心？',
     scaleLabels: {
-      left: { en: 'A) Do not engage in offering support', zh: '基本不提供支持' },
-      right: { en: 'E) Frequently offer support', zh: '经常主动给予支持' }
+      left: { en: 'Do not engage in offering support', zh: '基本不提供支持' },
+      right: { en: 'Frequently offer support', zh: '经常主动给予支持' }
     },
     tags: ['dedication']
   },
@@ -1246,8 +1246,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you feel recognized and valued by your team?',
     textZh: '您是否在团队中感觉到被认可？',
     scaleLabels: {
-      left: { en: 'A) Never', zh: '几乎从未被认可' },
-      right: { en: 'E) Always', zh: '总是被认可' }
+      left: { en: 'Never', zh: '几乎从未被认可' },
+      right: { en: 'Always', zh: '总是被认可' }
     },
     tags: ['selfAwareness']
   },
@@ -1257,8 +1257,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Does your company promote collaboration based on trust and respect?',
     textZh: '贵司是否鼓励基于信任与相互尊重的合作？',
     scaleLabels: {
-      left: { en: 'A) Does not at all', zh: '几乎没有' },
-      right: { en: 'E) Strongly across all levels', zh: '在所有层面都出色' }
+      left: { en: 'Does not at all', zh: '几乎没有' },
+      right: { en: 'Strongly across all levels', zh: '在所有层面都出色' }
     },
     tags: ['objectivity', 'dedication']
   },
@@ -1268,8 +1268,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Could you reach out to colleagues or managers when facing challenges?',
     textZh: '面对困难或需要帮助时，您能否与同事或上级沟通？',
     scaleLabels: {
-      left: { en: 'A) Very uncomfortable', zh: '很不愿意' },
-      right: { en: 'E) Very comfortable', zh: '非常自然' }
+      left: { en: 'Very uncomfortable', zh: '很不愿意' },
+      right: { en: 'Very comfortable', zh: '非常自然' }
     },
     tags: ['emotionalRegulation', 'socialIntelligence']
   },
@@ -1279,8 +1279,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Is a people-centered work culture important?',
     textZh: '以人为本的企业文化是否重要？',
     scaleLabels: {
-      left: { en: 'A) Not important at all', zh: '几乎不重要' },
-      right: { en: 'E) Extremely important', zh: '非常重要' }
+      left: { en: 'Not important at all', zh: '几乎不重要' },
+      right: { en: 'Extremely important', zh: '非常重要' }
     },
     tags: ['socialIntelligence']
   },
@@ -1290,8 +1290,8 @@ export const unifiedQuestions: Record<number, Question> = {
     textEn: 'Do you feel motivated by a sense of belonging or team care?',
     textZh: '您是否因团队归属感或同事关怀提升工作积极性？',
     scaleLabels: {
-      left: { en: 'A) Never', zh: '从未' },
-      right: { en: 'E) Very often', zh: '经常' }
+      left: { en: 'Never', zh: '从未' },
+      right: { en: 'Very often', zh: '经常' }
     },
     tags: ['emotionalRegulation']
   },

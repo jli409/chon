@@ -7,6 +7,8 @@
   margin: 0 auto;
   font-family: 'Kaisei Decol', serif;
   position: relative;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* 中文文本的特定样式 */

@@ -5,7 +5,7 @@ import LanguageSelector from '../../components/LanguageSelector/LanguageSelector
 import './PersonalityTest.css';
 import BothQuestionnaire from './BothQuestionnaire.tsx';
 import SearchableDropdown from './SearchableDropdown.tsx';
-import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage } from './ScrollUtils.ts';
+import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage, showAllQuestionsOnScroll, resetUserScroll } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
 import { questionnaires, questionnaireConfigs, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
 import { 
@@ -77,6 +77,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [showFifthPage, setShowFifthPage] = useState(false);
   const [showSixthPage, setShowSixthPage] = useState(false);
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
+  const [currentVisibleQuestionId, setCurrentVisibleQuestionId] = useState<string | null>(null);
   // 替换静态百分比为动态状态
   const [introStats, setIntroStats] = useState({
     yesCount: 0,
@@ -126,6 +127,128 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const getTotalQuestions = (): number => {
     return getCurrentQuestionnaire()?.totalQuestions || 0;
   };
+  
+  // Function to show only a specific question by ID
+  const showOnlyQuestion = (questionId: string) => {
+    setCurrentVisibleQuestionId(questionId);
+    
+    // Reset scroll tracking to hide questions again
+    resetUserScroll();
+    
+    // Immediately hide all questions
+    const allQuestions = document.querySelectorAll('.question-container');
+    const continueButton = document.querySelector('.question-navigation');
+    
+    allQuestions.forEach((q) => {
+      q.classList.add('question-hidden');
+      q.classList.remove('question-visible');
+    });
+    
+    // Hide continue button
+    if (continueButton) {
+      continueButton.classList.add('button-hidden');
+      continueButton.classList.remove('button-visible');
+    }
+    
+    // Then show only the target question
+    setTimeout(() => {
+      const targetQuestion = document.getElementById(`question-${questionId}`);
+      if (targetQuestion) {
+        targetQuestion.classList.add('question-visible');
+        targetQuestion.classList.remove('question-hidden');
+      }
+    }, 50);
+  };
+  
+  // Function to show continue button and scroll to it
+  const showContinueButton = () => {
+    setTimeout(() => {
+      // Hide all questions except the last one
+      const allQuestions = document.querySelectorAll('.question-container');
+      const questionArray = Array.from(allQuestions);
+      
+      questionArray.forEach((q, index) => {
+        if (index === questionArray.length - 1) {
+          // Keep last question visible
+          q.classList.add('question-visible');
+          q.classList.remove('question-hidden');
+        } else {
+          // Hide all other questions (including second-to-last)
+          q.classList.add('question-hidden');
+          q.classList.remove('question-visible');
+        }
+      });
+      
+      // Show continue button
+      const continueButton = document.querySelector('.question-navigation');
+      if (continueButton) {
+        continueButton.classList.remove('button-hidden');
+        continueButton.classList.add('button-visible');
+        
+        // Scroll to show continue button
+        setTimeout(() => {
+          continueButton.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'end'
+          });
+        }, 100);
+      }
+    }, 10);
+  };
+  
+  // Check if current question is the last in current section
+  const isLastQuestionInSection = (questionId: string): boolean => {
+    const allQuestions = document.querySelectorAll('.question-container');
+    const questionArray = Array.from(allQuestions);
+    const currentIndex = questionArray.findIndex(q => q.id === `question-${questionId}`);
+    
+    // Check if this is the last question on the current page
+    return currentIndex === questionArray.length - 1;
+  };
+
+  // Initialize scroll listener and first question visibility
+  useEffect(() => {
+    showAllQuestionsOnScroll();
+  }, []);
+  
+  // Initialize first question visibility when page changes
+  useEffect(() => {
+    // Reset scroll tracking when changing pages
+    resetUserScroll();
+    
+    // Multiple passes to ensure all questions are caught
+    const hideAllAndShowFirst = (attempt: number = 0) => {
+      const allQuestions = document.querySelectorAll('.question-container');
+      const continueButton = document.querySelector('.question-navigation');
+      
+      // Hide all questions
+      allQuestions.forEach(q => {
+        q.classList.add('question-hidden');
+        q.classList.remove('question-visible');
+      });
+      
+      // Hide continue button
+      if (continueButton) {
+        continueButton.classList.add('button-hidden');
+        continueButton.classList.remove('button-visible');
+      }
+      
+      // Show only first question
+      const firstQuestion = allQuestions[0];
+      if (firstQuestion) {
+        firstQuestion.classList.add('question-visible');
+        firstQuestion.classList.remove('question-hidden');
+      }
+      
+      // Run multiple times to catch late-rendered questions
+      if (attempt < 3) {
+        setTimeout(() => hideAllAndShowFirst(attempt + 1), 150);
+      }
+    };
+    
+    // Start the process
+    setTimeout(() => hideAllAndShowFirst(0), 100);
+  }, [showFirstPage, showSecondPage, showThirdPage, showFourthPage, showFifthPage, showSixthPage, step]);
   
   // 从本地存储加载答案数据
   useEffect(() => {
@@ -456,10 +579,24 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     // Update tag scores
     updateTagScores(questionId, optionId);
     
-    // Add new feature: auto-scroll to next question
-    setTimeout(() => {
-      scrollToNextQuestion(questionId);
-    }, 100);
+    // Check if this is the last question in the section
+    if (isLastQuestionInSection(questionId)) {
+      // Show continue button (keep last question visible)
+      setTimeout(() => {
+        showContinueButton();
+      }, 300);
+    } else {
+      // Find and show next question
+      const currentNum = parseInt(questionId.split('_')[1]) || 0;
+      const prefix = questionId.split('_')[0];
+      const nextQuestionId = `${prefix}_${currentNum + 1}`;
+      
+      // Show next question and scroll to it
+      setTimeout(() => {
+        showOnlyQuestion(nextQuestionId);
+        scrollToNextQuestion(questionId);
+      }, 100);
+    }
   };
 
   // Handle text input for free text questions
@@ -479,6 +616,30 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   };
 
+  // Handle Enter key press for text inputs
+  const handleTextInputKeyPress = (questionId: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && getCurrentAnswers()[questionId]?.trim()) {
+      // Check if this is the last question in the section
+      if (isLastQuestionInSection(questionId)) {
+        // Show continue button
+        setTimeout(() => {
+          showContinueButton();
+        }, 300);
+      } else {
+        // Find and show next question
+        const currentNum = parseInt(questionId.split('_')[1]) || 0;
+        const prefix = questionId.split('_')[0];
+        const nextQuestionId = `${prefix}_${currentNum + 1}`;
+        
+        // Show next question and scroll to it
+        setTimeout(() => {
+          showOnlyQuestion(nextQuestionId);
+          scrollToNextQuestion(questionId);
+        }, 100);
+      }
+    }
+  };
+
   // Handle scale question answer
   const handleScaleAnswer = (questionId: string, value: string) => {
     const currentAnswers = getCurrentAnswers();
@@ -490,10 +651,24 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     // Update tag scores
     updateTagScores(questionId, value);
     
-    // Add new feature: auto-scroll to next question
-    setTimeout(() => {
-      scrollToNextQuestion(questionId);
-    }, 100);
+    // Check if this is the last question in the section
+    if (isLastQuestionInSection(questionId)) {
+      // Show continue button (keep last question visible)
+      setTimeout(() => {
+        showContinueButton();
+      }, 300);
+    } else {
+      // Find and show next question
+      const currentNum = parseInt(questionId.split('_')[1]) || 0;
+      const prefix = questionId.split('_')[0];
+      const nextQuestionId = `${prefix}_${currentNum + 1}`;
+      
+      // Show next question and scroll to it
+      setTimeout(() => {
+        showOnlyQuestion(nextQuestionId);
+        scrollToNextQuestion(questionId);
+      }, 100);
+    }
   };
 
   // Handle multi-select answer (stores comma-separated option ids)
@@ -518,6 +693,25 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       ...currentAnswers,
       [questionId]: optionId
     });
+    
+    // Check if this is the last question in the section
+    if (isLastQuestionInSection(questionId)) {
+      // Show continue button (keep last question visible)
+      setTimeout(() => {
+        showContinueButton();
+      }, 300);
+    } else {
+      // Find and show next question
+      const currentNum = parseInt(questionId.split('_')[1]) || 0;
+      const prefix = questionId.split('_')[0];
+      const nextQuestionId = `${prefix}_${currentNum + 1}`;
+      
+      // Show next question and scroll to it
+      setTimeout(() => {
+        showOnlyQuestion(nextQuestionId);
+        scrollToNextQuestion(questionId);
+      }, 100);
+    }
   };
 
   // Helper to get current answers based on which questionnaire is active
@@ -672,6 +866,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -687,6 +882,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                           handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                         }}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
                       />
                       <div className="unit-selector">
@@ -849,6 +1045,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -923,7 +1120,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'II. 关于我们'}
               </h1>
               
-              {getQuestionsForCurrentPage(24, 38).map((question) => (
+              {getQuestionsForCurrentPage(23, 37).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -948,6 +1145,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1022,7 +1220,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'III. 关于母亲'}
               </h1>
               
-              {getQuestionsForCurrentPage(38, 50).map((question) => (
+              {getQuestionsForCurrentPage(37, 50).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1047,6 +1245,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1181,6 +1380,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1196,6 +1396,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                           handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                         }}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
                       />
                       <div className="unit-selector">
@@ -1308,6 +1509,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1407,6 +1609,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1506,6 +1709,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1618,6 +1822,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1633,6 +1838,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                           handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                         }}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
                       />
                       <div className="unit-selector">
@@ -1715,9 +1921,21 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             // 第2页: About Professional Work & Teamwork (questions 6-16)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'I. About Professional Work & Teamwork' 
-                  : 'I. 关于职业工作与团队合作'}
+                {(() => {
+                  // Check if user answered "No" to question 4 (corporate experience)
+                  const question4Answer = getCurrentAnswers()['other_4'];
+                  const hasNoCorporateExperience = question4Answer === 'B'; // B = No
+                  
+                  if (hasNoCorporateExperience) {
+                    return language === 'en' 
+                      ? 'I. About Teamwork' 
+                      : 'I. 关于团队合作';
+                  } else {
+                    return language === 'en' 
+                      ? 'I. About Professional Work' 
+                      : 'I. 关于职业工作';
+                  }
+                })()}
               </h1>
               
               {questions.slice(5, 16).map((question) => (
@@ -1745,6 +1963,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1844,6 +2063,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1943,6 +2163,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>

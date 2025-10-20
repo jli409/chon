@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
+import { toEnglishTag } from '../../utils/tagUtils';
+import { findBestMatchCharacter } from '../../utils/characterMatching';
 import './Login.css';
 
 const Login = () => {
@@ -39,12 +41,12 @@ const Login = () => {
             name: { en: 'Odin', zh: '奥丁' },
             image: '/images/characters/odin.jpg',
             tagRanges: {
-              selfAwareness: [80, 100],
-              dedication: [20, 50],
-              socialIntelligence: [30, 60],
-              emotionalRegulation: [20, 50],
-              objectivity: [60, 80],
-              coreEndurance: [0, 60]
+              selfAwareness: [80, 100] as [number, number],
+              dedication: [20, 50] as [number, number],
+              socialIntelligence: [30, 60] as [number, number],
+              emotionalRegulation: [20, 50] as [number, number],
+              objectivity: [60, 80] as [number, number],
+              coreEndurance: [0, 60] as [number, number]
             }
           },
           {
@@ -52,12 +54,12 @@ const Login = () => {
             name: { en: 'Wukong', zh: '大圣' },
             image: '/images/characters/wukong.jpg',
             tagRanges: {
-              selfAwareness: [40, 60],
-              dedication: [0, 40],
-              socialIntelligence: [40, 70],
-              emotionalRegulation: [80, 100],
-              objectivity: [40, 60],
-              coreEndurance: [40, 60]
+              selfAwareness: [40, 60] as [number, number],
+              dedication: [0, 40] as [number, number],
+              socialIntelligence: [40, 70] as [number, number],
+              emotionalRegulation: [80, 100] as [number, number],
+              objectivity: [40, 60] as [number, number],
+              coreEndurance: [40, 60] as [number, number]
             }
           },
           {
@@ -65,12 +67,12 @@ const Login = () => {
             name: { en: 'Prometheus', zh: '普罗米修斯' },
             image: '/images/characters/prometheus.jpg',
             tagRanges: {
-              selfAwareness: [0, 40],
-              dedication: [80, 100],
-              socialIntelligence: [30, 60],
-              emotionalRegulation: [10, 50],
-              objectivity: [30, 70],
-              coreEndurance: [60, 80]
+              selfAwareness: [0, 40] as [number, number],
+              dedication: [80, 100] as [number, number],
+              socialIntelligence: [30, 60] as [number, number],
+              emotionalRegulation: [10, 50] as [number, number],
+              objectivity: [30, 70] as [number, number],
+              coreEndurance: [60, 80] as [number, number]
             }
           },
           {
@@ -78,12 +80,12 @@ const Login = () => {
             name: { en: 'Nüwa', zh: '女娲' },
             image: '/images/characters/nuwa.jpg',
             tagRanges: {
-              selfAwareness: [0, 40],
-              dedication: [50, 80],
-              socialIntelligence: [40, 60],
-              emotionalRegulation: [60, 80],
-              objectivity: [40, 60],
-              coreEndurance: [80, 100]
+              selfAwareness: [0, 40] as [number, number],
+              dedication: [50, 80] as [number, number],
+              socialIntelligence: [40, 60] as [number, number],
+              emotionalRegulation: [60, 80] as [number, number],
+              objectivity: [40, 60] as [number, number],
+              coreEndurance: [80, 100] as [number, number]
             }
           },
           {
@@ -91,12 +93,12 @@ const Login = () => {
             name: { en: 'Athena', zh: '雅典娜' },
             image: '/images/characters/athena.jpg',
             tagRanges: {
-              selfAwareness: [60, 80],
-              dedication: [0, 40],
-              socialIntelligence: [50, 70],
-              emotionalRegulation: [40, 60],
-              objectivity: [70, 100],
-              coreEndurance: [40, 60]
+              selfAwareness: [60, 80] as [number, number],
+              dedication: [0, 40] as [number, number],
+              socialIntelligence: [50, 70] as [number, number],
+              emotionalRegulation: [40, 60] as [number, number],
+              objectivity: [70, 100] as [number, number],
+              coreEndurance: [40, 60] as [number, number]
             }
           },
           {
@@ -104,54 +106,29 @@ const Login = () => {
             name: { en: 'Venus', zh: '维纳斯' },
             image: '/images/characters/venus.jpg',
             tagRanges: {
-              selfAwareness: [60, 80],
-              dedication: [40, 60],
-              socialIntelligence: [80, 100],
-              emotionalRegulation: [40, 70],
-              objectivity: [30, 60],
-              coreEndurance: [20, 50]
+              selfAwareness: [60, 80] as [number, number],
+              dedication: [40, 60] as [number, number],
+              socialIntelligence: [80, 100] as [number, number],
+              emotionalRegulation: [40, 70] as [number, number],
+              objectivity: [30, 60] as [number, number],
+              coreEndurance: [20, 50] as [number, number]
             }
           }
         ];
 
-        // Calculate user scores and find best match
-        const tagMapping: Record<string, string> = {
-          '自我意识': 'selfAwareness',
-          '奉献精神': 'dedication',
-          '社交情商': 'socialIntelligence',
-          '情绪调节': 'emotionalRegulation',
-          '客观能力': 'objectivity',
-          '核心耐力': 'coreEndurance'
-        };
-
+        // Calculate user scores and find best match using sum of squares
         const userScores: Record<string, number> = {};
         Object.keys(tagStats).forEach(tag => {
           if (tagStats[tag] && typeof tagStats[tag].scorePercentage === 'number') {
-            const engKey = tagMapping[tag] || tag;
-            userScores[engKey] = tagStats[tag].scorePercentage;
-          }
-        });
-
-        // Find best match
-        let bestMatch = cardsData[0];
-        let bestScore = 0;
-
-        cardsData.forEach(card => {
-          let matchScore = 0;
-          Object.entries(card.tagRanges).forEach(([tag, range]) => {
-            const userScore = userScores[tag];
-            if (userScore !== undefined) {
-              if (userScore >= range[0] && userScore <= range[1]) {
-                matchScore++;
-              }
+            const engKey = toEnglishTag(tag);
+            if (engKey) {
+              userScores[engKey] = tagStats[tag].scorePercentage;
             }
-          });
-          if (matchScore > bestScore) {
-            bestScore = matchScore;
-            bestMatch = card;
           }
         });
 
+        // Find best match using sum of squares difference
+        const bestMatch = findBestMatchCharacter(userScores, cardsData);
         setMostFittedCharacter(bestMatch);
       } else {
         setIsLoggedIn(false);
@@ -268,11 +245,11 @@ const Login = () => {
       {isLoggedIn ? (
         // Logged in state - show character and logout
         <>
-          <h1 lang={language}>
-            {language === 'en' ? 'Welcome Back!' : '欢迎回来！'}
-          </h1>
           <div className="login-content logged-in-content" lang={language}>
             <div className="character-display">
+              <h1 className="welcome-message" lang={language}>
+                {language === 'en' ? 'Welcome Back!' : '欢迎回来！'}
+              </h1>
               <img 
                 src={mostFittedCharacter?.image} 
                 alt={language === 'en' ? mostFittedCharacter?.name?.en : mostFittedCharacter?.name?.zh}

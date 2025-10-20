@@ -55,6 +55,14 @@
   z-index: 10;
 }
 
+/* Welcome message inside character display */
+.welcome-message {
+  font-size: 2.5rem;
+  color: #F0BDC0;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
 .login-content {
   margin-top: 2rem;
   padding: 2rem;
@@ -378,7 +386,7 @@
 
 @media (max-width: 480px) {
   .login-container {
-    padding: 1.5rem;
+    padding: 1rem;
   }
   
   .login-container h1 {
@@ -386,7 +394,8 @@
   }
   
   .login-content {
-    padding: 1.2rem;
+    padding: 1rem;
+    min-width: unset;
   }
   
   .login-content p {
@@ -394,17 +403,18 @@
   }
   
   .form-group label {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   
   .form-group input {
     padding: 0.75rem 0.9rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   
   .submit-button {
-    padding: 0.56rem 1.05rem;
-    font-size: 0.63rem;
+    padding: 0.7rem 1.75rem;
+    font-size: 0.84rem;
+    min-width: unset;
   }
   
   .registration-form {
