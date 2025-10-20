@@ -5,7 +5,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     strictPort: false,
-    historyApiFallback: true,
   },
   build: {
     outDir: 'dist',
