@@ -264,7 +264,6 @@ const Login = () => {
   return (
     <div className="login-container" lang={language}>
       <div className="molecule-background"></div>
-      <div className="hexagon-pattern"></div>
       
       {isLoggedIn ? (
         // Logged in state - show character and logout
@@ -292,14 +291,14 @@ const Login = () => {
                   : '您在性格测试中最匹配的角色'
                 }
               </p>
+              <button 
+                type="button" 
+                className="logout-button"
+                onClick={handleLogout}
+              >
+                {language === 'en' ? 'Logout' : '退出登录'}
+              </button>
             </div>
-            <button 
-              type="button" 
-              className="logout-button"
-              onClick={handleLogout}
-            >
-              {language === 'en' ? 'Logout' : '退出登录'}
-            </button>
           </div>
         </>
       ) : (

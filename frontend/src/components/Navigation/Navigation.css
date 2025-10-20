@@ -37,7 +37,7 @@
 .nav-link {
   color: white;
   text-decoration: none;
-  font-size: 1.1rem;
+  font-size: 1.32rem;
   letter-spacing: 0.15em;
   margin: 0 1.8rem;
   padding: 0.5rem 0;
@@ -66,14 +66,14 @@
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .nav-link {
-    font-size: 1rem;
+    font-size: 1.2rem;
     margin: 0 1.5rem;
   }
 }
 
 @media (max-width: 900px) {
   .nav-link {
-    font-size: 0.95rem;
+    font-size: 1.14rem;
     margin: 0 1.2rem;
   }
 }
@@ -86,7 +86,7 @@
   
   .nav-link {
     margin: 0 0.8rem;
-    font-size: 0.9rem;
+    font-size: 1.08rem;
   }
 }
 
@@ -98,7 +98,7 @@
   
   .nav-link {
     margin: 0.3rem;
-    font-size: 0.85rem;
+    font-size: 1.02rem;
     padding: 0.3rem 0;
   }
 } 

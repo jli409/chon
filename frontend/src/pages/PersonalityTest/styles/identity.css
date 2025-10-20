@@ -127,8 +127,8 @@
 
 /* Inline 3x3 cluster replacing the corporate circle */
 .corporate-roles-inline {
-  width: 420px;
-  height: 360px;
+  width: 504px;
+  height: 432px;
   position: relative;
   margin: 0 auto;
   display: flex;
@@ -138,22 +138,22 @@
 
 /* Organic absolute positions for the 9 circles */
 .corporate-roles-inline .corporate-role-circle {
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   position: absolute;
   animation-duration: 3.5s;
 }
 
-/* Manually place circles in an organic layout (non-overlapping within 320x260) */
-.corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 20px; left: 20px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 10px; left: 140px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 25px; left: 260px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 130px; left: 60px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 140px; left: 160px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 125px; left: 280px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 250px; left: 30px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 260px; left: 160px; }
-.corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 245px; left: 280px; }
+/* Arrange circles: center first, then right/left alternating, progressing vertically */
+.corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 20px; left: 197px; }   /* Center top */
+.corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 30px; left: 330px; }   /* Right of center */
+.corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 25px; left: 64px; }    /* Left of center */
+.corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 166px; left: 197px; }  /* Center middle */
+.corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 156px; left: 340px; }  /* Right of center middle */
+.corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 160px; left: 54px; }   /* Left of center middle */
+.corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 312px; left: 197px; }  /* Center bottom */
+.corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 302px; left: 340px; }  /* Right of center bottom */
+.corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 306px; left: 54px; }   /* Left of center bottom */
 
 /* Corporate roles grid of small floating circles */
 .corporate-roles {
@@ -402,25 +402,25 @@
   
   /* Mobile corporate roles container */
   .corporate-roles-inline {
-    width: 320px;
-    height: 280px;
+    width: 384px;
+    height: 336px;
   }
   
   .corporate-roles-inline .corporate-role-circle {
-    width: 80px;
-    height: 80px;
+    width: 88px;
+    height: 88px;
   }
   
-  /* Adjust positions for mobile */
-  .corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 15px; left: 15px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 8px; left: 110px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 20px; left: 205px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 100px; left: 45px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 110px; left: 120px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 95px; left: 215px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 195px; left: 25px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 205px; left: 120px; }
-  .corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 190px; left: 215px; }
+  /* Arrange circles for mobile: center first, then right/left alternating */
+  .corporate-roles-inline .corporate-role-circle:nth-child(1) { top: 15px; left: 148px; }   /* Center top */
+  .corporate-roles-inline .corporate-role-circle:nth-child(2) { top: 22px; left: 252px; }   /* Right of center */
+  .corporate-roles-inline .corporate-role-circle:nth-child(3) { top: 18px; left: 44px; }    /* Left of center */
+  .corporate-roles-inline .corporate-role-circle:nth-child(4) { top: 124px; left: 148px; }  /* Center middle */
+  .corporate-roles-inline .corporate-role-circle:nth-child(5) { top: 118px; left: 260px; }  /* Right of center middle */
+  .corporate-roles-inline .corporate-role-circle:nth-child(6) { top: 120px; left: 36px; }   /* Left of center middle */
+  .corporate-roles-inline .corporate-role-circle:nth-child(7) { top: 233px; left: 148px; }  /* Center bottom */
+  .corporate-roles-inline .corporate-role-circle:nth-child(8) { top: 227px; left: 260px; }  /* Right of center bottom */
+  .corporate-roles-inline .corporate-role-circle:nth-child(9) { top: 230px; left: 36px; }   /* Left of center bottom */
   
   .corporate-role-circle span {
     font-size: 0.9rem;
