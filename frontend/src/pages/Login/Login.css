@@ -73,6 +73,7 @@
   background-color: rgba(255, 255, 255, 0.03);
   width: 100%;
   min-width: 400px;
+  max-width: 400px;
   box-sizing: border-box;
 }
 
@@ -169,6 +170,7 @@
   flex-direction: column;
   gap: 1.2rem;
   width: 100%;
+  max-width: 400px;
   box-sizing: border-box;
 }
 

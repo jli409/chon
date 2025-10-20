@@ -48,11 +48,10 @@ export const scrollToNextQuestion = (currentQuestionId: string): void => {
       nextQuestionElement?.classList.remove('question-hidden');
       nextQuestionElement?.classList.add('question-visible');
       
-      // Scroll to the next question - use 'start' on mobile, 'center' on desktop
-      const isMobile = window.innerWidth <= 480;
+      // Scroll to the next question - always use 'center' for proper positioning
       nextQuestionElement?.scrollIntoView({ 
         behavior: 'smooth', 
-        block: isMobile ? 'start' : 'center'
+        block: 'center'
       });
       
       // Clear auto-scroll flag after animation completes

@@ -15,6 +15,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Ensure Chinese text uses Kaisei Decol font */
+body, body * {
+  font-family: 'Kaisei Decol', serif;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
