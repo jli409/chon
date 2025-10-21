@@ -57,8 +57,8 @@ export const scrollToNextQuestion = (currentQuestionId: string): void => {
       // Clear auto-scroll flag after animation completes
       setTimeout(() => {
         isAutoScrolling = false;
-      }, 800);
-    }, 100);
+      }, 1000);
+    }, 150);
   }
 };
 
@@ -90,8 +90,11 @@ export const showAllQuestionsOnScroll = (): void => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - scrollHandlerInitialY);
       
-      // Trigger if there's significant scroll movement (>50px from start)
-      if (scrollDelta > 50) {
+      // Trigger if there's significant scroll movement (>150px from start for mobile)
+      const isMobile = window.innerWidth <= 768;
+      const scrollThreshold = isMobile ? 150 : 50;
+      
+      if (scrollDelta > scrollThreshold) {
         hasUserScrolled = true;
         
         // Show all questions when user scrolls

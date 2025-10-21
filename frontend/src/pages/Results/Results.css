@@ -37,6 +37,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2rem;
 }
 
@@ -63,7 +64,7 @@
 /* 六边形图表 */
 .hexagon-chart {
   width: 100%;
-  max-width: 400px;
+  max-width: 385px;
   aspect-ratio: 1 / 1;
   margin: 0 auto;
   position: relative;
@@ -444,8 +445,8 @@
 .create-account-button-desktop {
   display: block;
   margin: 2rem auto 0;
-  padding: 0.7rem 1.75rem;
-  font-size: 0.84rem;
+  padding: 0.77rem 1.925rem;
+  font-size: 0.924rem;
   font-weight: 500;
   font-family: 'Kaisei Decol', serif;
   color: white;
@@ -479,8 +480,8 @@
 .create-account-button-mobile {
   display: none;
   margin: 2rem auto 8rem;
-  padding: 0.7rem 1.75rem;
-  font-size: 0.84rem;
+  padding: 0.77rem 1.925rem;
+  font-size: 0.924rem;
   font-weight: 500;
   font-family: 'Kaisei Decol', serif;
   color: white;
@@ -636,8 +637,25 @@
     font-size: 2.6rem;
   }
   
+  .hexagon-chart {
+    max-width: 330px;
+  }
+  
   .svg-hexagon-chart {
-    max-width: 450px;
+    max-width: 330px;
+  }
+  
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.66rem 1.65rem;
+    font-size: 0.792rem;
+  }
+  
+  /* Move CREATE ACCOUNT button beneath hexagon */
+  .results-left {
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
   }
 }
 
@@ -652,21 +670,32 @@
   }
 
   .results-left {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3rem;
+    gap: 2rem;
     margin-bottom: 1rem;
   }
 
-  .character-portrait, .hexagon-chart {
-    max-width: 250px;
+  .character-portrait {
+    max-width: 300px;
+    margin: 0;
+  }
+  
+  .hexagon-chart {
+    max-width: 330px;
     margin: 0;
   }
   
   .svg-hexagon-chart {
-    max-width: 400px;
-    padding: 1.2rem;
+    max-width: 330px;
+    padding: 0.5rem;
+  }
+
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.66rem 1.65rem;
+    font-size: 0.792rem;
   }
 
   .character-name {
@@ -700,13 +729,19 @@
   }
   
   .hexagon-chart {
-    max-width: 100%;
+    max-width: 242px;
     margin: 0 auto;
   }
   
   .svg-hexagon-chart {
-    max-width: 380px;
+    max-width: 242px;
     margin: 0 auto;
+  }
+  
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.484rem 1.21rem;
+    font-size: 0.581rem;
   }
 }
 
@@ -726,12 +761,18 @@
   }
   
   .hexagon-chart {
-    max-width: 100%;
+    max-width: 220px;
   }
   
   .svg-hexagon-chart {
-    max-width: 350px;
+    max-width: 220px;
     padding: 1rem;
+  }
+
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.44rem 1.1rem;
+    font-size: 0.528rem;
   }
 
   .dock-card-image {
@@ -776,9 +817,19 @@
     max-width: 180px;
   }
   
+  .hexagon-chart {
+    max-width: 198px;
+  }
+  
   .svg-hexagon-chart {
-    max-width: 320px;
+    max-width: 198px;
     padding: 0.8rem;
+  }
+  
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.396rem 0.99rem;
+    font-size: 0.475rem;
   }
   
   .character-name {
@@ -822,14 +873,21 @@
   }
   
   .hexagon-chart {
-    max-width: 200px;
-    padding: 0.3rem;
+    max-width: 308px;
+    padding: 0;
     margin: 1rem auto;
   }
   
   .svg-hexagon-chart {
-    max-width: 200px;
-    padding: 0.3rem;
+    max-width: 308px;
+    padding: 0;
+    background-color: transparent;
+  }
+
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.616rem 1.54rem;
+    font-size: 0.739rem;
   }
 
   .character-cards-dock {
@@ -865,8 +923,8 @@
   
   .create-account-button-mobile {
     display: block;
-    padding: 0.56rem 1.05rem;
-    font-size: 0.63rem;
+    padding: 0.616rem 1.155rem;
+    font-size: 0.693rem;
     letter-spacing: 0.2em;
   }
 
@@ -905,9 +963,19 @@
     max-width: 130px;
   }
   
+  .hexagon-chart {
+    max-width: 143px;
+  }
+  
   .svg-hexagon-chart {
-    max-width: 280px;
+    max-width: 143px;
     padding: 0.5rem;
+  }
+  
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.286rem 0.715rem;
+    font-size: 0.343rem;
   }
   
   .character-name {
@@ -953,8 +1021,18 @@
     max-width: 120px;
   }
   
+  .hexagon-chart {
+    max-width: 132px;
+  }
+  
   .svg-hexagon-chart {
-    max-width: 250px;
+    max-width: 132px;
+  }
+  
+  /* Scale CREATE ACCOUNT button proportionally */
+  .create-account-button-desktop {
+    padding: 0.264rem 0.66rem;
+    font-size: 0.317rem;
   }
   
   .character-cards-dock {
@@ -1010,12 +1088,12 @@
 
 .svg-hexagon-chart {
   width: 100%;
-  max-width: 500px;
+  max-width: 385px;
   margin: 0 auto;
-  background-color: rgba(15, 15, 15, 0.8);
+  background-color: transparent;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+  box-shadow: none;
   position: relative;
   z-index: 1;
 }
@@ -1212,10 +1290,11 @@
 
 @media (max-width: 480px) {
   .svg-hexagon-chart {
-    max-width: 200px;
-    padding: 0.5rem;
+    max-width: 280px;
+    padding: 0;
     margin-top: 2rem;
     margin-bottom: 2rem;
+    background-color: transparent;
   }
   
   .info-card {

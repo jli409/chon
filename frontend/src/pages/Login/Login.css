@@ -368,7 +368,7 @@
   
   .registration-form {
     max-width: 400px;
-    min-width: 400px;
+    min-width: 300px;
     gap: 1rem;
   }
 }
@@ -384,8 +384,9 @@
   
   .login-content {
     padding: 1rem;
-    min-width: 400px;
-    max-width: 400px;
+    min-width: unset;
+    max-width: 100%;
+    width: calc(100vw - 2rem);
   }
   
   .login-content p {
@@ -408,8 +409,9 @@
   }
   
   .registration-form {
-    max-width: 400px;
-    min-width: 400px;
+    max-width: 100%;
+    min-width: unset;
+    width: 100%;
     gap: 0.8rem;
   }
   
@@ -426,5 +428,28 @@
   .login-container .molecule-background {
     width: 100%;
     opacity: 0.08;
+  }
+  
+  .character-display {
+    top: 55%;
+  }
+  
+  .welcome-message {
+    font-size: 2rem;
+    margin: 0 0 1rem 0;
+  }
+  
+  .character-image {
+    max-width: 200px;
+    max-height: 200px;
+  }
+  
+  .character-name {
+    font-size: 1.2rem;
+  }
+  
+  .character-description {
+    font-size: 0.9rem;
+    max-width: 250px;
   }
 } 

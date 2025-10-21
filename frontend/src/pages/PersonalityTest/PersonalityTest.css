@@ -376,6 +376,10 @@
   border-radius: 2px;
   white-space: nowrap;
   min-width: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
 }
 
 .continue-button:hover:not(:disabled) {

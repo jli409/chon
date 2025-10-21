@@ -512,7 +512,12 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   width: 100%;
   box-sizing: border-box;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+              visibility 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              margin 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -529,6 +534,13 @@
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
+  transform: scale(0.95) !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* Show questions explicitly - overrides default */
@@ -536,6 +548,9 @@
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
+  transform: scale(1) !important;
+  max-height: 10000px !important;
+  overflow: visible !important;
 }
 
 /* Continue button visibility control */
@@ -1419,6 +1434,31 @@
     scroll-margin-top: 60px;
     scroll-snap-align: start;
   }
+  
+  /* Reduce spacing between MCQ answer choices */
+  .answer-options {
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .answer-option {
+    padding: 0.8rem 1rem;
+  }
+  
+  /* Ensure scale questions show question text fully - reduce top margin */
+  .scale-question-container .question-text {
+    margin-bottom: 1.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  /* Non-scale questions: ensure question is visible above fold */
+  .question-container:not(.scale-question-container) {
+    padding-top: 1rem;
+  }
+  
+  .question-container:not(.scale-question-container) .question-text {
+    margin-bottom: 1rem;
+  }
 }
 
 @media (max-width: 360px) {
@@ -1432,6 +1472,20 @@
   .question-container {
     margin-top: 70px;
     scroll-margin-top: 80px;
+  }
+  
+  /* Further reduce spacing for very small screens */
+  .answer-options {
+    gap: 0.25rem;
+  }
+  
+  .answer-option {
+    padding: 0.7rem 0.8rem;
+  }
+  
+  .scale-question-container .question-text {
+    margin-bottom: 1.2rem;
+    margin-top: 0.3rem;
   }
 }
 

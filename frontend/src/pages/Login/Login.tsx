@@ -207,7 +207,7 @@ const Login = () => {
       }));
       
       console.log('Form submitted:', formData);
-      alert(language === 'en' ? 'Account created successfully!' : '账户创建成功！');
+      alert(language === 'en' ? 'Account created successfully!' : '账号创建成功！');
       
       // Redirect to results if test has been taken
       const hasResults = localStorage.getItem('tagStats');
@@ -283,7 +283,7 @@ const Login = () => {
         <>
           <h1 lang={language}>
             {mode === 'register' 
-              ? (language === 'en' ? 'Create Account' : '创建账户')
+              ? (language === 'en' ? 'Create Account' : '创建账号')
               : (language === 'en' ? 'Login' : '登录')}
           </h1>
       <div className="login-content" lang={language}>
@@ -349,7 +349,7 @@ const Login = () => {
           {/* Submit Button */}
           <button type="submit" className="submit-button">
             {mode === 'register'
-              ? (language === 'en' ? 'Create Account' : '创建账户')
+              ? (language === 'en' ? 'Create Account' : '创建账号')
               : (language === 'en' ? 'Login' : '登录')}
           </button>
           
@@ -371,7 +371,7 @@ const Login = () => {
                 }}
               >
                 <span className="signup-line1">
-                  {language === 'en' ? "Don't have an account?" : '还没有账户？'}
+                  {language === 'en' ? "Don't have an account?" : '还没有账号？'}
                 </span>
                 <span className="signup-line2">
                   {language === 'en' ? "Take the personality test" : '参加性格测试'}

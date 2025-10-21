@@ -2489,7 +2489,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   lang={language}
                   style={{ display: selectedCorporateRole ? 'block' : 'none' }}
                 >
-                  {language === 'en' ? 'CONTINUE →' : '继续 →'}
+                  <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
+                  <span style={{ letterSpacing: 'normal' }}>→</span>
                 </button>
               </div>
             </div>
@@ -2515,7 +2516,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             lang={language}
             style={{ display: (selectedIdentities.has('mother') || selectedIdentities.has('other')) ? 'block' : 'none' }}
           >
-            {language === 'en' ? 'CONTINUE →' : '继续 →'}
+            <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
+            <span style={{ letterSpacing: 'normal' }}>→</span>
           </button>
         )}
       </div>
