@@ -12,10 +12,7 @@
   box-sizing: border-box;
 }
 
-.personality-test-container[lang="zh"],
-.personality-test-container *[lang="zh"] {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed Chinese font override - using Kaisei Decol universally */
 
 /* Background elements */
 .molecule-background {

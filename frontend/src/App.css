@@ -1,6 +1,5 @@
 /* Base styles */
-/* 导入Alike Angular字体用于中文 */
-@import url('https://fonts.googleapis.com/css2?family=Alike+Angular&display=swap');
+/* Removed Alike Angular font import - using Kaisei Decol universally */
 
 #root {
   width: 100%;
@@ -38,31 +37,7 @@
   display: none;
 }
 
-/* 中文字体设置 - 高优先级 */
-*:lang(zh):not(.logo):not(.logo *) {
-  font-family: 'Alike Angular', serif !important;
-}
-
-[lang="zh"]:not(.logo):not(.logo *), 
-[lang="zh"] *:not(.logo):not(.logo *),
-.app-container[lang="zh"]:not(.logo):not(.logo *),
-.app-container[lang="zh"] *:not(.logo):not(.logo *) {
-  font-family: 'Alike Angular', serif !important;
-}
-
-/* 确保按钮和输入框也使用正确的字体 */
-button:lang(zh), 
-input:lang(zh), 
-textarea:lang(zh),
-label:lang(zh),
-p:lang(zh),
-h1:lang(zh),
-h2:lang(zh),
-h3:lang(zh),
-span:lang(zh),
-div:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed all Chinese font overrides - using Kaisei Decol universally */
 
 /* Navigation Menu */
 .nav-menu {

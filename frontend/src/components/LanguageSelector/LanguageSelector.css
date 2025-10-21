@@ -64,17 +64,7 @@
   background-color: rgba(240, 189, 192, 0.05);
 }
 
-/* 语言切换器中文文本的特定样式 */
-.language-selector:lang(zh),
-.language-selector *:lang(zh),
-.lang-button:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-}
-
-/* 专门为中文按钮设置字体 */
-.lang-button[lang="zh"] {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed Chinese font override - using Kaisei Decol universally */
 
 .lang-button {
   color: rgba(255, 255, 255, 0.6);

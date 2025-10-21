@@ -27,12 +27,7 @@
   background-color: #555;
 }
 
-/* 导航栏中文文本的特定样式 */
-.nav-menu:lang(zh),
-.nav-menu *:lang(zh),
-.nav-link:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed Chinese font override - using Kaisei Decol universally */
 
 .nav-link {
   color: white;

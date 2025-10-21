@@ -10,12 +10,7 @@
   position: relative;
 }
 
-.login-container:lang(zh),
-.login-container *:lang(zh),
-.login-content:lang(zh),
-.login-content *:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed Chinese font override - using Kaisei Decol universally */
 
 /* Molecule Background */
 .molecule-background {
@@ -130,9 +125,7 @@
   opacity: 1;
 }
 
-.character-description:lang(zh) {
-  font-size: 0.85rem;
-}
+/* Removed Chinese font size override */
 
 .logout-button {
   padding: 0.7rem 1.75rem;
@@ -205,9 +198,7 @@
   box-sizing: border-box;
 }
 
-.form-group input:lang(zh) {
-  font-family: 'Alike Angular', serif;
-}
+/* Removed Chinese font override for inputs */
 
 .form-group input::placeholder {
   color: rgba(255, 255, 255, 0.4);
@@ -265,10 +256,7 @@
   white-space: nowrap;
 }
 
-.submit-button:lang(zh) {
-  font-family: 'Alike Angular', serif;
-  letter-spacing: 0.2em;
-}
+/* Removed Chinese font override for buttons */
 
 .submit-button:hover {
   background-color: #F0BDC0;
@@ -312,9 +300,7 @@
   text-decoration: underline;
 }
 
-.link-text:lang(zh) {
-  font-family: 'Alike Angular', serif;
-}
+/* Removed Chinese font override for links */
 
 .signup-link {
   display: inline;
@@ -381,7 +367,8 @@
   }
   
   .registration-form {
-    max-width: 100%;
+    max-width: 400px;
+    min-width: 400px;
     gap: 1rem;
   }
 }
@@ -397,7 +384,8 @@
   
   .login-content {
     padding: 1rem;
-    min-width: unset;
+    min-width: 400px;
+    max-width: 400px;
   }
   
   .login-content p {
@@ -420,7 +408,8 @@
   }
   
   .registration-form {
-    max-width: 100%;
+    max-width: 400px;
+    min-width: 400px;
     gap: 0.8rem;
   }
   

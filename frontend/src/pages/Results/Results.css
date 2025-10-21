@@ -14,11 +14,7 @@
   background-color: #000 !important;
 }
 
-/* 中文文本的特定样式 */
-.results-container:lang(zh),
-.results-container *:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed Chinese font override - using Kaisei Decol universally */
 
 .results-loading {
   display: flex;
@@ -442,11 +438,7 @@
   transform: translateX(-50%) translateY(0) !important;
 }
 
-/* 中文文本的按钮样式 */
-.floating-create-account-button:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-  letter-spacing: 2px;
-}
+/* Removed Chinese font override for floating button */
 
 /* Create Account Button - Desktop (below hexagon) */
 .create-account-button-desktop {
@@ -481,10 +473,7 @@
   transform: translateY(0);
 }
 
-.create-account-button-desktop:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-  letter-spacing: 0.2em;
-}
+/* Removed Chinese font override for desktop button */
 
 /* Create Account Button - Mobile (at bottom of content) */
 .create-account-button-mobile {
@@ -519,10 +508,7 @@
   transform: translateY(0);
 }
 
-.create-account-button-mobile:lang(zh) {
-  font-family: 'Alike Angular', serif !important;
-  letter-spacing: 0.2em;
-}
+/* Removed Chinese font override for mobile button */
 
 /* 底部的dock样式 */
 .character-cards-dock {
@@ -634,9 +620,7 @@
   letter-spacing: 0.1em;
 }
 
-.dock-card-you-label:lang(zh) {
-  font-family: 'Alike Angular', serif;
-}
+/* Removed Chinese font override for you label */
 
 /* 响应式设计 */
 @media (max-width: 1200px) {

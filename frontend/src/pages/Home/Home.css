@@ -15,21 +15,7 @@
 .main-content[lang="zh"],
 .main-content [lang="zh"],
 .content-section[lang="zh"],
-.content-section [lang="zh"],
-.mission-statement[lang="zh"] {
-  font-family: 'Alike Angular', serif !important;
-}
-
-/* 强制中文内容使用Alike Angular */
-[lang="zh"] strong,
-[lang="zh"] span,
-[lang="zh"] p,
-[lang="zh"] h1,
-[lang="zh"] h2,
-[lang="zh"] h3,
-.main-content [lang="zh"] * {
-  font-family: 'Alike Angular', serif !important;
-}
+/* Removed Chinese font override - using Kaisei Decol universally */
 
 /* Molecule Background */
 .molecule-background {

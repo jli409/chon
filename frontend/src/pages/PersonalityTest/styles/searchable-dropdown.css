@@ -17,7 +17,7 @@
   border-radius: 4px;
   background-color: white;
   color: #333;
-  font-family: 'Kaisei Decol', 'Alike Angular', serif;
+  font-family: 'Kaisei Decol', serif;
   font-size: 1rem;
   outline: none;
   transition: all 0.3s ease;
@@ -85,13 +85,13 @@
 
 .option-text {
   color: #333;
-  font-family: 'Kaisei Decol', 'Alike Angular', serif;
+  font-family: 'Kaisei Decol', serif;
   font-size: 1rem;
 }
 
 .option-text-secondary {
   color: #666;
-  font-family: 'Kaisei Decol', 'Alike Angular', serif;
+  font-family: 'Kaisei Decol', serif;
   font-size: 0.9rem;
 }
 
@@ -99,7 +99,7 @@
   padding: 1rem;
   text-align: center;
   color: #999;
-  font-family: 'Kaisei Decol', 'Alike Angular', serif;
+  font-family: 'Kaisei Decol', serif;
   font-size: 0.9rem;
 }
 
