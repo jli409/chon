@@ -11,10 +11,6 @@
   height: 100%;
 }
 
-/* 中文文本的特定样式 - 更高优先级 */
-.main-content[lang="zh"],
-.main-content [lang="zh"],
-.content-section[lang="zh"],
 /* Removed Chinese font override - using Kaisei Decol universally */
 
 /* Molecule Background */
