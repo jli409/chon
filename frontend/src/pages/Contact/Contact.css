@@ -14,7 +14,7 @@
 /* Removed Chinese font override - using Kaisei Decol universally */
 
 /* 背景元素 */
-.contact-container .molecule-background {
+.molecule-background {
   position: fixed;
   top: 50%;
   right: 0;
@@ -22,7 +22,7 @@
   height: 70%;
   background-image: url('/images/molecule.jpg');
   background-repeat: no-repeat;
-  background-position: right center;
+  background-position: center right;
   background-size: contain;
   opacity: 0.15;
   pointer-events: none;
@@ -148,7 +148,7 @@
     padding: 2.5rem 6rem;
   }
   
-  .contact-container .molecule-background {
+  .molecule-background {
     right: 0;
   }
   
@@ -166,7 +166,7 @@
     padding: 2rem 4rem;
   }
   
-  .contact-container .molecule-background {
+  .molecule-background {
     opacity: 0.1;
   }
   
@@ -204,7 +204,7 @@
     padding: 0.9rem 0;
   }
 
-  .contact-container .molecule-background {
+  .molecule-background {
     width: 100%;
     opacity: 0.08;
   }
@@ -234,10 +234,9 @@
     font-size: 1rem;
   }
   
-  .contact-container .molecule-background {
+  .molecule-background {
     width: 100%;
     opacity: 0.08;
-    background-position: right center;
   }
 }
 

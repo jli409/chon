@@ -326,7 +326,7 @@
     padding: 2.5rem 3rem;
   }
   
-  .login-container .molecule-background {
+  .molecule-background {
     width: 100%;
     opacity: 0.08;
   }
@@ -426,7 +426,7 @@
     content: '';
   }
   
-  .login-container .molecule-background {
+  .molecule-background {
     width: 100%;
     opacity: 0.08;
   }
