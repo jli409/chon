@@ -200,13 +200,15 @@ const Login = () => {
     e.preventDefault();
     if (validateForm()) {
       // Save account data to localStorage
-      localStorage.setItem('userAccount', JSON.stringify({
+      const accountData = {
         email: formData.email,
         password: formData.password,
         createdAt: new Date().toISOString()
-      }));
+      };
+      localStorage.setItem('userAccount', JSON.stringify(accountData));
       
-      console.log('Form submitted:', formData);
+      console.log('Account created and saved:', accountData);
+      console.log('localStorage userAccount:', localStorage.getItem('userAccount'));
       alert(language === 'en' ? 'Account created successfully!' : '账号创建成功！');
       
       // Redirect to results if test has been taken

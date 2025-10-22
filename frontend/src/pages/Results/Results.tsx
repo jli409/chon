@@ -498,6 +498,7 @@ const Results: React.FC = () => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
   const [isCardSwitching, setIsCardSwitching] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // 添加图片预加载功能
   useEffect(() => {
@@ -819,6 +820,35 @@ const Results: React.FC = () => {
     }
   }, []);
 
+  // Check if user is logged in
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const hasAccount = localStorage.getItem('userAccount');
+      console.log('Checking login status:', { hasAccount, isLoggedIn: !!hasAccount });
+      setIsLoggedIn(!!hasAccount);
+    };
+    
+    // Check immediately
+    checkLoginStatus();
+    
+    // Listen for storage changes (when user logs in/out in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userAccount') {
+        checkLoginStatus();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically in case localStorage was modified directly
+    const interval = setInterval(checkLoginStatus, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const handleCardClick = (index: number) => {
     if (index !== activeCardIndex) {
       // 设置切换状态
@@ -878,12 +908,14 @@ const Results: React.FC = () => {
           </div>
           
           {/* Create Account Button - Below hexagon on desktop */}
-          <button 
-            className="create-account-button-desktop"
-            onClick={() => navigate('/login', { state: { mode: 'register' } })}
-          >
-            {language === 'en' ? 'Create Account' : '创建账户'}
-          </button>
+          {!isLoggedIn && (
+            <button 
+              className="create-account-button-desktop"
+              onClick={() => navigate('/login', { state: { mode: 'register' } })}
+            >
+              {language === 'en' ? 'Create Account' : '创建账户'}
+            </button>
+          )}
         </div>
         
         <div className="results-right">
@@ -931,12 +963,14 @@ const Results: React.FC = () => {
           </div>
           
           {/* Create Account Button - At bottom on mobile */}
-          <button 
-            className="create-account-button-mobile"
-            onClick={() => navigate('/login', { state: { mode: 'register' } })}
-          >
-            {language === 'en' ? 'Create Account' : '创建账户'}
-          </button>
+          {!isLoggedIn && (
+            <button 
+              className="create-account-button-mobile"
+              onClick={() => navigate('/login', { state: { mode: 'register' } })}
+            >
+              {language === 'en' ? 'Create Account' : '创建账户'}
+            </button>
+          )}
         </div>
       </div>
       

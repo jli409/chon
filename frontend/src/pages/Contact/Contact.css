@@ -205,7 +205,8 @@
   }
 
   .contact-container .molecule-background {
-    opacity: 0.1;
+    width: 100%;
+    opacity: 0.08;
   }
 }
 

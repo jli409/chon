@@ -684,9 +684,9 @@
 .question-navigation, 
 .first-page-navigation {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   width: 100%;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 /* 确保在有多个按钮时的位置正确 */
@@ -700,13 +700,13 @@
 
 /* 特别指定第一页导航样式 */
 .first-page-true .question-navigation {
-  justify-content: flex-end;
+  justify-content: center;
   display: flex;
   width: 100%;
 }
 
 .first-page-true .question-navigation .next-button {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .nav-button {
@@ -719,6 +719,10 @@
   background-color: white;
   border: 1px solid #e0e0e0;
   color: #333;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .next-button {
@@ -1188,6 +1192,18 @@
   border-color: #FF9598;
 }
 
+/* Position continue button under scale circles */
+.scale-question-container .question-navigation {
+  justify-content: center !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Fix continue button arrow centering */
+.question-navigation .continue-arrow {
+  letter-spacing: normal !important;
+  margin-left: 0.3em;
+}
+
 /* 桌面端优化 - 调整样式 */
 @media (min-width: 1024px) {
   .question-text {
@@ -1579,19 +1595,19 @@ html[data-privacy="true"] {
 
 /* 为第一页调整特殊样式 */
 .first-page-true .question-navigation {
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 /* 第一页为所有continue按钮强制指定样式 */
 .first-page-questions .question-navigation {
   display: flex !important;
-  justify-content: flex-end !important;
+  justify-content: center !important;
   width: 100% !important;
 }
 
 /* 特别强调first-page-true的样式优先级 */
 .first-page-true .question-navigation {
   display: flex !important;
-  justify-content: flex-end !important;
+  justify-content: center !important;
   width: 100% !important;
 } 
