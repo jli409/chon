@@ -48,16 +48,18 @@ export const scrollToNextQuestion = (currentQuestionId: string): void => {
       nextQuestionElement?.classList.remove('question-hidden');
       nextQuestionElement?.classList.add('question-visible');
       
-      // Scroll to the next question - always use 'center' for proper positioning
-      nextQuestionElement?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center'
-      });
+      // Wait for visibility changes to complete, then scroll to center
+      setTimeout(() => {
+        nextQuestionElement?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
+      }, 900);
       
       // Clear auto-scroll flag after animation completes
       setTimeout(() => {
         isAutoScrolling = false;
-      }, 1000);
+      }, 1200);
     }, 150);
   }
 };
@@ -97,18 +99,23 @@ export const showAllQuestionsOnScroll = (): void => {
       if (scrollDelta > scrollThreshold) {
         hasUserScrolled = true;
         
-        // Show all questions when user scrolls
-        const allQuestions = document.querySelectorAll('.question-container');
-        allQuestions.forEach(q => {
-          q.classList.remove('question-hidden');
-          q.classList.add('question-visible');
-        });
-        
-        // Show continue button too
+        // Check if continue button is visible (meaning we're at end of section)
         const continueButton = document.querySelector('.question-navigation');
-        if (continueButton) {
-          continueButton.classList.remove('button-hidden');
-          continueButton.classList.add('button-visible');
+        const isContinueButtonVisible = continueButton && !continueButton.classList.contains('button-hidden');
+        
+        if (!isContinueButtonVisible) {
+          // Show all questions when user scrolls (only if not at end of section)
+          const allQuestions = document.querySelectorAll('.question-container');
+          allQuestions.forEach(q => {
+            q.classList.remove('question-hidden');
+            q.classList.add('question-visible');
+          });
+          
+          // Show continue button too
+          if (continueButton) {
+            continueButton.classList.remove('button-hidden');
+            continueButton.classList.add('button-visible');
+          }
         }
       }
     }
