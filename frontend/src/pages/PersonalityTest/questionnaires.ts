@@ -1325,7 +1325,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       66,  // mother 20
       69,  // mother 21
       70,  // mother 22
-      25,  // mother 23
       // Section II. About Us, CHON
       26,  // mother 24
       27,  // mother 25
@@ -1354,7 +1353,9 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       78,  // mother 47
       79,  // mother 48
       80,  // mother 49
-      51   // mother 50
+      51,  // mother 50
+      // Section IV. Final Question
+      25   // mother 51
     ],
     sections: [
       {
@@ -1365,17 +1366,22 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
         startIndex: 11,
-        endIndex: 22
+        endIndex: 21
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 23,
-        endIndex: 36
+        startIndex: 22,
+        endIndex: 35
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 37,
+        startIndex: 36,
         endIndex: 49
+      },
+      {
+        title: { en: 'Final Question', zh: '最后一题' },
+        startIndex: 50,
+        endIndex: 50
       }
     ],
     questionModifications: {
@@ -1555,7 +1561,7 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
         }
       ]
     },
-    totalQuestions: 50
+    totalQuestions: 51
   },
   corporate: {
     type: 'corporate',
@@ -1585,7 +1591,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       22,  // corporate manager 21
       23,  // corporate manager 22
       24,  // corporate manager 23
-      25,  // corporate manager 24
       // Section II. About Us, CHON
       26,  // corporate manager 25
       27,  // corporate manager 26
@@ -1613,7 +1618,9 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       48,  // corporate manager 47
       49,  // corporate manager 48
       50,  // corporate manager 49
-      51   // corporate manager 50
+      51,  // corporate manager 50
+      // Section IV. Final Question
+      25   // corporate manager 51
     ],
     sections: [
       {
@@ -1624,21 +1631,26 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
         startIndex: 10,
-        endIndex: 23
+        endIndex: 22
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 24,
-        endIndex: 38
+        startIndex: 23,
+        endIndex: 37
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 39,
+        startIndex: 38,
         endIndex: 49
+      },
+      {
+        title: { en: 'Final Question', zh: '最后一题' },
+        startIndex: 50,
+        endIndex: 50
       }
     ],
     questionModifications: {},
-    totalQuestions: 50
+    totalQuestions: 51
   },
   other: {
     type: 'other',
@@ -1688,7 +1700,9 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       48,  // others 39
       49,  // others 40
       50,  // others 41
-      51   // others 42
+      51,  // others 42
+      // Section IV. Final Question
+      25   // others 43
     ],
     sections: [
       {
@@ -1710,10 +1724,15 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
         startIndex: 31,
         endIndex: 41
+      },
+      {
+        title: { en: 'Final Question', zh: '最后一题' },
+        startIndex: 42,
+        endIndex: 42
       }
     ],
     questionModifications: {},
-    totalQuestions: 42
+    totalQuestions: 43
   },
   both: {
     type: 'both',
@@ -1750,7 +1769,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       22,  // both 28
       23,  // both 29
       24,  // both 30
-      25,  // both 31
       // Section II. About Work-Life Balance
       59,  // both 32
       60,  // both 33
@@ -1791,7 +1809,9 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       78,  // both 66
       79,  // both 67
       80,  // both 68
-      51   // both 69
+      51,  // both 69
+      // Section V. Final Question
+      25   // both 70
     ],
     sections: [
       {
@@ -1802,22 +1822,27 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
         startIndex: 17,
-        endIndex: 30
+        endIndex: 29
       },
       {
         title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
-        startIndex: 31,
-        endIndex: 41
+        startIndex: 30,
+        endIndex: 40
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 42,
-        endIndex: 55
+        startIndex: 41,
+        endIndex: 54
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 56,
+        startIndex: 55,
         endIndex: 68
+      },
+      {
+        title: { en: 'Final Question', zh: '最后一题' },
+        startIndex: 69,
+        endIndex: 69
       }
     ],
     questionModifications: {
@@ -1846,7 +1871,7 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
         textZh: '公司是否应核实该平台供您允许的家庭成员使用？'
       }
     },
-    totalQuestions: 69
+    totalQuestions: 70
   }
 };
 

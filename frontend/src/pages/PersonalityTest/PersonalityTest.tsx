@@ -579,6 +579,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     // Update tag scores
     updateTagScores(questionId, optionId);
     
+    // Auto-finish if this is question 25 (final question)
+    if (questionId === '25') {
+      // Wait a moment for the answer to be visually registered, then finish
+      setTimeout(() => {
+        finishQuestionnaire();
+      }, 500);
+      return;
+    }
+    
     // Check if this is the last question in the section
     if (isLastQuestionInSection(questionId)) {
       // Show continue button (keep last question visible)
@@ -1298,16 +1307,85 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                 </button>
                 
                 <button 
-                  className="nav-button finish-button"
+                  className="nav-button next-button"
                   onClick={() => {
-                    // 完成问卷并跳转到结果页面
-                    finishQuestionnaire();
+                    setShowFifthPage(false);
+                    setShowSixthPage(true);
+                    // 添加自动滚动功能
+                    setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
                   disabled={Object.keys(getCurrentAnswers()).length < 13}
                 >
-                  {language === 'en' ? 'Finish' : '完成'}
+                  {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
+            </div>
+          ) : null
+        }
+
+        {/* 母亲问卷第六页 - Final Question */}
+        {
+          showSixthPage ? (
+            <div className="questions-section">
+              {questions.slice(50, 51).map((question) => (
+                <div 
+                  key={question.id}
+                  id={`question-${question.id}`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible`}
+                >
+                  {question.type === 'scale-question' && (
+                    <div className="scale-question-wrapper">
+                      <p className="question-text" lang={language}>
+                        {language === 'en' ? question.textEn : question.textZh}
+                      </p>
+                      <div className="scale-options">
+                        {[...Array(9)].map((_, i) => {
+                          const value = i + 1;
+                          const isSelected = getCurrentAnswers()[question.id] === value.toString();
+                          return (
+                            <label key={value} className={`scale-option ${isSelected ? 'selected' : ''}`}>
+                              <input
+                                type="radio"
+                                name={question.id}
+                                value={value}
+                                checked={isSelected}
+                                onChange={() => handleScaleAnswer(question.id, value.toString())}
+                              />
+                              <span className="scale-circle"></span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div className="scale-labels">
+                        <span className="scale-label-left">
+                          {language === 'en' ? question.scaleLabels?.left.en : question.scaleLabels?.left.zh}
+                        </span>
+                        <span className="scale-label-right">
+                          {language === 'en' ? question.scaleLabels?.right.en : question.scaleLabels?.right.zh}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {question.type === 'multiple-choice' && question.options && (
+                    <div>
+                      <p className="question-text" lang={language}>
+                        {language === 'en' ? question.textEn : question.textZh}
+                      </p>
+                      <div className="answer-options">
+                        {question.options.map((option) => (
+                          <div
+                            key={option.id}
+                            className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
+                            onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
+                          >
+                            <p>{language === 'en' ? option.textEn : option.textZh}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ) : null
         }
@@ -1762,16 +1840,52 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                 </button>
                 
                 <button 
-                  className="nav-button finish-button"
+                  className="nav-button next-button"
                   onClick={() => {
-                    // 完成问卷并跳转到结果页面
-                    finishQuestionnaire();
+                    setShowFourthPage(false);
+                    setShowSixthPage(true);
+                    // 添加自动滚动功能
+                    setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
                   disabled={Object.keys(getCurrentAnswers()).length < 11}
                 >
-                  {language === 'en' ? 'Finish' : '完成'}
+                  {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
+            </div>
+          ) : null
+        }
+
+        {/* 企业问卷第六页 - Final Question */}
+        {
+          showSixthPage ? (
+            <div className="questions-section">
+              {questions.slice(50, 51).map((question) => (
+                <div 
+                  key={question.id}
+                  id={`question-${question.id}`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible`}
+                >
+                  {question.type === 'multiple-choice' && question.options && (
+                    <div>
+                      <p className="question-text" lang={language}>
+                        {language === 'en' ? question.textEn : question.textZh}
+                      </p>
+                      <div className="answer-options">
+                        {question.options.map((option) => (
+                          <div
+                            key={option.id}
+                            className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
+                            onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
+                          >
+                            <p>{language === 'en' ? option.textEn : option.textZh}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ) : null
         }
@@ -2216,16 +2330,52 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                 </button>
                 
                 <button 
-                  className="nav-button finish-button"
+                  className="nav-button next-button"
                   onClick={() => {
-                    // 完成问卷并跳转到结果页面
-                    finishQuestionnaire();
+                    setShowFourthPage(false);
+                    setShowSixthPage(true);
+                    // 添加自动滚动功能
+                    setTimeout(scrollToFirstQuestionOfNextPage, 100);
                   }}
                   disabled={Object.keys(getCurrentAnswers()).length < 11}
                 >
-                  {language === 'en' ? 'Finish' : '完成'}
+                  {language === 'en' ? 'Continue' : '继续'}
                 </button>
               </div>
+            </div>
+          ) : null
+        }
+
+        {/* 其他问卷第六页 - Final Question */}
+        {
+          showSixthPage ? (
+            <div className="questions-section">
+              {questions.slice(42, 43).map((question) => (
+                <div 
+                  key={question.id}
+                  id={`question-${question.id}`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible`}
+                >
+                  {question.type === 'multiple-choice' && question.options && (
+                    <div>
+                      <p className="question-text" lang={language}>
+                        {language === 'en' ? question.textEn : question.textZh}
+                      </p>
+                      <div className="answer-options">
+                        {question.options.map((option) => (
+                          <div
+                            key={option.id}
+                            className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
+                            onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
+                          >
+                            <p>{language === 'en' ? option.textEn : option.textZh}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ) : null
         }
