@@ -524,6 +524,13 @@
   scroll-margin-top: 100px;
 }
 
+/* Final question (question 25) - remove white background */
+.question-container.final-question {
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
 /* First question in demographic section (no section title) - centered like titled sections */
 .first-page-true .question-container:first-child {
   margin-top: 80px;

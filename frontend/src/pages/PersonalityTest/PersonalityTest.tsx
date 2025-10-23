@@ -7,7 +7,7 @@ import BothQuestionnaire from './BothQuestionnaire.tsx';
 import SearchableDropdown from './SearchableDropdown.tsx';
 import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage, showAllQuestionsOnScroll, resetUserScroll } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
-import { questionnaires, questionnaireConfigs, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
+import { questionnaires, questionnaireConfigs, unifiedQuestions, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
 import { 
   scaleValueToPercentage, 
   toChineseTag, 
@@ -1327,11 +1327,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {
           showSixthPage ? (
             <div className="questions-section">
-              {questions.slice(50, 51).map((question) => (
+              {[unifiedQuestions[25]].map((question) => (
                 <div 
                   key={question.id}
                   id={`question-${question.id}`}
-                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible final-question`}
                 >
                   {question.type === 'scale-question' && (
                     <div className="scale-question-wrapper">
@@ -1860,11 +1860,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {
           showSixthPage ? (
             <div className="questions-section">
-              {questions.slice(50, 51).map((question) => (
+              {[unifiedQuestions[25]].map((question) => (
                 <div 
                   key={question.id}
                   id={`question-${question.id}`}
-                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible final-question`}
                 >
                   {question.type === 'multiple-choice' && question.options && (
                     <div>
@@ -2350,11 +2350,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {
           showSixthPage ? (
             <div className="questions-section">
-              {questions.slice(42, 43).map((question) => (
+              {[unifiedQuestions[25]].map((question) => (
                 <div 
                   key={question.id}
                   id={`question-${question.id}`}
-                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible final-question`}
                 >
                   {question.type === 'multiple-choice' && question.options && (
                     <div>

@@ -1,36 +1,46 @@
 // Character matching utility
 
 /**
- * Find the best matching character using sum of squares difference
- * Compares user scores to the midpoint of each character's tag ranges
- * Returns the character with the lowest sum of squared differences
+ * Find the best matching character based on:
+ * 1. Maximum number of skills in range
+ * 2. For out-of-range skills, minimum sum of differences
  */
 export const findBestMatchCharacter = <T extends { tagRanges: Record<string, [number, number]> }>(
   userScores: Record<string, number>,
   characters: T[]
 ): T => {
   let bestMatch = characters[0];
-  let lowestDifference = Infinity;
+  let maxInRange = -1;
+  let minOutOfRangeDiff = Infinity;
 
   characters.forEach(character => {
-    let sumOfSquares = 0;
+    let inRangeCount = 0;
+    let outOfRangeDiffSum = 0;
     
     Object.entries(character.tagRanges).forEach(([tag, range]) => {
       const userScore = userScores[tag];
       if (userScore !== undefined) {
-        // Calculate minimum distance to either lower or upper bound
-        const distanceToLower = Math.abs(userScore - range[0]);
-        const distanceToUpper = Math.abs(userScore - range[1]);
-        const minDistance = Math.min(distanceToLower, distanceToUpper);
-        
-        // Square the minimum distance
-        sumOfSquares += minDistance * minDistance;
+        // Check if score is in range
+        if (userScore >= range[0] && userScore <= range[1]) {
+          inRangeCount++;
+        } else {
+          // Calculate difference for out-of-range score
+          if (userScore < range[0]) {
+            outOfRangeDiffSum += range[0] - userScore;
+          } else {
+            outOfRangeDiffSum += userScore - range[1];
+          }
+        }
       }
     });
     
-    // Update best match if this character has lower sum of squares
-    if (sumOfSquares < lowestDifference) {
-      lowestDifference = sumOfSquares;
+    // Update best match based on:
+    // 1. More skills in range (higher priority)
+    // 2. Lower sum of out-of-range differences (tiebreaker)
+    if (inRangeCount > maxInRange || 
+        (inRangeCount === maxInRange && outOfRangeDiffSum < minOutOfRangeDiff)) {
+      maxInRange = inRangeCount;
+      minOutOfRangeDiff = outOfRangeDiffSum;
       bestMatch = character;
     }
   });
@@ -39,37 +49,50 @@ export const findBestMatchCharacter = <T extends { tagRanges: Record<string, [nu
 };
 
 /**
- * Sort all characters by best match (lowest sum of squares first)
+ * Sort all characters by best match:
+ * 1. First by number of skills in range (descending)
+ * 2. Then by sum of out-of-range differences (ascending)
  */
 export const sortCharactersByMatch = <T extends { tagRanges: Record<string, [number, number]> }>(
   userScores: Record<string, number>,
   characters: T[]
 ): T[] => {
   const charactersWithScores = characters.map(character => {
-    let sumOfSquares = 0;
+    let inRangeCount = 0;
+    let outOfRangeDiffSum = 0;
     
     Object.entries(character.tagRanges).forEach(([tag, range]) => {
       const userScore = userScores[tag];
       if (userScore !== undefined) {
-        // Calculate minimum distance to either lower or upper bound
-        const distanceToLower = Math.abs(userScore - range[0]);
-        const distanceToUpper = Math.abs(userScore - range[1]);
-        const minDistance = Math.min(distanceToLower, distanceToUpper);
-        
-        // Square the minimum distance
-        sumOfSquares += minDistance * minDistance;
+        // Check if score is in range
+        if (userScore >= range[0] && userScore <= range[1]) {
+          inRangeCount++;
+        } else {
+          // Calculate difference for out-of-range score
+          if (userScore < range[0]) {
+            outOfRangeDiffSum += range[0] - userScore;
+          } else {
+            outOfRangeDiffSum += userScore - range[1];
+          }
+        }
       }
     });
     
     return {
       character,
-      sumOfSquares
+      inRangeCount,
+      outOfRangeDiffSum
     };
   });
 
-  // Sort by sum of squares (lowest first = best match)
+  // Sort by in-range count (descending), then by out-of-range diff sum (ascending)
   return charactersWithScores
-    .sort((a, b) => a.sumOfSquares - b.sumOfSquares)
+    .sort((a, b) => {
+      if (a.inRangeCount !== b.inRangeCount) {
+        return b.inRangeCount - a.inRangeCount; // More in-range is better
+      }
+      return a.outOfRangeDiffSum - b.outOfRangeDiffSum; // Lower difference is better
+    })
     .map(item => item.character);
 };
 
