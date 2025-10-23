@@ -1,27 +1,7 @@
 import React from 'react';
 import { questionnaires } from './questionnaires';
 import SearchableDropdown from './SearchableDropdown';
-
-
-// 不使用严格的类型检查，改用更宽松的类型以适应所有问题类型
-interface QuestionBase {
-  id: string;
-  type: string;
-  textEn: string;
-  textZh: string;
-  options?: { id: string; textEn: string; textZh: string; }[];
-  scaleLabels?: { 
-    left: {
-      en: string;
-      zh: string;
-    };
-    right: {
-      en: string;
-      zh: string;
-    };
-  };
-  tags?: string[];
-}
+import EmailVerificationQuestion from './EmailVerificationQuestion';
 
 // Define option type to fix 'any' type issues
 interface OptionType {
@@ -143,7 +123,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                       const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                       handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                     }}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter' && getCurrentAnswers()[question.id]) {
                         const currentIndex = page1Questions.findIndex(q => q.id === question.id);
                         if (currentIndex < page1Questions.length - 1) {
@@ -177,7 +157,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                     className="text-answer-input"
                     value={getCurrentAnswers()[question.id] || ''}
                     onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter' && getCurrentAnswers()[question.id]) {
                         const currentIndex = page1Questions.findIndex(q => q.id === question.id);
                         if (currentIndex < page1Questions.length - 1) {
@@ -197,7 +177,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                   questionId={question.id}
                   value={getCurrentAnswers()[question.id] || ''}
                   onChange={(value: string) => handleTextAnswer(question.id, value)}
-                  onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === 'Enter') {
                       // Handle enter key if needed
                     }
