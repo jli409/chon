@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { toEnglishTag, REVERSE_TAG_MAPPING } from '../../utils/tagUtils';
-import { sortCharactersByMatch } from '../../utils/characterMatching';
+import { sortCharactersByMatch, applyQuestion25Bonus } from '../../utils/characterMatching';
 import './Results.css';
 
 interface TagScore {
@@ -807,11 +807,29 @@ const Results: React.FC = () => {
       userScores['coreEndurance'] = adjustedCore;
     }
 
-    setTagScores(userScores);
+    // Get question 25 answer from localStorage
+    const savedAnswers = localStorage.getItem('currentAnswers') || localStorage.getItem('motherAnswers') || localStorage.getItem('corporateAnswers') || localStorage.getItem('otherAnswers');
+    let question25Answer: string | undefined;
+    if (savedAnswers) {
+      try {
+        const answers = JSON.parse(savedAnswers);
+        question25Answer = answers['25'];
+      } catch (e) {
+        console.error('Error parsing answers:', e);
+      }
+    }
 
-    // 匹配最佳符合的卡片并按匹配度排序（使用sum of squares）
-    if (Object.keys(userScores).length > 0) {
-      const sortedCards = sortCharactersByMatch(userScores, cardsData);
+    // Apply question 25 bonus (adds 10% to specific tag)
+    let finalScores = userScores;
+    if (question25Answer) {
+      finalScores = applyQuestion25Bonus(userScores, question25Answer);
+    }
+
+    setTagScores(finalScores);
+
+    // 匹配最佳符合的卡片并按匹配度排序，使用question 25作为tie-breaker
+    if (Object.keys(finalScores).length > 0) {
+      const sortedCards = sortCharactersByMatch(finalScores, cardsData, question25Answer);
       setCards(sortedCards);
       setActiveCardIndex(0);
       setMatchedCard(sortedCards[0]);

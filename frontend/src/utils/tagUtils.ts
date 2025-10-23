@@ -27,7 +27,7 @@ export const ENGLISH_TAGS = ['selfAwareness', 'dedication', 'socialIntelligence'
 export const CHINESE_TAGS = ['自我意识', '奉献精神', '社交情商', '情绪调节', '客观能力', '核心耐力'];
 
 // Convert scale value to percentage
-// Supports both 5-point scale (1-5) and 9-point scale (1-9)
+// Only supports 5-point scale (1-5)
 export const scaleValueToPercentage = (value: string | number): number => {
   let rawScore: number;
   
@@ -36,8 +36,6 @@ export const scaleValueToPercentage = (value: string | number): number => {
       // Map A-E to 1-5 (5-point scale)
       const scoreMap: Record<string, number> = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5};
       rawScore = scoreMap[value] || 0;
-      // 5-point scale: 1=20%, 2=40%, 3=60%, 4=80%, 5=100%
-      return rawScore * 20;
     } else {
       // Parse numeric string
       rawScore = parseInt(value, 10) || 0;
@@ -46,15 +44,8 @@ export const scaleValueToPercentage = (value: string | number): number => {
     rawScore = value;
   }
   
-  // Determine if it's a 9-point or 5-point scale based on the value
-  if (rawScore >= 6 && rawScore <= 9) {
-    // 9-point scale: convert to percentage (1-9 mapped to ~11.11% increments)
-    // 1=11.11%, 2=22.22%, ..., 5=55.56%, ..., 9=100%
-    return (rawScore / 9) * 100;
-  } else {
-    // 5-point scale: 1=20%, 2=40%, 3=60%, 4=80%, 5=100%
-    return rawScore * 20;
-  }
+  // 5-point scale: 1=20%, 2=40%, 3=60%, 4=80%, 5=100%
+  return rawScore * 20;
 };
 
 // Convert English tag to Chinese tag
