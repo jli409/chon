@@ -1366,16 +1366,16 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
         startIndex: 11,
-        endIndex: 21
+        endIndex: 22
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 22,
-        endIndex: 35
+        startIndex: 23,
+        endIndex: 36
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 36,
+        startIndex: 37,
         endIndex: 49
       },
       {
@@ -1631,16 +1631,16 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
         startIndex: 10,
-        endIndex: 22
+        endIndex: 23
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 23,
-        endIndex: 37
+        startIndex: 24,
+        endIndex: 38
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 38,
+        startIndex: 39,
         endIndex: 49
       },
       {
@@ -1822,21 +1822,21 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
         startIndex: 17,
-        endIndex: 29
+        endIndex: 30
       },
       {
         title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
-        startIndex: 30,
-        endIndex: 40
+        startIndex: 31,
+        endIndex: 41
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 41,
-        endIndex: 54
+        startIndex: 42,
+        endIndex: 55
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 55,
+        startIndex: 56,
         endIndex: 68
       },
       {
