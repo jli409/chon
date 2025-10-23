@@ -85,8 +85,28 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [introStats, setIntroStats] = useState({
     yesCount: 0,
     noCount: 0,
-    yesPercentage: 65, // 默认值，将被API数据替换
+    yesPercentage: 50, // Start with 50% default
     loading: true
+  });
+  
+  // Local fallback for tracking choices if API fails - persist in localStorage
+  const [localChoices, setLocalChoices] = useState<{yes: number, no: number}>(() => {
+    try {
+      const saved = localStorage.getItem('introLocalChoices');
+      return saved ? JSON.parse(saved) : {yes: 0, no: 0};
+    } catch {
+      return {yes: 0, no: 0};
+    }
+  });
+  
+  // Track if user has already made a choice (persist in localStorage)
+  const [hasUserChosen, setHasUserChosen] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('introUserHasChosen');
+      return saved === 'true';
+    } catch {
+      return false;
+    }
   });
   // Add state to track current questionnaire type
   const [activeQuestionnaire, setActiveQuestionnaire] = useState<QuestionnaireType | null>(null);
@@ -424,25 +444,67 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   // 添加获取intro统计数据的函数
   const fetchIntroStats = async () => {
     try {
+      console.log("Fetching intro stats from:", `${API_URL}/api/intro-stats`);
       const response = await fetch(`${API_URL}/api/intro-stats`);
+      
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
       }
       
       const data = await response.json();
+      console.log("Raw API response:", data);
       
-      // 只有在用户已经做出选择时，才更新UI显示
-      setIntroStats({
-        yesCount: data.yes_count,
-        noCount: data.no_count,
-        yesPercentage: data.yes_percentage,
-        loading: false
-      });
+      // Handle different possible response formats
+      const yesCount = data.yes_count || data.yesCount || data.yes || 0;
+      const noCount = data.no_count || data.noCount || data.no || 0;
+      const totalResponses = yesCount + noCount;
+      const yesPercentage = totalResponses > 0 ? Math.round((yesCount / totalResponses) * 100) : 0;
       
-      console.log("Fetched intro stats:", data);
+      console.log("Processed stats:", { yesCount, noCount, totalResponses, yesPercentage });
+      
+      // Always prioritize local data if we have any local choices
+      if (localChoices.yes > 0 || localChoices.no > 0) {
+        const totalLocal = localChoices.yes + localChoices.no;
+        const localYesPercentage = totalLocal > 0 ? Math.round((localChoices.yes / totalLocal) * 100) : 0;
+        
+        console.log("Using local data (API data ignored):", { 
+          apiYes: yesCount,
+          apiNo: noCount,
+          apiTotal: totalResponses,
+          localYes: localChoices.yes, 
+          localNo: localChoices.no, 
+          localPercentage: localYesPercentage 
+        });
+        
+        setIntroStats({
+          yesCount: localChoices.yes,
+          noCount: localChoices.no,
+          yesPercentage: localYesPercentage,
+          loading: false
+        });
+      } else {
+        // Only use API data if we have no local choices
+        console.log("Using API data (no local choices):", { yesCount, noCount, yesPercentage });
+        setIntroStats({
+          yesCount,
+          noCount,
+          yesPercentage,
+          loading: false
+        });
+      }
+      
     } catch (error) {
       console.error("Error fetching intro stats:", error);
-      setIntroStats(prev => ({...prev, loading: false}));
+      // Use local data as fallback
+      const totalLocal = localChoices.yes + localChoices.no;
+      const localYesPercentage = totalLocal > 0 ? Math.round((localChoices.yes / totalLocal) * 100) : 0;
+      
+      setIntroStats({
+        yesCount: localChoices.yes,
+        noCount: localChoices.no,
+        yesPercentage: localYesPercentage,
+        loading: false
+      });
     }
   };
 
@@ -457,6 +519,37 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       return () => clearTimeout(timer);
     }
   }, [userChoice]);
+  
+  // Update stats immediately when local choices change (as fallback)
+  useEffect(() => {
+    console.log("localChoices changed:", localChoices);
+    if (localChoices.yes > 0 || localChoices.no > 0) {
+      const totalLocal = localChoices.yes + localChoices.no;
+      const localYesPercentage = totalLocal > 0 ? Math.round((localChoices.yes / totalLocal) * 100) : 50;
+      
+      console.log("Updating stats from local choices:", { 
+        localYes: localChoices.yes, 
+        localNo: localChoices.no, 
+        localPercentage: localYesPercentage 
+      });
+      
+      // Always update with local data immediately
+      setIntroStats({
+        yesCount: localChoices.yes,
+        noCount: localChoices.no,
+        yesPercentage: localYesPercentage,
+        loading: false
+      });
+    } else {
+      // If no local choices, show default 50/50
+      setIntroStats({
+        yesCount: 0,
+        noCount: 0,
+        yesPercentage: 50,
+        loading: false
+      });
+    }
+  }, [localChoices]);
 
   // 在组件挂载或step变为'intro'时进行初始化
   useEffect(() => {
@@ -464,21 +557,80 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       // 重置userChoice，确保用户每次回到intro页面时都会看到选项
       setUserChoice(null);
       
+      // Load local choices and choice flag from localStorage
+      try {
+        const savedChoices = localStorage.getItem('introLocalChoices');
+        const savedHasChosen = localStorage.getItem('introUserHasChosen');
+        
+        if (savedChoices) {
+          const parsedChoices = JSON.parse(savedChoices);
+          setLocalChoices(parsedChoices);
+          console.log("Loaded local choices from localStorage:", parsedChoices);
+        }
+        
+        if (savedHasChosen === 'true') {
+          setHasUserChosen(true);
+          console.log("User has already made a choice, will show stats bar");
+        }
+      } catch (error) {
+        console.error("Error loading local data:", error);
+      }
+      
       // 同时预加载统计数据，但不会影响UI显示
       fetchIntroStats();
+      
+      // 设置定期刷新统计数据以显示实时更新
+      // Only refresh if we don't have local data to avoid overriding
+      const interval = setInterval(() => {
+        if (localChoices.yes === 0 && localChoices.no === 0) {
+          fetchIntroStats();
+        }
+      }, 5000); // 每5秒刷新一次
+      
+      return () => clearInterval(interval);
     }
   }, [step]);
 
-  const handleOptionClick = (choice: string) => {
+  const handleOptionClick = async (choice: string) => {
+    console.log("User clicked:", choice);
     setUserChoice(choice);
     
-    // 实时保存intro choice到后端
-    questionnaireApi.saveIntroChoice(choice);
-    // 设置loading状态，等待数据更新
-    setIntroStats(prev => ({...prev, loading: true}));
+    // Mark that user has made a choice and persist to localStorage
+    setHasUserChosen(true);
+    localStorage.setItem('introUserHasChosen', 'true');
+    
+    // Update local tracking immediately and persist to localStorage
+    setLocalChoices(prev => {
+      const newChoices = {
+        ...prev,
+        [choice]: prev[choice as keyof typeof prev] + 1
+      };
+      localStorage.setItem('introLocalChoices', JSON.stringify(newChoices));
+      return newChoices;
+    });
+    
+    try {
+      // 实时保存intro choice到后端
+      const success = await questionnaireApi.saveIntroChoice(choice);
+      console.log("Save intro choice result:", success);
+      
+      // Don't fetch API data immediately to avoid overriding local data
+      // The local useEffect will handle updating the display
+      console.log("Choice saved to backend, local data will be used for display");
+      
+    } catch (error) {
+      console.error("Error saving intro choice:", error);
+      // The useEffect watching localChoices will handle updating the stats
+      // No need to manually calculate here since localChoices was already updated
+    }
   };
   
   const handleBeginTest = () => {
+    // Clear local choices and choice flag when starting the test
+    localStorage.removeItem('introLocalChoices');
+    localStorage.removeItem('introUserHasChosen');
+    setLocalChoices({yes: 0, no: 0});
+    setHasUserChosen(false);
     setStep('identity');
   };
 
@@ -2686,7 +2838,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             lang={language}>
         </h1>
         
-        {!userChoice ? (
+        {!hasUserChosen ? (
           <div className="test-options" lang={language}>
             <button 
               className="test-option-button"
@@ -2706,24 +2858,32 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         ) : (
           <>
             <div className="progress-container" lang={language}>
-              <div className="percentage-labels" lang={language}>
-                <span className="agree-label" lang={language}>
-                  {t.intro.agree} ({introStats.yesPercentage}%)
-                </span>
-                <span className="disagree-label" lang={language}>
-                  {t.intro.disagree} ({100 - introStats.yesPercentage}%)
-                </span>
-              </div>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${introStats.yesPercentage}%` }}
-                ></div>
-              </div>
-              {introStats.loading && (
+              {introStats.loading ? (
                 <div className="loading-indicator">
-                  {language === 'en' ? 'Loading stats...' : '加载统计数据...'}
+                  {language === 'en' ? 'Loading real-time stats...' : '加载实时统计数据...'}
                 </div>
+              ) : (
+                <>
+                  <div className="percentage-labels" lang={language}>
+                    <span className="agree-label" lang={language}>
+                      {t.intro.agree} ({introStats.yesPercentage}%)
+                    </span>
+                    <span className="disagree-label" lang={language}>
+                      {t.intro.disagree} ({100 - introStats.yesPercentage}%)
+                    </span>
+                  </div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${introStats.yesPercentage}%` }}
+                    ></div>
+                  </div>
+                  <div className="stats-info" lang={language}>
+                    {language === 'en' 
+                      ? `Based on ${introStats.yesCount + introStats.noCount} responses` 
+                      : `基于 ${introStats.yesCount + introStats.noCount} 个回答`}
+                  </div>
+                </>
               )}
             </div>
             
