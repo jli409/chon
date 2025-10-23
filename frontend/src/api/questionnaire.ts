@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 // 问卷类型定义
 export type QuestionnaireType = 'mother' | 'corporate' | 'other' | 'both';
-export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question' | 'multi-select' | 'searchable-dropdown' | 'text-with-unit';
+export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question' | 'multi-select' | 'searchable-dropdown' | 'text-with-unit' | 'email';
 
 // 回答格式定义
 export interface QuestionResponse {

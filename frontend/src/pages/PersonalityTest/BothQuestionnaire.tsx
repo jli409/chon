@@ -131,7 +131,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                   question={question}
                   selectedValue={getCurrentAnswers()[question.id] || ''}
                   onSelect={(value: string) => handleMultipleChoiceAnswer(question.id, value)}
-                  language={language}
+                  language={language as 'en' | 'zh'}
                 />
               ) : question.type === 'text-with-unit' ? (
                 <div className="text-with-unit-container">
@@ -166,7 +166,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                         const value = getCurrentAnswers()[question.id]?.split('_')[0] || '';
                         handleTextAnswer(question.id, `${value}_${unitId}`);
                       }}
-                      language={language}
+                      language={language as 'en' | 'zh'}
                     />
                   </div>
                 </div>
@@ -196,8 +196,8 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                 <EmailVerificationQuestion
                   questionId={question.id}
                   value={getCurrentAnswers()[question.id] || ''}
-                  onChange={(value) => handleTextAnswer(question.id, value)}
-                  onKeyPress={(e) => {
+                  onChange={(value: string) => handleTextAnswer(question.id, value)}
+                  onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === 'Enter') {
                       // Handle enter key if needed
                     }

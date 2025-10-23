@@ -2605,7 +2605,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     if (activeQuestionnaire === 'both') {
       // 对于'both'问卷，收集主要和次要回答
       const primaryQuestions = questionnaires.both.questions;
-      const primaryResponses = prepareQuestionResponses('both', primaryQuestions, primaryAnswers);
+      const primaryResponses = prepareQuestionResponses('both', primaryQuestions as { id: string; type: QuestionType }[], primaryAnswers);
       const secondaryResponses = prepareQuestionResponses('both', primaryQuestions, secondaryAnswers);
       
       allResponses = [...primaryResponses, ...secondaryResponses];
