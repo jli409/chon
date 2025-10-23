@@ -2829,7 +2829,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
 
   // 在intro页面确保显示问题和选项
   const renderIntroContent = () => {
-    const wrappedQuestion = `<span lang="${language}">${language === 'en' ? t.intro.question : '母亲是天生的领导者。'}</span>`;
+    const wrappedQuestion = `<span lang="${language}">${language === 'en' ? t.intro.question : '<span style="color: #F0BDC0;">母亲</span>是天生的领导者。'}</span>`;
     
     return (
       <div className="intro-content" lang={language}>

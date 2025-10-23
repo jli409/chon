@@ -459,7 +459,7 @@ const Login = () => {
                   ? (language === 'en' ? 'Create Account' : '创建账号')
                   : (language === 'en' ? 'Login' : '登录')}
               </h1>
-              <div className="login-content" lang={language}>
+      <div className="login-content" lang={language}>
         <form className="registration-form" onSubmit={handleSubmit}>
           {/* Email Field */}
           <div className="form-group">
@@ -560,7 +560,9 @@ const Login = () => {
               {/* Forgot Password Forms */}
               {forgotPasswordStep === 'email' && (
         <div className="login-content forgot-password-content" lang={language}>
-          <h2>{language === 'en' ? 'Reset Password' : '重置密码'}</h2>
+          <h2 dangerouslySetInnerHTML={{ 
+            __html: language === 'en' ? '<span style="color: #F0BDC0;">Reset Password</span>' : '<span style="color: #F0BDC0;">重置密码</span>' 
+          }}></h2>
           <form className="registration-form" onSubmit={handleSendOTP}>
             <div className="form-group">
               <label htmlFor="forgot-email">
@@ -666,15 +668,16 @@ const Login = () => {
               {forgotPasswordErrors.confirmNewPassword && <span className="error-message">{forgotPasswordErrors.confirmNewPassword}</span>}
             </div>
             
-            <button type="submit" className="submit-button">
-              {language === 'en' ? 'Reset Password' : '重置密码'}
+            <button type="submit" className="submit-button" dangerouslySetInnerHTML={{ 
+              __html: language === 'en' ? '<span style="color: #F0BDC0;">Reset Password</span>' : '<span style="color: #F0BDC0;">重置密码</span>' 
+            }}>
             </button>
             
             <button type="button" className="link-text back-button" onClick={handleBackToLogin}>
               {language === 'en' ? '← Back to Login' : '← 返回登录'}
             </button>
           </form>
-        </div>
+      </div>
               )}
             </>
           )}
