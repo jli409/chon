@@ -936,7 +936,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
                           onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
                         >
-                          <p>{option.id}) {language === 'en' ? option.textEn : option.textZh}</p>
+                          <p>{option.id} {language === 'en' ? option.textEn : option.textZh}</p>
                         </div>
                       ))}
                     </div>
@@ -949,7 +949,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -960,7 +960,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
 
@@ -974,7 +974,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                           handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                         }}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
                       />
                       <div className="unit-selector">
@@ -1124,7 +1124,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
                           onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
                         >
-                          <p>{option.id}) {language === 'en' ? option.textEn : option.textZh}</p>
+                          <p>{option.id} {language === 'en' ? option.textEn : option.textZh}</p>
                         </div>
                       ))}
                     </div>
@@ -1137,7 +1137,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1148,7 +1148,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -1233,7 +1233,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
                           onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
                         >
-                          <p>{option.id}) {language === 'en' ? option.textEn : option.textZh}</p>
+                          <p>{option.id} {language === 'en' ? option.textEn : option.textZh}</p>
                         </div>
                       ))}
                     </div>
@@ -1246,7 +1246,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1257,7 +1257,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -1355,7 +1355,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1366,7 +1366,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -1568,7 +1568,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1579,7 +1579,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
 
@@ -1593,7 +1593,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                           handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                         }}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
                       />
                       <div className="unit-selector">
@@ -1706,7 +1706,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1717,7 +1717,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -1815,7 +1815,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1826,7 +1826,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -1924,7 +1924,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -1935,7 +1935,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -2082,7 +2082,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -2093,7 +2093,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
 
@@ -2107,7 +2107,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                           const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
                           handleTextAnswer(question.id, `${e.target.value}_${unit}`);
                         }}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
                       />
                       <div className="unit-selector">
@@ -2232,7 +2232,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -2243,7 +2243,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -2341,7 +2341,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -2352,7 +2352,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -2450,7 +2450,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         className="text-answer-input"
                         value={getCurrentAnswers()[question.id] || ''}
                         onChange={(e) => handleTextAnswer(question.id, e.target.value)}
-                        onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                        onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
@@ -2461,7 +2461,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       questionId={question.id}
                       value={getCurrentAnswers()[question.id] || ''}
                       onChange={(value) => handleTextAnswer(question.id, value)}
-                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                      onKeyDown={(e) => handleTextInputKeyPress(question.id, e)}
                     />
                   )}
                   
@@ -3159,7 +3159,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                 setUserEmail(e.target.value);
                 setEmailError('');
               }}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleEmailVerificationContinue();
                 }
