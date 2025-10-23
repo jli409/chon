@@ -5,6 +5,7 @@ import LanguageSelector from '../../components/LanguageSelector/LanguageSelector
 import './PersonalityTest.css';
 import BothQuestionnaire from './BothQuestionnaire.tsx';
 import SearchableDropdown from './SearchableDropdown.tsx';
+import EmailVerificationQuestion from './EmailVerificationQuestion.tsx';
 import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage, showAllQuestionsOnScroll, resetUserScroll } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
 import { questionnaires, questionnaireConfigs, unifiedQuestions, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
@@ -22,7 +23,7 @@ import './styles/searchable-dropdown.css';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 type IdentityType = 'mother' | 'corporate' | 'both' | 'other';
-type TestStep = 'intro' | 'identity' | 'privacy' | 'questionnaire';
+type TestStep = 'intro' | 'identity' | 'privacy' | 'email-verification' | 'questionnaire';
 
 interface PersonalityTestProps {
   onWhiteThemeChange?: (isWhite: boolean) => void;
@@ -57,6 +58,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [userChoice, setUserChoice] = useState<string | null>(null);
   const [selectedIdentities, setSelectedIdentities] = useState<Set<IdentityType>>(new Set());
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [emailError, setEmailError] = useState<string>('');
   const [typingText, setTypingText] = useState<string>('');
   const [isTyping, setIsTyping] = useState<boolean>(false);
   // Identity roles expansion for corporate
@@ -156,6 +159,27 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       if (targetQuestion) {
         targetQuestion.classList.add('question-visible');
         targetQuestion.classList.remove('question-hidden');
+        
+        // Special handling for question 5 and 8 to prevent scroll issues
+        if (questionId.includes('5') || questionId.includes('8')) {
+          // Force a reflow to ensure accurate height measurement
+          targetQuestion.offsetHeight;
+          
+          // Check if it's a tall question and position at top
+          const questionHeight = targetQuestion.getBoundingClientRect().height;
+          const viewportHeight = window.innerHeight;
+          const hasManyOptions = targetQuestion.querySelectorAll('.answer-option').length > 8;
+          
+          if (hasManyOptions || questionHeight > viewportHeight * 0.7) {
+            // Position at top to show all answer options
+            setTimeout(() => {
+              targetQuestion.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start'
+              });
+            }, 100);
+          }
+        }
       }
     }, 50);
   };
@@ -351,7 +375,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   // Update white theme state when step changes
   useEffect(() => {
     if (onWhiteThemeChange) {
-      const isWhiteTheme = step === 'privacy' || step === 'questionnaire';
+      const isWhiteTheme = step === 'privacy' || step === 'email-verification' || step === 'questionnaire';
       onWhiteThemeChange(isWhiteTheme);
       
       // Remove hormone-related style customization since those pages no longer exist
@@ -384,7 +408,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   // 根据步骤决定是否隐藏UI元素
   useEffect(() => {
     if (onHideUIChange) {
-      const shouldHideUI = step === 'privacy' || step === 'questionnaire';
+      const shouldHideUI = step === 'privacy' || step === 'email-verification' || step === 'questionnaire';
       onHideUIChange(shouldHideUI);
     }
   }, [step, onHideUIChange]);
@@ -526,6 +550,56 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   const handlePrivacyContinue = () => {
+    // Check if user needs email verification (corporate or both identities)
+    const needsEmailVerification = selectedIdentities.has('corporate') || selectedIdentities.has('both');
+    
+    if (needsEmailVerification) {
+      // Go to email verification page
+      setStep('email-verification');
+    } else {
+      // 确保所有页面状态初始化
+      setShowFirstPage(true);
+      setShowSecondPage(false);
+      setShowThirdPage(false);
+      setShowFourthPage(false);
+      setShowFifthPage(false);
+      setShowSixthPage(false);
+      
+      // 如果是both类型，初始化primary和secondary答案容器
+      if (activeQuestionnaire === 'both') {
+        setPrimaryAnswers({});
+        setSecondaryAnswers({});
+        setShowingPrimaryQuestionnaire(true);
+      }
+      
+      // 设置为问卷步骤
+      setStep('questionnaire');
+      
+      // 通知父组件需要设置白色主题和隐藏UI
+      if (onWhiteThemeChange) {
+        onWhiteThemeChange(true);
+      }
+      
+      if (onHideUIChange) {
+        onHideUIChange(true);
+      }
+    }
+  };
+
+  const handleEmailVerificationContinue = () => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!userEmail || !emailRegex.test(userEmail)) {
+      setEmailError(language === 'en' 
+        ? 'Please enter a valid email address.' 
+        : '请输入有效的邮箱地址。');
+      return;
+    }
+    
+    // Email is valid, proceed to questionnaire
+    setEmailError('');
+    
     // 确保所有页面状态初始化
     setShowFirstPage(true);
     setShowSecondPage(false);
@@ -881,6 +955,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     </div>
                   )}
 
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
+                  )}
+
                   {question.type === 'text-with-unit' && (
                     <div className="text-with-unit-container">
                       <input
@@ -1059,6 +1142,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -1159,6 +1251,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -1258,6 +1359,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
+                  )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
                   )}
                   
                   {question.type === 'scale-question' && (
@@ -1431,9 +1541,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 企业问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: Demographics & Professional Background (questions 1-10)
+            // 第1页: Demographics & Professional Background (questions 1-9)
             <div className="first-page-questions first-page-true">
-              {questions.slice(0, 10).map((question) => (
+              {questions.slice(0, 9).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1462,6 +1572,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
+                  )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
                   )}
 
                   {question.type === 'text-with-unit' && (
@@ -1562,7 +1681,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'I. 关于您的领导力'}
               </h1>
               
-              {questions.slice(10, 24).map((question) => (
+              {questions.slice(9, 22).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1591,6 +1710,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
+                  )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
                   )}
                   
                   {question.type === 'scale-question' && (
@@ -1662,7 +1790,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'II. 关于我们'}
               </h1>
               
-              {questions.slice(24, 39).map((question) => (
+              {questions.slice(22, 37).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1691,6 +1819,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
+                  )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
                   )}
                   
                   {question.type === 'scale-question' && (
@@ -1762,7 +1899,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   : 'III. 关于母亲'}
               </h1>
               
-              {questions.slice(39, 50).map((question) => (
+              {questions.slice(37, 48).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1791,6 +1928,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
+                  )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
                   )}
                   
                   {question.type === 'scale-question' && (
@@ -1942,6 +2088,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                     </div>
                   )}
 
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
+                  )}
+
                   {question.type === 'text-with-unit' && (
                     <div className="text-with-unit-container">
                       <input
@@ -2082,6 +2237,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -2182,6 +2346,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                       />
                     </div>
                   )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
+                  )}
                   
                   {question.type === 'scale-question' && (
                     <div className="scale-question-container">
@@ -2281,6 +2454,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         placeholder={language === 'en' ? 'Enter your answer here' : '在此输入您的答案'}
                       />
                     </div>
+                  )}
+
+                  {question.type === 'email' && (
+                    <EmailVerificationQuestion
+                      questionId={question.id}
+                      value={getCurrentAnswers()[question.id] || ''}
+                      onChange={(value) => handleTextAnswer(question.id, value)}
+                      onKeyPress={(e) => handleTextInputKeyPress(question.id, e)}
+                    />
                   )}
                   
                   {question.type === 'scale-question' && (
@@ -2404,6 +2586,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         setShowFifthPage={setShowFifthPage}
         setShowSixthPage={setShowSixthPage}
         scrollToFirstQuestionOfNextPage={scrollToFirstQuestionOfNextPage}
+        showOnlyQuestion={showOnlyQuestion}
+        scrollToNextQuestion={scrollToNextQuestion}
         calculatedQuestionnaireProgress={calculatedQuestionnaireProgress}
         finishQuestionnaire={finishQuestionnaire}
       />
@@ -2479,7 +2663,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   );
 
   // Only white theme steps should have no-header class
-  const containerClass = step === 'privacy' || step === 'questionnaire' 
+  const containerClass = step === 'privacy' || step === 'email-verification' || step === 'questionnaire' 
     ? 'personality-test-container no-header' 
     : 'personality-test-container';
 
@@ -2639,8 +2823,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                   lang={language}
                   style={{ display: selectedCorporateRole ? 'block' : 'none' }}
                 >
-                  <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
-                  <span style={{ letterSpacing: 'normal' }}>→</span>
+                  <span className="continue-text">{language === 'en' ? 'CONTINUE' : '继续'}</span>
+                  <span className="continue-arrow">→</span>
                 </button>
               </div>
             </div>
@@ -2666,8 +2850,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             lang={language}
             style={{ display: (selectedIdentities.has('mother') || selectedIdentities.has('other')) ? 'block' : 'none' }}
           >
-            <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
-            <span style={{ letterSpacing: 'normal' }}>→</span>
+            <span className="continue-text">{language === 'en' ? 'CONTINUE' : '继续'}</span>
+            <span className="continue-arrow">→</span>
           </button>
         )}
       </div>
@@ -2952,6 +3136,57 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     );
   };
 
+  // Render email verification page
+  const renderEmailVerification = () => {
+    return (
+      <div className="email-verification-page" lang={language}>
+        <div className="email-verification-content">
+          <h2 className="email-verification-title">
+            {language === 'en' ? 'Email Verification' : '邮箱验证'}
+          </h2>
+          <p className="email-verification-description">
+            {language === 'en' 
+              ? 'Please enter your professional email to verify your identity.' 
+              : '请输入您的职业邮箱以验证您的身份。'}
+          </p>
+          
+          <div className="text-input-container">
+            <input
+              type="email"
+              className="text-answer-input"
+              value={userEmail}
+              onChange={(e) => {
+                setUserEmail(e.target.value);
+                setEmailError('');
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleEmailVerificationContinue();
+                }
+              }}
+              placeholder={language === 'en' ? 'your.email@company.com' : '您的邮箱@公司.com'}
+            />
+          </div>
+          
+          {emailError && (
+            <div className="email-error-text">
+              {emailError}
+            </div>
+          )}
+          
+          <button 
+            className="email-continue-button"
+            onClick={handleEmailVerificationContinue}
+            lang={language}
+          >
+            <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
+            <span className="continue-arrow">→</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // Render content based on step
   const renderContent = () => {
     switch (step) {
@@ -2961,6 +3196,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         return renderIdentitySelection();
       case 'privacy':
         return renderPrivacyStatement();
+      case 'email-verification':
+        return renderEmailVerification();
       case 'questionnaire':
         return renderQuestionnaireContent();
       default:
@@ -2979,7 +3216,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       )}
       
       {/* 只为非母亲问卷页面显示背景 */}
-      {step !== 'privacy' && step !== 'questionnaire' && (
+      {step !== 'privacy' && step !== 'email-verification' && step !== 'questionnaire' && (
         <>
           <div className="molecule-background"></div>
           <div className="hexagon-pattern"></div>
@@ -2987,12 +3224,12 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       )}
       
       {/* Show exit button at the top left corner for questionnaire and privacy screens */}
-      {(step === 'privacy' || step === 'questionnaire') && exitButton}
+      {(step === 'privacy' || step === 'email-verification' || step === 'questionnaire') && exitButton}
       
       {renderContent()}
       
       {/* Only show LanguageSelector when not in questionnaire or privacy screens */}
-      {step !== 'privacy' && step !== 'questionnaire' && <LanguageSelector />}
+      {step !== 'privacy' && step !== 'email-verification' && step !== 'questionnaire' && <LanguageSelector />}
     </main>
   );
 };

@@ -71,7 +71,7 @@
 
 /* Content Sections */
 .content-section {
-  margin: 0 0 1.5rem 0;
+  margin: 0; /* Removed bottom margin to eliminate extra space after last paragraph */
   padding: 0;
   max-width: 900px;
   margin-left: auto;
@@ -156,7 +156,7 @@
 
 /* CTA Button */
 .cta-container {
-  margin-top: 2rem; /* 统一间距 */
+  margin-top: 2rem; /* Match logo-container margin-bottom spacing */
   display: flex;
   justify-content: center;
   width: 100%;
@@ -278,7 +278,7 @@
   }
   
   .content-section {
-    margin: 0 0 1.2rem 0;
+    margin: 0; /* Removed bottom margin to eliminate extra space after last paragraph */
   }
   
   .molecule-background {
@@ -317,7 +317,11 @@
   }
   
   .content-section {
-    margin: 0 0 1rem 0;
+    margin: 0; /* Removed bottom margin to eliminate extra space after last paragraph */
+  }
+  
+  .cta-container {
+    margin-top: 2rem; /* Match logo-container margin-bottom spacing */
   }
   
   .main-content .cta-container .cta-button {
@@ -362,7 +366,7 @@
   }
   
   .cta-container {
-    margin-top: 0.2rem;
+    margin-top: 1.5rem; /* Match logo-container margin-bottom spacing */
   }
   
   .main-content .cta-container .cta-button {
@@ -376,7 +380,7 @@
   }
   
   .content-section {
-    margin: 0 0 0.8rem 0;
+    margin: 0; /* Removed bottom margin to eliminate extra space after last paragraph */
   }
 }
 

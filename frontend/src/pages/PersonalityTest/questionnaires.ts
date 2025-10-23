@@ -1,4 +1,4 @@
-export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question' | 'multi-select' | 'searchable-dropdown' | 'text-with-unit';
+export type QuestionType = 'multiple-choice' | 'text-input' | 'scale-question' | 'multi-select' | 'searchable-dropdown' | 'text-with-unit' | 'email';
 export type QuestionnaireType = 'mother' | 'corporate' | 'other' | 'both';
 
 export interface Option {
@@ -351,9 +351,9 @@ export const unifiedQuestions: Record<number, Question> = {
   },
   6: {
     id: '6',
-        type: 'text-input',
-    textEn: 'Please enter your professional contact to allow us to verify your identity.',
-    textZh: '请输入您的职业联系方式，以便验证身份。'
+    type: 'email',
+    textEn: 'Please enter your professional email to verify your identity.',
+    textZh: '请输入您的职业邮箱以验证您的身份。'
       },
   7: {
     id: '7',
@@ -374,16 +374,15 @@ export const unifiedQuestions: Record<number, Question> = {
         textZh: '贵公司属于哪个行业或业务领域？',
         options: [
       { id: 'A', textEn: 'Consumer Goods & Retail', textZh: '消费品与零售' },
-      { id: 'B', textEn: 'Education & Business Professional Services', textZh: '教育与商业专业服务' },
-      { id: 'C', textEn: 'Energy & Utilities', textZh: '能源与公用事业' },
-      { id: 'D', textEn: 'Entertainment & Media', textZh: '娱乐与媒体' },
-      { id: 'E', textEn: 'Financial Services', textZh: '金融服务' },
-      { id: 'F', textEn: 'Government, Nonprofits & Public Services', textZh: '政府、非营利组织与公共服务' },
-      { id: 'G', textEn: 'Healthcare & Pharmaceuticals', textZh: '医疗保健与制药' },
-      { id: 'H', textEn: 'Industrial Production & Manufacturing', textZh: '工业生产与制造业' },
-      { id: 'I', textEn: 'Real Estate & Construction', textZh: '房地产与建筑' },
-      { id: 'J', textEn: 'Technology & Telecommunications', textZh: '技术与电信' },
-      { id: 'K', textEn: 'Transportation & Logistics', textZh: '运输与物流' }
+          { id: 'B', textEn: 'Education & Professional Services', textZh: '教育与专业服务' },
+          { id: 'C', textEn: 'Entertainment & Media', textZh: '娱乐与媒体' },
+          { id: 'D', textEn: 'Financial Services', textZh: '金融服务' },
+          { id: 'E', textEn: 'Government & Nonprofits', textZh: '政府与非营利组织' },
+          { id: 'F', textEn: 'Healthcare & Pharma', textZh: '医疗与制药' },
+          { id: 'G', textEn: 'Industrial & Energy', textZh: '工业与能源' },
+          { id: 'H', textEn: 'Real Estate & Construction', textZh: '房地产与建筑' },
+          { id: 'I', textEn: 'Technology & Telecom', textZh: '技术与电信' },
+          { id: 'J', textEn: 'Transportation & Logistics', textZh: '运输与物流' }
     ]
   },
   9: {
@@ -1560,83 +1559,82 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
     type: 'corporate',
     title: { en: 'Corporate Manager Questionnaire', zh: '企业管理者问卷' },
     questionIds: [
-      6,   // corporate manager 1
-      1,   // corporate manager 2
-      2,   // corporate manager 3
-      3,   // corporate manager 4
-      5,   // corporate manager 5
-      7,   // corporate manager 6
-      8,   // corporate manager 7
-      9,   // corporate manager 8
-      10,  // corporate manager 9
-      11,  // corporate manager 10
+      1,   // corporate manager 1
+      2,   // corporate manager 2
+      3,   // corporate manager 3
+      5,   // corporate manager 4
+      7,   // corporate manager 5
+      8,   // corporate manager 6
+      9,   // corporate manager 7
+      10,  // corporate manager 8
+      11,  // corporate manager 9
       // Section I. About Your Leadership
-      12,  // corporate manager 11
-      13,  // corporate manager 12
-      14,  // corporate manager 13
-      15,  // corporate manager 14
-      16,  // corporate manager 15
-      17,  // corporate manager 16
-      18,  // corporate manager 17
-      19,  // corporate manager 18
-      20,  // corporate manager 19
-      21,  // corporate manager 20
-      22,  // corporate manager 21
-      23,  // corporate manager 22
-      24,  // corporate manager 23
+      12,  // corporate manager 10
+      13,  // corporate manager 11
+      14,  // corporate manager 12
+      15,  // corporate manager 13
+      16,  // corporate manager 14
+      17,  // corporate manager 15
+      18,  // corporate manager 16
+      19,  // corporate manager 17
+      20,  // corporate manager 18
+      21,  // corporate manager 19
+      22,  // corporate manager 20
+      23,  // corporate manager 21
+      24,  // corporate manager 22
       // Section II. About Us, CHON
-      26,  // corporate manager 24
-      27,  // corporate manager 25
-      28,  // corporate manager 26
-      29,  // corporate manager 27
-      30,  // corporate manager 28
-      31,  // corporate manager 29
-      32,  // corporate manager 30
-      33,  // corporate manager 31
-      34,  // corporate manager 32
-      35,  // corporate manager 33
-      36,  // corporate manager 34
-      37,  // corporate manager 35
-      38,  // corporate manager 36
-      39,  // corporate manager 37
-      40,  // corporate manager 38
+      26,  // corporate manager 23
+      27,  // corporate manager 24
+      28,  // corporate manager 25
+      29,  // corporate manager 26
+      30,  // corporate manager 27
+      31,  // corporate manager 28
+      32,  // corporate manager 29
+      33,  // corporate manager 30
+      34,  // corporate manager 31
+      35,  // corporate manager 32
+      36,  // corporate manager 33
+      37,  // corporate manager 34
+      38,  // corporate manager 35
+      39,  // corporate manager 36
+      40,  // corporate manager 37
       // Section III. About Motherhood
-      41,  // corporate manager 39
-      42,  // corporate manager 40
-      43,  // corporate manager 41
-      44,  // corporate manager 42
-      45,  // corporate manager 43
-      46,  // corporate manager 44
-      47,  // corporate manager 45
-      48,  // corporate manager 46
-      49,  // corporate manager 47
-      50,  // corporate manager 48
-      51   // corporate manager 49
+      41,  // corporate manager 38
+      42,  // corporate manager 39
+      43,  // corporate manager 40
+      44,  // corporate manager 41
+      45,  // corporate manager 42
+      46,  // corporate manager 43
+      47,  // corporate manager 44
+      48,  // corporate manager 45
+      49,  // corporate manager 46
+      50,  // corporate manager 47
+      51   // corporate manager 48
     ],
     sections: [
       {
         title: { en: 'Demographics & Professional Background', zh: '人口统计与职业背景' },
         startIndex: 0,
-        endIndex: 9
+        endIndex: 8
       },
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
-        startIndex: 10,
-        endIndex: 22
+        startIndex: 9,
+        endIndex: 21
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 23,
-        endIndex: 37
+        startIndex: 22,
+        endIndex: 36
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 38,
-        endIndex: 48
+        startIndex: 37,
+        endIndex: 47
       }
     ],
     questionModifications: {},
-    totalQuestions: 49
+    totalQuestions: 48
   },
   other: {
     type: 'other',
@@ -1717,104 +1715,103 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
     type: 'both',
     title: { en: 'Mother + Corporate Manager Questionnaire', zh: '母亲+企业管理者问卷' },
     questionIds: [
-      6,   // both 1
-      2,   // both 2
-      3,   // both 3
-      5,   // both 4
-      52,  // both 5
-      53,  // both 6
-      54,  // both 7
-      55,  // both 8
-      56,  // both 9
-      57,  // both 10
-      58,  // both 11
-      5,   // both 12
-      7,   // both 13
-      8,   // both 14
-      9,   // both 15
-      10,  // both 16
-      11,  // both 17
+      2,   // both 1
+      3,   // both 2
+      5,   // both 3
+      52,  // both 4
+      53,  // both 5
+      54,  // both 6
+      55,  // both 7
+      56,  // both 8
+      57,  // both 9
+      58,  // both 10
+      7,   // both 11
+      8,   // both 12
+      9,   // both 13
+      10,  // both 14
+      11,  // both 15
       // Section I. About Your Leadership
-      12,  // both 18
-      13,  // both 19
-      14,  // both 20
-      15,  // both 21
-      16,  // both 22
-      17,  // both 23
-      18,  // both 24
-      19,  // both 25
-      20,  // both 26
-      21,  // both 27
-      22,  // both 28
-      23,  // both 29
-      24,  // both 30
+      12,  // both 16
+      13,  // both 17
+      14,  // both 18
+      15,  // both 19
+      16,  // both 20
+      17,  // both 21
+      18,  // both 22
+      19,  // both 23
+      20,  // both 24
+      21,  // both 25
+      22,  // both 26
+      23,  // both 27
+      24,  // both 28
       // Section II. About Work-Life Balance
-      59,  // both 31
-      60,  // both 32
-      61,  // both 33
-      62,  // both 34
-      63,  // both 35
-      68,  // both 36
-      64,  // both 37
-      65,  // both 38
-      66,  // both 39
-      69,  // both 40
-      70,  // both 41
+      59,  // both 29
+      60,  // both 30
+      61,  // both 31
+      62,  // both 32
+      63,  // both 33
+      68,  // both 34
+      64,  // both 35
+      65,  // both 36
+      66,  // both 37
+      69,  // both 38
+      70,  // both 39
       // Section III. About Us, CHON
-      26,  // both 42
-      27,  // both 43
-      71,  // both 44
-      29,  // both 45
-      28,  // both 46
-      31,  // both 47
-      30,  // both 48
-      32,  // both 49
-      72,  // both 50
-      33,  // both 51
-      35,  // both 52
-      38,  // both 53
-      39,  // both 54
-      40,  // both 55
+      26,  // both 40
+      27,  // both 41
+      71,  // both 42
+      29,  // both 43
+      28,  // both 44
+      31,  // both 45
+      30,  // both 46
+      32,  // both 47
+      72,  // both 48
+      33,  // both 49
+      35,  // both 50
+      38,  // both 51
+      39,  // both 52
+      40,  // both 53
       // Section IV. About Motherhood
-      41,  // both 56
-      42,  // both 57
-      43,  // both 58
-      44,  // both 59
-      73,  // both 60
-      74,  // both 61
-      75,  // both 62
-      76,  // both 63
-      77,  // both 64
-      78,  // both 65
-      79,  // both 66
-      80,  // both 67
-      51   // both 68
+      41,  // both 54
+      42,  // both 55
+      43,  // both 56
+      44,  // both 57
+      73,  // both 58
+      74,  // both 59
+      75,  // both 60
+      76,  // both 61
+      77,  // both 62
+      78,  // both 63
+      79,  // both 64
+      80,  // both 65
+      51,  // both 66
+      25   // both 67 - Final Question
     ],
     sections: [
       {
         title: { en: 'Demographics & Background', zh: '人口统计与背景' },
         startIndex: 0,
-        endIndex: 16
+        endIndex: 14
       },
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
-        startIndex: 17,
-        endIndex: 29
+        startIndex: 15,
+        endIndex: 27
       },
       {
         title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
-        startIndex: 30,
-        endIndex: 40
+        startIndex: 28,
+        endIndex: 38
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 41,
-        endIndex: 54
+        startIndex: 39,
+        endIndex: 52
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 55,
-        endIndex: 67
+        startIndex: 53,
+        endIndex: 65
       }
     ],
     questionModifications: {
@@ -1843,7 +1840,7 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
         textZh: '公司是否应核实该平台供您允许的家庭成员使用？'
       }
     },
-    totalQuestions: 68
+    totalQuestions: 67
   }
 };
 

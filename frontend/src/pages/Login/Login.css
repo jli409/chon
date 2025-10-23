@@ -303,16 +303,18 @@
 /* Removed Chinese font override for links */
 
 .signup-link {
-  display: inline;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .signup-line1::after {
-  content: ' ';
+  content: '';
 }
 
 .signup-line1,
 .signup-line2 {
-  display: inline;
+  display: block;
 }
 
 @media (max-width: 1200px) {
