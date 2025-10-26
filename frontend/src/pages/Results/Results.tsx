@@ -808,12 +808,28 @@ const Results: React.FC = () => {
     }
 
     // Get question 25 answer from localStorage
+    // Question 25 is always the last question in each questionnaire
     const savedAnswers = localStorage.getItem('currentAnswers') || localStorage.getItem('motherAnswers') || localStorage.getItem('corporateAnswers') || localStorage.getItem('otherAnswers');
+    const savedQuestionnaireType = localStorage.getItem('selectedQuestionnaireType') || 'mother';
+    
     let question25Answer: string | undefined;
     if (savedAnswers) {
       try {
         const answers = JSON.parse(savedAnswers);
-        question25Answer = answers['25'];
+        
+        // Find question 25 based on questionnaire type
+        // Mother: mother_33, Corporate: corporate_33, Other: other_32, Both: both_44
+        const question25IdMap: Record<string, string> = {
+          'mother': 'mother_33',
+          'corporate': 'corporate_33',
+          'other': 'other_32',
+          'both': 'both_44'
+        };
+        
+        const question25Id = question25IdMap[savedQuestionnaireType] || question25IdMap['mother'];
+        question25Answer = answers[question25Id];
+        
+        console.log('Question 25 ID:', question25Id, 'Answer:', question25Answer);
       } catch (e) {
         console.error('Error parsing answers:', e);
       }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { questionnaires } from './questionnaires';
+import { questionnaires, questionnaireConfigs, getQuestionsForSection, getSectionInfo } from './questionnaires';
 import SearchableDropdown from './SearchableDropdown';
 import EmailVerificationQuestion from './EmailVerificationQuestion';
 
@@ -68,12 +68,17 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
     );
   };
   const bothQuestions = questionnaires.both.questions;
-  const page1Questions: any[] = bothQuestions.slice(0, 15); // Demographics & Background (both 1-15)
-  const page2Questions: any[] = bothQuestions.slice(15, 28); // About Your Leadership (both 16-28)
-  const page3Questions: any[] = bothQuestions.slice(28, 39); // About Work-Life Balance (both 29-39)
-  const page4Questions: any[] = bothQuestions.slice(39, 53); // About Us, CHON (both 40-53)
-  const page5Questions: any[] = bothQuestions.slice(53, 66); // About Motherhood (both 54-66)
-  const page6Question: any = bothQuestions[66]; // Question 25 - Final Question (both 67)
+  const bothConfig = questionnaireConfigs.both;
+  
+  // Get questions for each section dynamically based on sections configuration
+  const page1Questions = getQuestionsForSection(bothQuestions, bothConfig, 0); // Section 0: Demographics & Background
+  const page2Questions = getQuestionsForSection(bothQuestions, bothConfig, 1); // Section 1: About Your Leadership
+  const page3Questions = getQuestionsForSection(bothQuestions, bothConfig, 2); // Section 2: About Work-Life Balance
+  const page4Questions = getQuestionsForSection(bothQuestions, bothConfig, 3); // Section 3: About Us, CHON
+  const page5Questions = getQuestionsForSection(bothQuestions, bothConfig, 4); // Section 4: About Motherhood
+  
+  // Get the final question (last one that's not in sections)
+  const page6Question: any = bothQuestions[bothQuestions.length - 1];
 
   return (
     <div className="questionnaire-content both-questionnaire" lang={language}>
@@ -207,9 +212,11 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
       {showSecondPage && (
         <div className="first-page-questions">
           <h1 className="section-title">
-            {language === 'en' 
-              ? 'I. About Your Leadership' 
-              : 'I. 关于您的领导力'}
+            {(() => {
+              const sectionInfo = getSectionInfo(bothConfig, 1);
+              return sectionInfo ? (language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh) : 
+                     (language === 'en' ? 'I. About Your Leadership' : 'I. 关于您的领导力');
+            })()}
           </h1>
           
           {page2Questions.map((question) => (
@@ -310,9 +317,11 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
       {showThirdPage && (
         <div className="first-page-questions">
           <h1 className="section-title">
-            {language === 'en' 
-              ? 'II. About Work-Life Balance' 
-              : 'II. 关于工作与生活平衡'}
+            {(() => {
+              const sectionInfo = getSectionInfo(bothConfig, 2);
+              return sectionInfo ? (language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh) : 
+                     (language === 'en' ? 'II. About Work-Life Balance' : 'II. 关于工作与生活平衡');
+            })()}
           </h1>
           
           {page3Questions.map((question) => (
@@ -413,9 +422,11 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
       {showFourthPage && (
         <div className="first-page-questions">
           <h1 className="section-title">
-            {language === 'en' 
-              ? 'III. About Us, CHON' 
-              : 'III. 关于我们，CHON'}
+            {(() => {
+              const sectionInfo = getSectionInfo(bothConfig, 3);
+              return sectionInfo ? (language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh) : 
+                     (language === 'en' ? 'III. About Us, CHON' : 'III. 关于我们，CHON');
+            })()}
           </h1>
           
           {page4Questions.map((question) => (
@@ -516,9 +527,11 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
       {showFifthPage && (
         <div className="first-page-questions">
           <h1 className="section-title">
-            {language === 'en' 
-              ? 'IV. About Motherhood' 
-              : 'IV. 关于母亲身份'}
+            {(() => {
+              const sectionInfo = getSectionInfo(bothConfig, 4);
+              return sectionInfo ? (language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh) : 
+                     (language === 'en' ? 'IV. About Motherhood' : 'IV. 关于母亲身份');
+            })()}
           </h1>
           
           {page5Questions.map((question) => (

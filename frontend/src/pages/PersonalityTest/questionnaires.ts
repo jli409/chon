@@ -115,6 +115,7 @@ export const unifiedQuestions: Record<number, Question> = {
           { id: 'G', textEn: '65 or above', textZh: '65岁及以上' }
         ]
       },
+  /*
   3: {
     id: '3',
     type: 'searchable-dropdown',
@@ -321,6 +322,7 @@ export const unifiedQuestions: Record<number, Question> = {
       { id: 'ZW', textEn: 'Zimbabwe', textZh: '津巴布韦' }
     ]
   },
+  */
   4: {
     id: '4',
         type: 'multiple-choice',
@@ -425,6 +427,7 @@ export const unifiedQuestions: Record<number, Question> = {
       { id: 'D', textEn: '50+ people', textZh: '50人以上' }
     ]
   },
+  /*
   12: {
     id: '12',
     type: 'scale-question',
@@ -435,6 +438,7 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Flexibly adaptive', zh: '灵活变通' }
     }
   },
+  */
   13: {
     id: '13',
         type: 'scale-question',
@@ -446,6 +450,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['objectivity']
   },
+  /*
   14: {
     id: '14',
         type: 'scale-question',
@@ -457,6 +462,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['objectivity', 'coreEndurance']
   },
+  */
   15: {
     id: '15',
         type: 'scale-question',
@@ -490,6 +496,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['socialIntelligence']
   },
+  /*
   18: {
     id: '18',
         type: 'scale-question',
@@ -512,6 +519,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['socialIntelligence', 'dedication']
   },
+  */
   20: {
     id: '20',
         type: 'scale-question',
@@ -537,6 +545,7 @@ export const unifiedQuestions: Record<number, Question> = {
       female: ['selfAwareness']
     }
   },
+  /*
   22: {
     id: '22',
         type: 'scale-question',
@@ -551,6 +560,7 @@ export const unifiedQuestions: Record<number, Question> = {
       female: ['selfAwareness']
     }
   },
+  */
   23: {
     id: '23',
         type: 'scale-question',
@@ -590,6 +600,7 @@ export const unifiedQuestions: Record<number, Question> = {
       { id: 'F', textEn: 'Ensure that no matter what happens, I can always come up with a plan to stay ahead and outmaneuver my competitors', textZh: '确保无论发生什么，我总能想出计划来保持领先并超越竞争对手' }
     ]
   },
+  /*
   26: {
     id: '26',
         type: 'scale-question',
@@ -601,6 +612,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['objectivity', 'emotionalRegulation']
   },
+  */
   27: {
     id: '27',
         type: 'scale-question',
@@ -623,6 +635,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['dedication']
   },
+  /*
   29: {
     id: '29',
         type: 'scale-question',
@@ -634,6 +647,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['dedication']
   },
+  */
   30: {
     id: '30',
         type: 'scale-question',
@@ -656,6 +670,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['dedication']
   },
+  /*
   32: {
     id: '32',
     type: 'scale-question',
@@ -667,6 +682,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['objectivity']
   },
+  */
   33: {
     id: '33',
         type: 'scale-question',
@@ -688,7 +704,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Extremely important', zh: '极具价值' }
     },
     tags: ['socialIntelligence']
-  },
+  },  
+  /*
   35: {
     id: '35',
         type: 'scale-question',
@@ -700,6 +717,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['dedication']
   },
+  */
   36:{
     id: '36',
     type: 'scale-question',
@@ -721,7 +739,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Extremely beneficial', zh: '极具价值' }
     },
     tags: ['emotionalRegulation']
-  },
+  },  
+  /*
   38: {
     id: '38',
         type: 'scale-question',
@@ -743,6 +762,7 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Definitely yes', zh: '绝对会' }
     }
   },
+  */
   40: {
     id: '40',
         type: 'scale-question',
@@ -786,7 +806,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Extremely important', zh: '极其重要' }
     },
     tags: ['socialIntelligence']
-  },
+  },  
+  /*
   44: {
     id: '44',
         type: 'scale-question',
@@ -798,6 +819,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['objectivity', 'dedication']
   },
+  */
   45: {
     id: '45',
         type: 'scale-question',
@@ -819,7 +841,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Significantly changed it for the better', zh: '显著改善' }
     },
     tags: ['dedication']
-  },
+  },  
+  /*
   47: {
     id: '47',
         type: 'scale-question',
@@ -841,7 +864,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Very well', zh: '非常融入' }
     },
     tags: ['dedication']
-  },
+  },  
+  */
   49: {
     id: '49',
     type: 'scale-question',
@@ -852,7 +876,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Very much', zh: '非常关注' }
     },
     tags: ['socialIntelligence']
-  },
+  },  
+  /*
   50: {
     id: '50',
     type: 'scale-question',
@@ -863,7 +888,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Very equipped', zh: '非常识别' }
     },
     tags: ['emotionalRegulation', 'dedication']
-  },
+  },  
+  */
   51: {
     id: '51',
     type: 'scale-question',
@@ -987,6 +1013,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['selfAwareness']
   },
+  /*
   62: {
     id: '62',
         type: 'scale-question',
@@ -1008,6 +1035,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['selfAwareness']
   },
+  */
   64: {
     id: '64',
     type: 'scale-question',
@@ -1030,6 +1058,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['emotionalRegulation', 'coreEndurance']
   },
+  /*
   66: {
     id: '66',
     type: 'scale-question',
@@ -1063,6 +1092,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['selfAwareness']
   },
+  */
   69: {
     id: '69',
     type: 'scale-question',
@@ -1074,6 +1104,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['socialIntelligence']
   },
+  /*
   70: {
     id: '70',
     type: 'scale-question',
@@ -1085,6 +1116,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['socialIntelligence']
   },
+  */
   71: {
     id: '71',
     type: 'scale-question',
@@ -1096,6 +1128,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['selfAwareness']
   }, 
+  /*
   72: {
     id: '72',
     type: 'scale-question',
@@ -1107,6 +1140,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['objectivity']
   },
+  */
   73: {
     id: '73',
     type: 'scale-question',
@@ -1162,6 +1196,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['emotionalRegulation', 'coreEndurance']
   },
+  /*
   78: {
     id: '78',
     type: 'scale-question',
@@ -1195,6 +1230,7 @@ export const unifiedQuestions: Record<number, Question> = {
     },
     tags: ['selfAwareness']
   },
+  */
   81: {
     id: '81',
     type: 'scale-question',
@@ -1205,7 +1241,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Very supportive', zh: '非常重视' }
     },
     tags: ['selfAwareness']
-  },
+  },  
+  /*
   82: {
     id: '82',
     type: 'scale-question',
@@ -1216,7 +1253,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'A lot', zh: '很多' }
     },
     tags: ['socialIntelligence']
-  },
+  },  
+  */
   83: {
     id: '83',
     type: 'scale-question',
@@ -1249,7 +1287,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Always', zh: '总是被认可' }
     },
     tags: ['selfAwareness']
-  },
+  },  
+  /*
   86: {
     id: '86',
     type: 'scale-question',
@@ -1260,7 +1299,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Strongly across all levels', zh: '在所有层面都出色' }
     },
     tags: ['objectivity', 'dedication']
-  },
+  },  
+  */
   87: {
     id: '87',
     type: 'scale-question',
@@ -1271,7 +1311,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Very comfortable', zh: '非常自然' }
     },
     tags: ['emotionalRegulation', 'socialIntelligence']
-  },
+  },  
+  /*
   88: {
     id: '88',
     type: 'scale-question',
@@ -1282,7 +1323,8 @@ export const unifiedQuestions: Record<number, Question> = {
       right: { en: 'Extremely important', zh: '非常重要' }
     },
     tags: ['socialIntelligence']
-  },
+  },  
+  */
   89: {
     id: '89',
     type: 'scale-question',
@@ -1301,94 +1343,43 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
     type: 'mother',
     title: { en: 'Mother Questionnaire', zh: '母亲问卷' },
     questionIds: [
-      2,   // mother 1
-      3,   // mother 2
-      4,   // mother 3
-      5,   // mother 4
-      52,  // mother 5
-      53,  // mother 6
-      54,  // mother 7
-      55,  // mother 8
-      56,  // mother 9
-      57,  // mother 10
-      58,  // mother 11
-      // Section I. About Work-Life Balance (if yes to mother 3) / About Life Balance (if no to mother 3)
-      59,  // mother 12
-      60,  // mother 13
-      61,  // mother 14
-      62,  // mother 15
-      63,  // mother 16
-      68,  // mother 17
-      64,  // mother 18
-      65,  // mother 19
-      66,  // mother 20
-      69,  // mother 21
-      70,  // mother 22
-      // Section II. About Us, CHON
-      26,  // mother 23
-      27,  // mother 24
-      71,  // mother 25
-      29,  // mother 26
-      28,  // mother 27
-      31,  // mother 28
-      30,  // mother 29
-      32,  // mother 30
-      72,  // mother 31
-      33,  // mother 32
-      35,  // mother 33
-      38,  // mother 34
-      39,  // mother 35
-      40,  // mother 36
-      // Section III. About Motherhood
-      41,  // mother 37
-      42,  // mother 38
-      43,  // mother 39
-      44,  // mother 40
-      73,  // mother 41
-      74,  // mother 42
-      75,  // mother 43
-      76,  // mother 44
-      77,  // mother 45
-      78,  // mother 46
-      79,  // mother 47
-      80,  // mother 48
-      51   // mother 49
+      2, 4, 5, 52, 53, 54, 55, 56, 57, 58,
+      59, 60, 61, 64, 65, 69,
+      27, 71, 28, 31, 30, 33, 40,
+      41, 42, 43, 73, 74, 75, 76, 77, 51,
+      25
     ],
     sections: [
       {
         title: { en: 'Demographics & Background', zh: '人口统计与背景' },
         startIndex: 0,
-        endIndex: 10
+        endIndex: 9
       },
       {
         title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
-        startIndex: 11,
-        endIndex: 21
+        startIndex: 10,
+        endIndex: 15
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 22,
-        endIndex: 35
+        startIndex: 16,
+        endIndex: 22
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 36,
-        endIndex: 48
+        startIndex: 23,
+        endIndex: 31
+      },
+      {
+        title: { en: 'Final Question', zh: '最终问题' },
+        startIndex: 32,
+        endIndex: 32
       }
     ],
     questionModifications: {
-      // Note: Questions 28 and 29 have conditional text based on question 4 answer
-      // If question 4 (mother 3 - corporate experience) is "No":
-      //   Q28: 'How valuable are you staying updated with interested fields?' / '您了解感兴趣领域有多大价值？'
-      //   Q29: 'How valuable are you sharing your life and accessing new opportunities?' / '您分享生活和了解新机会有多大价值？'
-      // If question 4 is "Yes", use the default modifications below
       28: {
         textEn: 'How valuable is it for you to stay updated with your professional field?',
         textZh: '您了解行业领域信息有多大价值？'
-      },
-      29: {
-        textEn: 'How valuable is it for you to post and access new business deals?',
-        textZh: '您发布和获取商业合作有多大价值？'
       },
       30: {
         textEn: 'How valuable is it for you to share maternal experiences and emotional support?',
@@ -1397,10 +1388,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       31: {
         textEn: 'How valuable is medical advice from healthcare professionals for you?',
         textZh: '外部医疗专业人士为您提供医学建议有多大价值？'
-      },
-      35: {
-        textEn: 'How valuable is a company-specific AI for you?',
-        textZh: '一个为每家公司定制的您专用人工智能模型有多大价值？'
       },
       40: {
         textEn: 'Should companies verify that this platform is for family members approved by you?',
@@ -1417,18 +1404,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
           modifications: {
             textEn: 'How valuable are you staying updated with interested fields?',
             textZh: '您了解感兴趣领域有多大价值？'
-          }
-        }
-      ],
-      29: [
-        {
-          condition: {
-            questionId: 4,
-            answer: 'B' // No corporate experience
-          },
-          modifications: {
-            textEn: 'How valuable are you sharing your life and accessing new opportunities?',
-            textZh: '您分享生活和了解新机会有多大价值？'
           }
         }
       ],
@@ -1468,42 +1443,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
           }
         }
       ],
-      62: [
-        {
-          condition: {
-            questionId: 4,
-            answer: 'B' // No corporate experience
-          },
-          modifications: {
-            textEn: 'How has motherhood impacted your personal development?',
-            textZh: '母亲身份对您的个人发展有何影响？'
-          }
-        }
-      ],
-      63: [
-        {
-          condition: {
-            questionId: 4,
-            answer: 'B' // No corporate experience
-          },
-          modifications: {
-            textEn: 'How is your life balance supported by your community?',
-            textZh: '您的生活平衡如何被社区支持？'
-          }
-        }
-      ],
-      66: [
-        {
-          condition: {
-            questionId: 4,
-            answer: 'B' // No corporate experience
-          },
-          modifications: {
-            textEn: 'How motivated do you feel to pursue personal growth?',
-            textZh: '您个人发展的动力有多强？'
-          }
-        }
-      ],
       67: [
         {
           condition: {
@@ -1513,18 +1452,6 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
           modifications: {
             textEn: 'How satisfied are you with your life balance?',
             textZh: '您对您的生活平衡满意吗？'
-          }
-        }
-      ],
-      68: [
-        {
-          condition: {
-            questionId: 4,
-            answer: 'B' // No corporate experience
-          },
-          modifications: {
-            textEn: 'Are your needs as a mother taken into account during community decisions?',
-            textZh: '您作为母亲的需求是否在社区决策中被考虑到？'
           }
         }
       ],
@@ -1539,279 +1466,131 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
             textZh: '您在生活中与其他母亲的联系如何？'
           }
         }
-      ],
-      70: [
-        {
-          condition: {
-            questionId: 4,
-            answer: 'B' // No corporate experience
-          },
-          modifications: {
-            textEn: 'Do you want to connect with other mothers through your lifestyle?',
-            textZh: '您是否想在生活中与其他母亲建立联系？'
-          }
-        }
       ]
     },
-    totalQuestions: 49
+    totalQuestions: 33
   },
   corporate: {
     type: 'corporate',
     title: { en: 'Corporate Manager Questionnaire', zh: '企业管理者问卷' },
     questionIds: [
-      1,   // corporate manager 1
-      2,   // corporate manager 2
-      3,   // corporate manager 3
-      5,   // corporate manager 4
-      7,   // corporate manager 5
-      8,   // corporate manager 6
-      9,   // corporate manager 7
-      10,  // corporate manager 8
-      11,  // corporate manager 9
-      // Section I. About Your Leadership
-      12,  // corporate manager 10
-      13,  // corporate manager 11
-      14,  // corporate manager 12
-      15,  // corporate manager 13
-      16,  // corporate manager 14
-      17,  // corporate manager 15
-      18,  // corporate manager 16
-      19,  // corporate manager 17
-      20,  // corporate manager 18
-      21,  // corporate manager 19
-      22,  // corporate manager 20
-      23,  // corporate manager 21
-      24,  // corporate manager 22
-      // Section II. About Us, CHON
-      26,  // corporate manager 23
-      27,  // corporate manager 24
-      28,  // corporate manager 25
-      29,  // corporate manager 26
-      30,  // corporate manager 27
-      31,  // corporate manager 28
-      32,  // corporate manager 29
-      33,  // corporate manager 30
-      34,  // corporate manager 31
-      35,  // corporate manager 32
-      36,  // corporate manager 33
-      37,  // corporate manager 34
-      38,  // corporate manager 35
-      39,  // corporate manager 36
-      40,  // corporate manager 37
-      // Section III. About Motherhood
-      41,  // corporate manager 38
-      42,  // corporate manager 39
-      43,  // corporate manager 40
-      44,  // corporate manager 41
-      45,  // corporate manager 42
-      46,  // corporate manager 43
-      47,  // corporate manager 44
-      48,  // corporate manager 45
-      49,  // corporate manager 46
-      50,  // corporate manager 47
-      51   // corporate manager 48
+      1, 2, 5, 7, 8, 9, 10, 11,
+      13, 15, 16, 17, 20, 21, 23, 24,
+      27, 28, 30, 31, 33, 34, 36, 37, 40,
+      41, 42, 43, 45, 46, 49, 51,
+      25
     ],
     sections: [
       {
         title: { en: 'Demographics & Professional Background', zh: '人口统计与职业背景' },
         startIndex: 0,
-        endIndex: 8
+        endIndex: 7
       },
       {
         title: { en: 'About Your Leadership', zh: '关于您的领导力' },
-        startIndex: 9,
-        endIndex: 21
-      },
-      {
-        title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 22,
-        endIndex: 36
-      },
-      {
-        title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 37,
-        endIndex: 47
-      }
-    ],
-    questionModifications: {},
-    totalQuestions: 48
-  },
-  other: {
-    type: 'other',
-    title: { en: 'General Questionnaire', zh: '通用问卷' },
-    questionIds: [
-      1,   // others 1
-      2,   // others 2
-      3,   // others 3
-      4,   // others 4
-      5,   // others 5
-      // Section I. About Professional Work (if yes to others 3) / About Teamwork (if no to others 3)
-      81,  // others 6
-      82,  // others 7
-      20,  // others 8
-      83,  // others 9
-      84,  // others 10
-      85,  // others 11
-      86,  // others 12
-      87,  // others 13
-      88,  // others 14
-      89,  // others 15
-      24,  // others 16
-      // Section II. About Us, CHON
-      26,  // others 17
-      27,  // others 18
-      28,  // others 19
-      29,  // others 20
-      30,  // others 21
-      31,  // others 22
-      32,  // others 23
-      33,  // others 24
-      34,  // others 25
-      35,  // others 26
-      36,  // others 27
-      37,  // others 28
-      38,  // others 29
-      39,  // others 30
-      40,  // others 31
-      // Section III. About Motherhood
-      41,  // others 32
-      42,  // others 33
-      43,  // others 34
-      44,  // others 35
-      45,  // others 36
-      46,  // others 37
-      47,  // others 38
-      48,  // others 39
-      49,  // others 40
-      50,  // others 41
-      51   // others 42
-    ],
-    sections: [
-      {
-        title: { en: 'Demographics & Background', zh: '人口统计与背景' },
-        startIndex: 0,
-        endIndex: 4
-      },
-      {
-        title: { en: 'About Professional Work & Teamwork', zh: '关于专业工作与团队合作' },
-        startIndex: 5,
+        startIndex: 8,
         endIndex: 15
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
         startIndex: 16,
-        endIndex: 30
+        endIndex: 24
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 31,
-        endIndex: 41
+        startIndex: 25,
+        endIndex: 31
+      },
+      {
+        title: { en: 'Final Question', zh: '最终问题' },
+        startIndex: 32,
+        endIndex: 32
       }
     ],
     questionModifications: {},
-    totalQuestions: 42
+    totalQuestions: 33
   },
-  both: {
-    type: 'both',
-    title: { en: 'Mother + Corporate Manager Questionnaire', zh: '母亲+企业管理者问卷' },
+  other: {
+    type: 'other',
+    title: { en: 'General Questionnaire', zh: '通用问卷' },
     questionIds: [
-      2,   // both 1
-      3,   // both 2
-      5,   // both 3
-      52,  // both 4
-      53,  // both 5
-      54,  // both 6
-      55,  // both 7
-      56,  // both 8
-      57,  // both 9
-      58,  // both 10
-      7,   // both 11
-      8,   // both 12
-      9,   // both 13
-      10,  // both 14
-      11,  // both 15
-      // Section I. About Your Leadership
-      12,  // both 16
-      13,  // both 17
-      14,  // both 18
-      15,  // both 19
-      16,  // both 20
-      17,  // both 21
-      18,  // both 22
-      19,  // both 23
-      20,  // both 24
-      21,  // both 25
-      22,  // both 26
-      23,  // both 27
-      24,  // both 28
-      // Section II. About Work-Life Balance
-      59,  // both 29
-      60,  // both 30
-      61,  // both 31
-      62,  // both 32
-      63,  // both 33
-      68,  // both 34
-      64,  // both 35
-      65,  // both 36
-      66,  // both 37
-      69,  // both 38
-      70,  // both 39
-      // Section III. About Us, CHON
-      26,  // both 40
-      27,  // both 41
-      71,  // both 42
-      29,  // both 43
-      28,  // both 44
-      31,  // both 45
-      30,  // both 46
-      32,  // both 47
-      72,  // both 48
-      33,  // both 49
-      35,  // both 50
-      38,  // both 51
-      39,  // both 52
-      40,  // both 53
-      // Section IV. About Motherhood
-      41,  // both 54
-      42,  // both 55
-      43,  // both 56
-      44,  // both 57
-      73,  // both 58
-      74,  // both 59
-      75,  // both 60
-      76,  // both 61
-      77,  // both 62
-      78,  // both 63
-      79,  // both 64
-      80,  // both 65
-      51,  // both 66
-      25   // both 67 - Final Question
+      1, 2, 4, 5,
+      81, 20, 83, 84, 85, 87, 89, 24,
+      27, 28, 30, 31, 33, 34, 36, 37, 40,
+      41, 42, 43, 45, 46, 49, 51,
+      25
     ],
     sections: [
       {
         title: { en: 'Demographics & Background', zh: '人口统计与背景' },
         startIndex: 0,
-        endIndex: 14
+        endIndex: 3
       },
       {
-        title: { en: 'About Your Leadership', zh: '关于您的领导力' },
-        startIndex: 15,
-        endIndex: 27
-      },
-      {
-        title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
-        startIndex: 28,
-        endIndex: 38
+        title: { en: 'About Professional Work & Teamwork', zh: '关于专业工作与团队合作' },
+        startIndex: 4,
+        endIndex: 12
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 39,
-        endIndex: 52
+        startIndex: 13,
+        endIndex: 22
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 53,
-        endIndex: 65
+        startIndex: 23,
+        endIndex: 30
+      },
+      {
+        title: { en: 'Final Question', zh: '最终问题' },
+        startIndex: 31,
+        endIndex: 31
+      }
+    ],
+    questionModifications: {},
+    totalQuestions: 32
+  },
+  both: {
+    type: 'both',
+    title: { en: 'Mother + Corporate Manager Questionnaire', zh: '母亲+企业管理者问卷' },
+    questionIds: [
+      2, 5, 52, 53, 54, 55, 56, 57, 58, 7, 8, 9, 10, 11,
+      13, 15, 16, 17, 20, 21, 23, 24,
+      59, 60, 61, 64, 65, 69,
+      27, 71, 28, 31, 30, 33, 40,
+      41, 42, 43, 73, 74, 75, 76, 77, 51,
+      25
+    ],
+    sections: [
+      {
+        title: { en: 'Demographics & Background', zh: '人口统计与背景' },
+        startIndex: 0,
+        endIndex: 13
+      },
+      {
+        title: { en: 'About Your Leadership', zh: '关于您的领导力' },
+        startIndex: 14,
+        endIndex: 21
+      },
+      {
+        title: { en: 'About Work-Life Balance', zh: '关于工作与生活平衡' },
+        startIndex: 22,
+        endIndex: 27
+      },
+      {
+        title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
+        startIndex: 28,
+        endIndex: 34
+      },
+      {
+        title: { en: 'About Motherhood', zh: '关于母亲身份' },
+        startIndex: 35,
+        endIndex: 43
+      },
+      {
+        title: { en: 'Final Question', zh: '最终问题' },
+        startIndex: 44,
+        endIndex: 44
       }
     ],
     questionModifications: {
@@ -1840,7 +1619,7 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
         textZh: '公司是否应核实该平台供您允许的家庭成员使用？'
       }
     },
-    totalQuestions: 67
+    totalQuestions: 45
   }
 };
 
@@ -1881,6 +1660,33 @@ export const getQuestionnaire = (type: QuestionnaireType): QuestionnaireContext 
     },
     totalQuestions: config.totalQuestions
   };
+};
+
+// Helper function to get questions for a specific section based on the sections configuration
+export const getQuestionsForSection = (
+  questions: Question[],
+  config: QuestionnaireConfig,
+  sectionIndex: number,
+  includeEndIndex: boolean = true
+): Question[] => {
+  if (!config.sections || sectionIndex >= config.sections.length) {
+    return [];
+  }
+  
+  const section = config.sections[sectionIndex];
+  const endIndex = includeEndIndex ? section.endIndex + 1 : section.endIndex;
+  return questions.slice(section.startIndex, endIndex);
+};
+
+// Helper function to get section information
+export const getSectionInfo = (
+  config: QuestionnaireConfig,
+  sectionIndex: number
+): { title: { en: string; zh: string }; startIndex: number; endIndex: number } | null => {
+  if (!config.sections || sectionIndex >= config.sections.length) {
+    return null;
+  }
+  return config.sections[sectionIndex];
 };
 
 export const questionnaires: Record<QuestionnaireType, QuestionnaireContext> = {

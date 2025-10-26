@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check LocalStorage</title>
+</head>
+<body>
+    <h1>LocalStorage Contents for Personality Test</h1>
+    <div id="output"></div>
+    <button onclick="clearStorage()">Clear All Storage</button>
+    <script>
+        const output = document.getElementById('output');
+        const keys = ['chon_personality_step', 'chon_personality_answers', 'chon_personality_identities', 'chon_personality_user_choice', 'chon_personality_show_first_page', 'chon_personality_show_second_page', 'chon_personality_show_third_page', 'chon_personality_show_fourth_page', 'chon_personality_show_fifth_page', 'chon_personality_show_sixth_page'];
+        
+        keys.forEach(key => {
+            const value = localStorage.getItem(key);
+            output.innerHTML += `<p><strong>${key}:</strong> ${value || 'not set'}</p>`;
+        });
+        
+        function clearStorage() {
+            keys.forEach(key => localStorage.removeItem(key));
+            location.reload();
+        }
+    </script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import SearchableDropdown from './SearchableDropdown.tsx';
 import EmailVerificationQuestion from './EmailVerificationQuestion.tsx';
 import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage, showAllQuestionsOnScroll, resetUserScroll } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
-import { questionnaires, questionnaireConfigs, unifiedQuestions, Question, QuestionType, QuestionnaireType, QuestionnaireContext } from './questionnaires.ts';
+import { questionnaires, questionnaireConfigs, unifiedQuestions, Question, QuestionType, QuestionnaireType, QuestionnaireContext, getQuestionsForSection, getSectionInfo } from './questionnaires.ts';
 import { 
   scaleValueToPercentage, 
   toChineseTag, 
@@ -55,6 +55,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const navigate = useNavigate(); // 添加导航钩子
   const location = useLocation();
   const [step, setStep] = useState<TestStep>('intro');
+  
+  // Debug: log step changes
+  useEffect(() => {
+    console.log('Current step:', step);
+  }, [step]);
   const [userChoice, setUserChoice] = useState<string | null>(null);
   const [selectedIdentities, setSelectedIdentities] = useState<Set<IdentityType>>(new Set());
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -110,6 +115,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   });
   // Add state to track current questionnaire type
   const [activeQuestionnaire, setActiveQuestionnaire] = useState<QuestionnaireType | null>(null);
+  
+  // Save active questionnaire type to localStorage when it changes
+  useEffect(() => {
+    if (activeQuestionnaire) {
+      localStorage.setItem('selectedQuestionnaireType', activeQuestionnaire);
+      console.log('Saved questionnaire type to localStorage:', activeQuestionnaire);
+    }
+  }, [activeQuestionnaire]);
   // Add state to track secondary questionnaire for "both" option
   const [secondaryQuestionnaire, setSecondaryQuestionnaire] = useState<QuestionnaireType | null>(null);
   // Add state to track if we're showing the primary or secondary questionnaire
@@ -311,8 +324,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       setAnswers(JSON.parse(savedAnswers));
     }
     
+    // Don't load saved step if it would hide the UI on a fresh page load
     if (savedStep && isValidStep(savedStep)) {
+      console.log('Loading saved step from localStorage:', savedStep);
       setStep(savedStep as TestStep);
+    } else {
+      // Reset to intro if no valid saved step
+      console.log('No valid saved step, starting at intro');
+      setStep('intro');
     }
     
     if (savedIdentities) {
@@ -425,13 +444,25 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   }, [step, language]);
 
-  // 根据步骤决定是否隐藏UI元素
+  // 根据步骤决定是否隐藏UI元素 - Make sure this runs immediately
   useEffect(() => {
     if (onHideUIChange) {
+      // Only hide UI for specific steps, otherwise show it
       const shouldHideUI = step === 'privacy' || step === 'email-verification' || step === 'questionnaire';
       onHideUIChange(shouldHideUI);
+      
+      console.log('Step:', step, 'shouldHideUI:', shouldHideUI);
     }
   }, [step, onHideUIChange]);
+  
+  // Also send the initial state immediately on mount
+  useEffect(() => {
+    // On initial mount, ensure UI is visible unless we're in a state that should hide it
+    // This will be properly set by the other useEffect
+    console.log('PersonalityTest mounted, step:', step);
+    // This runs only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Reset corporate roles state when returning to identity step
   useEffect(() => {
@@ -702,8 +733,11 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   const handlePrivacyContinue = () => {
-    // Check if user needs email verification (corporate or both identities)
-    const needsEmailVerification = selectedIdentities.has('corporate') || selectedIdentities.has('both');
+    // Check if user needs email verification (mother, corporate, other, or both)
+    const needsEmailVerification = selectedIdentities.has('mother') || 
+                                   selectedIdentities.has('corporate') || 
+                                   selectedIdentities.has('other') || 
+                                   selectedIdentities.has('both');
     
     if (needsEmailVerification) {
       // Go to email verification page
@@ -1007,34 +1041,18 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   const renderMotherQuestionnaire = (questions: Question[]) => {
-    // Helper function to get questions based on branching logic
-    const getQuestionsForCurrentPage = (startIndex: number, endIndex: number) => {
-      if (!hasBranchingQuestion || startIndex < 6) {
-        // Before branching question, show all questions normally
-        return questions.slice(startIndex, endIndex);
-      }
-
-      if (startIndex === 6) {
-        // Include branching question
-        return questions.slice(6, 7);
-      }
-
-      if (branchingPath === 'yes-path') {
-        // Questions for "yes" path (e.g., 7-10)
-        return questions.slice(7, 11);
-      }
-
-      if (branchingPath === 'no-path') {
-        // Questions for "no" path (e.g., 11-13)
-        return questions.slice(11, 14);
-      }
-
-      // After branching paths converge (e.g., from question 14 onwards)
-      if (startIndex >= 14) {
-        return questions.slice(startIndex, endIndex);
-      }
-
-      return [];
+    const motherConfig = questionnaireConfigs.mother;
+    
+    // Helper function to get questions for a section index based on sections configuration
+    const getQuestionsForSectionIndex = (sectionIndex: number) => {
+      return getQuestionsForSection(questions, motherConfig, sectionIndex);
+    };
+    
+    // Helper function to get section info for titles
+    const getSectionTitle = (sectionIndex: number) => {
+      const sectionInfo = getSectionInfo(motherConfig, sectionIndex);
+      if (!sectionInfo) return '';
+      return language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh;
     };
 
     return (
@@ -1074,9 +1092,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 母亲问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: Demographics & Background (questions 1-11 including 58)
+            // 第1页: Demographics & Background (Section 0)
             <div className="first-page-questions first-page-true">
-              {getQuestionsForCurrentPage(0, 11).map((question) => (
+              {getQuestionsForSectionIndex(0).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1247,24 +1265,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showThirdPage ? (
-            // 第2页: About Work-Life Balance / About Life Balance (questions 12-23)
+            // 第2页: About Work-Life Balance (Section 1)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {(() => {
-                  const hasCorporateExperience = getCurrentAnswers()['mother_3'] === 'A';
-                  if (language === 'en') {
-                    return hasCorporateExperience 
-                      ? 'I. About Work-Life Balance' 
-                      : 'I. About Life Balance';
-                  } else {
-                    return hasCorporateExperience 
-                      ? 'I. 关于工作与生活的平衡' 
-                      : 'I. 关于生活平衡';
-                  }
-                })()}
+                {getSectionTitle(1)}
               </h1>
               
-              {getQuestionsForCurrentPage(11, 23).map((question) => (
+              {getQuestionsForSectionIndex(1).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1365,15 +1372,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showFourthPage ? (
-            // 第3页: About Us, CHON (questions 25-38)
+            // 第3页: About Us, CHON (Section 2)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'II. About Us, CHON' 
-                  : 'II. 关于我们'}
+                {getSectionTitle(2)}
               </h1>
               
-              {getQuestionsForCurrentPage(23, 37).map((question) => (
+              {getQuestionsForSectionIndex(2).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1474,15 +1479,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showFifthPage ? (
-            // 第4页: About Motherhood (questions 39-50)
+            // 第4页: About Motherhood (Section 3)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'III. About Motherhood' 
-                  : 'III. 关于母亲'}
+                {getSectionTitle(3)}
               </h1>
               
-              {getQuestionsForCurrentPage(37, 50).map((question) => (
+              {getQuestionsForSectionIndex(3).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1585,64 +1588,71 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
           ) : null
         }
 
-        {/* 母亲问卷第六页 - Final Question */}
+        {/* 母亲问卷第六页 - Final Question (Section 4) */}
         {
           showSixthPage ? (
-            <div className="questions-section">
-              {[unifiedQuestions[25]].map((question) => (
+            <div className="first-page-questions">
+              {getQuestionsForSectionIndex(4).map((question) => (
                 <div 
                   key={question.id}
                   id={`question-${question.id}`}
-                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} question-visible final-question`}
+                  className={`question-container ${question.type === 'scale-question' ? 'scale-question-container' : ''} final-question`}
                 >
-                  {question.type === 'scale-question' && (
-                    <div className="scale-question-wrapper">
-                      <p className="question-text" lang={language}>
-                        {language === 'en' ? question.textEn : question.textZh}
-                      </p>
-                      <div className="scale-options">
-                        {[...Array(9)].map((_, i) => {
-                          const value = i + 1;
-                          const isSelected = getCurrentAnswers()[question.id] === value.toString();
-                          return (
-                            <label key={value} className={`scale-option ${isSelected ? 'selected' : ''}`}>
-                              <input
-                                type="radio"
-                                name={question.id}
-                                value={value}
-                                checked={isSelected}
-                                onChange={() => handleScaleAnswer(question.id, value.toString())}
-                              />
-                              <span className="scale-circle"></span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div className="scale-labels">
-                        <span className="scale-label-left">
-                          {language === 'en' ? question.scaleLabels?.left.en : question.scaleLabels?.left.zh}
-                        </span>
-                        <span className="scale-label-right">
-                          {language === 'en' ? question.scaleLabels?.right.en : question.scaleLabels?.right.zh}
-                        </span>
-                      </div>
+                  {renderQuestionText(question)}
+                  
+                  {question.type === 'multiple-choice' && (
+                    <div className="answer-options">
+                      {question.options?.map((option) => (
+                        <div 
+                          key={option.id}
+                          className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
+                          onClick={() => {
+                            handleMultipleChoiceAnswer(question.id, option.id);
+                            // Auto-finish after answering the final question
+                            setTimeout(() => {
+                              finishQuestionnaire();
+                            }, 500);
+                          }}
+                        >
+                          <p>{option.id}) {language === 'en' ? option.textEn : option.textZh}</p>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  {question.type === 'multiple-choice' && question.options && (
-                    <div>
-                      <p className="question-text" lang={language}>
-                        {language === 'en' ? question.textEn : question.textZh}
-                      </p>
-                      <div className="answer-options">
-                        {question.options.map((option) => (
-                          <div
-                            key={option.id}
-                            className={`answer-option ${getCurrentAnswers()[question.id] === option.id ? 'selected' : ''}`}
-                            onClick={() => handleMultipleChoiceAnswer(question.id, option.id)}
-                          >
-                            <p>{language === 'en' ? option.textEn : option.textZh}</p>
-                          </div>
-                        ))}
+                  
+                  {question.type === 'scale-question' && (
+                    <div className="scale-question-container">
+                      <div className="scale-labels-wrapper">
+                        <div className="scale-options">
+                          {['1', '2', '3', '4', '5'].map((value) => (
+                            <div 
+                              key={value}
+                              className={`scale-option ${getCurrentAnswers()[question.id] === value ? 'selected' : ''}`}
+                              onClick={() => {
+                                handleScaleAnswer(question.id, value);
+                                // Auto-finish after answering the final question
+                                setTimeout(() => {
+                                  finishQuestionnaire();
+                                }, 500);
+                              }}
+                            >
+                              <div className="scale-circle"></div>
+                              <span className="scale-value">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="scale-extreme-labels">
+                          <span className="scale-extreme-label">
+                            {language === 'en' 
+                              ? question.scaleLabels?.left.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.left.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
+                          </span>
+                          <span className="scale-extreme-label">
+                            {language === 'en' 
+                              ? question.scaleLabels?.right.en.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>) 
+                              : question.scaleLabels?.right.zh.split(' – ').map((part: string, i: number) => <span key={i}>{part}</span>)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1656,6 +1666,20 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   const renderCorporateQuestionnaire = (questions: Question[]) => {
+    const corporateConfig = questionnaireConfigs.corporate;
+    
+    // Helper function to get questions for a section index
+    const getQuestionsForSectionIndex = (sectionIndex: number) => {
+      return getQuestionsForSection(questions, corporateConfig, sectionIndex);
+    };
+    
+    // Helper function to get section info for titles
+    const getSectionTitle = (sectionIndex: number) => {
+      const sectionInfo = getSectionInfo(corporateConfig, sectionIndex);
+      if (!sectionInfo) return '';
+      return language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh;
+    };
+    
     return (
       <div className="questionnaire-content corporate-questionnaire" lang={language}>
         {/* Progress bar */}
@@ -1693,9 +1717,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 企业问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: Demographics & Professional Background (questions 1-9)
+            // 第1页: Demographics & Professional Background (Section 0)
             <div className="first-page-questions first-page-true">
-              {questions.slice(0, 9).map((question) => (
+              {getQuestionsForSectionIndex(0).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1828,12 +1852,10 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
             // 第2页: About Your Leadership (questions 11-24)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'I. About Your Leadership' 
-                  : 'I. 关于您的领导力'}
+                {getSectionTitle(1)}
               </h1>
               
-              {questions.slice(9, 22).map((question) => (
+              {getQuestionsForSectionIndex(1).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -1934,15 +1956,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showThirdPage ? (
-            // 第3页: About Us, CHON (questions 25-39)
+            // 第3页: About Us, CHON (Section 2)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'II. About Us, CHON' 
-                  : 'II. 关于我们'}
+                {getSectionTitle(2)}
               </h1>
               
-              {questions.slice(22, 37).map((question) => (
+              {getQuestionsForSectionIndex(2).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -2043,15 +2063,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showFourthPage ? (
-            // 第4页: About Motherhood (questions 40-50)
+            // 第4页: About Motherhood (Section 3)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'III. About Motherhood' 
-                  : 'III. 关于母亲'}
+                {getSectionTitle(3)}
               </h1>
               
-              {questions.slice(37, 48).map((question) => (
+              {getQuestionsForSectionIndex(3).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -2192,6 +2210,20 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   const renderOtherQuestionnaire = (questions: Question[]) => {
+    const otherConfig = questionnaireConfigs.other;
+    
+    // Helper function to get questions for a section index
+    const getQuestionsForSectionIndex = (sectionIndex: number) => {
+      return getQuestionsForSection(questions, otherConfig, sectionIndex);
+    };
+    
+    // Helper function to get section info for titles
+    const getSectionTitle = (sectionIndex: number) => {
+      const sectionInfo = getSectionInfo(otherConfig, sectionIndex);
+      if (!sectionInfo) return '';
+      return language === 'en' ? sectionInfo.title.en : sectionInfo.title.zh;
+    };
+    
     return (
       <div className="questionnaire-content other-questionnaire" lang={language}>
         {/* Progress bar */}
@@ -2207,9 +2239,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         {/* 其他问卷分页内容 */}
         {
           showFirstPage ? (
-            // 第1页: Demographics & Background (questions 1-5)
+            // 第1页: Demographics & Background (Section 0)
             <div className="first-page-questions first-page-true">
-              {questions.slice(0, 5).map((question) => (
+              {getQuestionsForSectionIndex(0).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -2359,7 +2391,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                 })()}
               </h1>
               
-              {questions.slice(5, 16).map((question) => (
+              {getQuestionsForSectionIndex(1).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -2460,15 +2492,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showThirdPage ? (
-            // 第3页: About Us, CHON (questions 17-31)
+            // 第3页: About Us, CHON (Section 2)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'II. About Us, CHON' 
-                  : 'II. 关于我们'}
+                {getSectionTitle(2)}
               </h1>
               
-              {questions.slice(16, 31).map((question) => (
+              {getQuestionsForSectionIndex(2).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   
@@ -2569,15 +2599,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               </div>
             </div>
           ) : showFourthPage ? (
-            // 第4页: About Motherhood (questions 32-42)
+            // 第4页: About Motherhood (Section 3)
             <div className="first-page-questions">
               <h1 className="section-title">
-                {language === 'en' 
-                  ? 'III. About Motherhood' 
-                  : 'III. 关于母亲'}
+                {getSectionTitle(3)}
               </h1>
               
-              {questions.slice(31, 42).map((question) => (
+              {getQuestionsForSectionIndex(3).map((question) => (
                 <div key={question.id} id={`question-${question.id}`} className="question-container">
                   {renderQuestionText(question)}
                   

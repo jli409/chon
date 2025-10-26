@@ -18,6 +18,27 @@ function App() {
   const location = useLocation();
   const isPersonalityTest = location.pathname.includes('/personality-test');
 
+  // Force clear problematic localStorage on mount if needed
+  useEffect(() => {
+    // If we're on home page and localStorage has problematic state, clear it
+    if (!isPersonalityTest) {
+      const savedStep = localStorage.getItem('chon_personality_step');
+      if (savedStep === 'questionnaire' || savedStep === 'privacy' || savedStep === 'email-verification') {
+        console.warn('Clearing problematic localStorage state:', savedStep);
+        localStorage.removeItem('chon_personality_step');
+        localStorage.removeItem('chon_personality_show_first_page');
+        localStorage.removeItem('chon_personality_show_second_page');
+        localStorage.removeItem('chon_personality_show_third_page');
+        localStorage.removeItem('chon_personality_show_fourth_page');
+        localStorage.removeItem('chon_personality_show_fifth_page');
+        localStorage.removeItem('chon_personality_show_sixth_page');
+      }
+    }
+    
+    // Always ensure initial state is correct
+    console.log('App mounted, isPersonalityTest:', isPersonalityTest, 'hideUI:', hideUI);
+  }, [isPersonalityTest, hideUI]);
+
   // 当语言变化时，更新HTML根元素的lang属性
   useEffect(() => {
     document.documentElement.lang = language;
@@ -34,16 +55,20 @@ function App() {
 
   // Handler for setting white theme
   const handleWhiteThemeChange = (isWhite: boolean) => {
+    console.log('Setting white theme:', isWhite);
     setWhiteTheme(isWhite);
   };
   
   // Handler for hiding UI elements
   const handleHideUIChange = (shouldHide: boolean) => {
+    console.log('Setting hideUI:', shouldHide);
     setHideUI(shouldHide);
   };
 
   // 只有在PersonalityTest页面且hideUI为true时才隐藏导航栏和语言选择器
   const shouldHideNavigation = isPersonalityTest && hideUI;
+
+  console.log('Rendering App - shouldHideNavigation:', shouldHideNavigation, 'isPersonalityTest:', isPersonalityTest, 'hideUI:', hideUI);
 
   return (
     <div className={`app-container ${whiteTheme ? 'white-theme' : ''}`} lang={language}>
