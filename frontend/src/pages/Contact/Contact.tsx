@@ -1,6 +1,5 @@
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import './Contact.css';
-import { useState, useEffect } from 'react';
 
 // 定义是否显示 Coming Soon 页面的标志
 // 将此变量设置为 true 可以显示 Coming Soon 页面
@@ -9,7 +8,7 @@ const SHOW_COMING_SOON = true;
 
 const Contact = () => {
   const { t, language } = useLanguage();
-  const [isContactInfo, setIsContactInfo] = useState(SHOW_COMING_SOON);
+  const isContactInfo = SHOW_COMING_SOON;
   
   const renderHtml = (html: string) => {
     const wrappedHtml = `<span lang="${language}">${html}</span>`;

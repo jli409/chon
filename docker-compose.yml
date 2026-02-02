@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-contact@chon.life}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-CHON}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - PORT=5001
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:5001}
+      - PORT=3000
+    restart: unless-stopped
+    depends_on:
+      - backend
+

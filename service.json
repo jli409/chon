@@ -1,0 +1,31 @@
+{
+    "serviceName": "app-service",
+    "cluster": "chon-cluster",
+    "taskDefinition": "app-task:1",
+    "desiredCount": 1,
+    "launchType": "FARGATE",
+    "networkConfiguration": {
+      "awsvpcConfiguration": {
+        "subnets": ["subnet-0d07d8f2e22b27a66", "subnet-04012d44897126735", "subnet-0b57d0837db931a81", "subnet-0721fe8f9f2cdc6e1", "subnet-09459cb719933931c", "subnet-01ac7b450b3aaadd3"],
+        "securityGroups": ["sg-0d24227b85e6bf911"],
+        "assignPublicIp": "ENABLED"
+      }
+    },
+    "loadBalancers": [
+      {
+        "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:207995142959:targetgroup/backend-tg/631d6bc558b7c15c",
+        "containerName": "python-app",
+        "containerPort": 5000
+      },
+      {
+        "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:207995142959:targetgroup/frontend-tg/aa3b47c9372f1226",
+        "containerName": "frontend-ts",
+        "containerPort": 3000
+      }
+    ]
+  }
+  
+  
+  
+  
+  

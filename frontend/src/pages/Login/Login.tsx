@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import { toEnglishTag } from '../../utils/tagUtils';
 import { findBestMatchCharacter } from '../../utils/characterMatching';
+import { supabase } from '../../lib/supabaseClient.ts';
 import './Login.css';
 
 const Login = () => {
@@ -10,6 +11,7 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const mode = (location.state as { mode?: string })?.mode || 'login';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
   
   const [formData, setFormData] = useState({
     email: '',
@@ -22,24 +24,20 @@ const Login = () => {
     confirmPassword: ''
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mostFittedCharacter, setMostFittedCharacter] = useState<any>(null);
+  const [mostFittedCharacter, setMostFittedCharacter] = useState<{
+    id: string;
+    name: { en: string; zh: string };
+    image: string;
+  } | null>(null);
   
   // Forgot password flow states
-  const [forgotPasswordStep, setForgotPasswordStep] = useState<'none' | 'email' | 'otp' | 'reset'>('none');
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<'none' | 'email' | 'sent'>('none');
   const [forgotPasswordData, setForgotPasswordData] = useState({
-    email: '',
-    otp: '',
-    newPassword: '',
-    confirmNewPassword: ''
+    email: ''
   });
   const [forgotPasswordErrors, setForgotPasswordErrors] = useState({
-    email: '',
-    otp: '',
-    newPassword: '',
-    confirmNewPassword: ''
+    email: ''
   });
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
 
   // Check if user is logged in and get most fitted character
   useEffect(() => {
@@ -216,25 +214,54 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // Save account data to localStorage
-      const accountData = {
-        email: formData.email,
-        password: formData.password,
-        createdAt: new Date().toISOString()
+      const register = async () => {
+        try {
+          const userSessionId = localStorage.getItem('userSessionId');
+          if (userSessionId) {
+            const response = await fetch(`${API_URL}/user-accounts`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                email: formData.email,
+                password: formData.password,
+                user_session_id: userSessionId
+              })
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(errorText || 'Failed to create user account');
+            }
+          }
+
+          // Save account data to localStorage
+          const accountData = {
+            email: formData.email,
+            password: formData.password,
+            createdAt: new Date().toISOString()
+          };
+          localStorage.setItem('userAccount', JSON.stringify(accountData));
+          
+          console.log('Account created and saved:', accountData);
+          console.log('localStorage userAccount:', localStorage.getItem('userAccount'));
+          alert(language === 'en' ? 'Account created successfully!' : '账号创建成功！');
+          
+          // Redirect to results if test has been taken
+          const hasResults = localStorage.getItem('tagStats');
+          if (hasResults) {
+            navigate('/personality-test/results');
+          } else {
+            navigate('/personality-test/intro');
+          }
+        } catch (error) {
+          console.error('Account creation failed:', error);
+          alert(language === 'en' ? 'Failed to create account. Please try again.' : '创建账号失败，请重试。');
+        }
       };
-      localStorage.setItem('userAccount', JSON.stringify(accountData));
-      
-      console.log('Account created and saved:', accountData);
-      console.log('localStorage userAccount:', localStorage.getItem('userAccount'));
-      alert(language === 'en' ? 'Account created successfully!' : '账号创建成功！');
-      
-      // Redirect to results if test has been taken
-      const hasResults = localStorage.getItem('tagStats');
-      if (hasResults) {
-        navigate('/results');
-      } else {
-        navigate('/personality-test');
-      }
+
+      void register();
     }
   };
 
@@ -254,17 +281,15 @@ const Login = () => {
     setMostFittedCharacter(null);
     
     // Redirect to personality test to restart
-    navigate('/personality-test');
+    navigate('/personality-test/intro');
   };
 
   // Forgot password handlers
   const handleForgotPasswordClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setForgotPasswordStep('email');
-    setForgotPasswordData({ email: '', otp: '', newPassword: '', confirmNewPassword: '' });
-    setForgotPasswordErrors({ email: '', otp: '', newPassword: '', confirmNewPassword: '' });
-    setOtpSent(false);
-    setOtpVerified(false);
+    setForgotPasswordData({ email: '' });
+    setForgotPasswordErrors({ email: '' });
   };
 
   const handleForgotPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,7 +302,7 @@ const Login = () => {
     }
   };
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSendResetLink = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate email
@@ -292,121 +317,29 @@ const Login = () => {
     }
 
     try {
-      // TODO: Replace with actual API call
-      console.log('Sending OTP to:', forgotPasswordData.email);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setOtpSent(true);
-      setForgotPasswordStep('otp');
-      console.log('OTP sent successfully');
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      setForgotPasswordErrors(prev => ({ 
-        ...prev, 
-        email: language === 'en' ? 'Failed to send OTP. Please try again.' : '发送验证码失败，请重试。' 
-      }));
-    }
-  };
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordData.email, {
+        redirectTo: redirectUrl
+      });
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!forgotPasswordData.otp) {
-      setForgotPasswordErrors(prev => ({ ...prev, otp: language === 'en' ? 'OTP is required' : '请输入验证码' }));
-      return;
-    }
-    if (forgotPasswordData.otp.length !== 6) {
-      setForgotPasswordErrors(prev => ({ ...prev, otp: language === 'en' ? 'OTP must be 6 digits' : '验证码必须是6位数字' }));
-      return;
-    }
-
-    try {
-      // TODO: Replace with actual API call
-      console.log('Verifying OTP:', forgotPasswordData.otp);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, accept any 6-digit OTP
-      if (forgotPasswordData.otp.length === 6 && /^\d+$/.test(forgotPasswordData.otp)) {
-        setOtpVerified(true);
-        setForgotPasswordStep('reset');
-        console.log('OTP verified successfully');
-      } else {
-        setForgotPasswordErrors(prev => ({ 
-          ...prev, 
-          otp: language === 'en' ? 'Invalid OTP' : '验证码无效' 
-        }));
+      if (error) {
+        throw error;
       }
+
+      setForgotPasswordStep('sent');
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      console.error('Error sending reset link:', error);
       setForgotPasswordErrors(prev => ({ 
         ...prev, 
-        otp: language === 'en' ? 'Failed to verify OTP. Please try again.' : '验证码验证失败，请重试。' 
-      }));
-    }
-  };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate passwords
-    const newErrors = { newPassword: '', confirmNewPassword: '' };
-    let isValid = true;
-
-    if (!forgotPasswordData.newPassword) {
-      newErrors.newPassword = language === 'en' ? 'New password is required' : '请输入新密码';
-      isValid = false;
-    } else if (forgotPasswordData.newPassword.length < 8) {
-      newErrors.newPassword = language === 'en' ? 'Password must be at least 8 characters' : '密码至少需要8个字符';
-      isValid = false;
-    }
-
-    if (!forgotPasswordData.confirmNewPassword) {
-      newErrors.confirmNewPassword = language === 'en' ? 'Please confirm your password' : '请确认您的密码';
-      isValid = false;
-    } else if (forgotPasswordData.newPassword !== forgotPasswordData.confirmNewPassword) {
-      newErrors.confirmNewPassword = language === 'en' ? 'Passwords do not match' : '密码不匹配';
-      isValid = false;
-    }
-
-    setForgotPasswordErrors(prev => ({ ...prev, ...newErrors }));
-
-    if (!isValid) return;
-
-    try {
-      // TODO: Replace with actual API call
-      console.log('Resetting password for:', forgotPasswordData.email);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Reset form and go back to login
-      setForgotPasswordStep('none');
-      setForgotPasswordData({ email: '', otp: '', newPassword: '', confirmNewPassword: '' });
-      setForgotPasswordErrors({ email: '', otp: '', newPassword: '', confirmNewPassword: '' });
-      setOtpSent(false);
-      setOtpVerified(false);
-      
-      alert(language === 'en' ? 'Password reset successfully!' : '密码重置成功！');
-      console.log('Password reset successfully');
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      setForgotPasswordErrors(prev => ({ 
-        ...prev, 
-        newPassword: language === 'en' ? 'Failed to reset password. Please try again.' : '密码重置失败，请重试。' 
+        email: language === 'en' ? 'Failed to send reset link. Please try again.' : '发送重置链接失败，请重试。' 
       }));
     }
   };
 
   const handleBackToLogin = () => {
     setForgotPasswordStep('none');
-    setForgotPasswordData({ email: '', otp: '', newPassword: '', confirmNewPassword: '' });
-    setForgotPasswordErrors({ email: '', otp: '', newPassword: '', confirmNewPassword: '' });
-    setOtpSent(false);
-    setOtpVerified(false);
+    setForgotPasswordData({ email: '' });
+    setForgotPasswordErrors({ email: '' });
   };
   
   return (
@@ -529,17 +462,24 @@ const Login = () => {
           {/* Forgot Password / Sign Up Links */}
           {mode === 'login' ? (
             <div className="form-links">
-              <a href="#" className="link-text" onClick={handleForgotPasswordClick}>
-                {language === 'en' ? 'Forgot password?' : '忘记密码？'}
-              </a>
-              <a 
-                href="/personality-test" 
+              <a
+                href="#"
+                className="link-text"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleForgotPasswordClick(e);
+                }}
+              >
+            {language === 'en' ? 'Forgot password?' : '忘记密码？'}
+          </a>
+              <Link
+                to="/personality-test/intro"
                 className="link-text signup-link"
                 onClick={(e) => {
                   const hasResults = localStorage.getItem('tagStats');
                   if (hasResults) {
                     e.preventDefault();
-                    navigate('/results');
+                    navigate('/personality-test/results');
                   }
                 }}
               >
@@ -549,7 +489,7 @@ const Login = () => {
                 <span className="signup-line2">
                   {language === 'en' ? "Take the personality test" : '参加性格测试'}
                 </span>
-              </a>
+              </Link>
             </div>
           ) : null}
         </form>
@@ -563,7 +503,7 @@ const Login = () => {
           <h2 dangerouslySetInnerHTML={{ 
             __html: language === 'en' ? '<span style="color: #F0BDC0;">Reset Password</span>' : '<span style="color: #F0BDC0;">重置密码</span>' 
           }}></h2>
-          <form className="registration-form" onSubmit={handleSendOTP}>
+          <form className="registration-form" onSubmit={handleSendResetLink}>
             <div className="form-group">
               <label htmlFor="forgot-email">
                 {language === 'en' ? 'Email Address' : '邮箱地址'}
@@ -582,7 +522,7 @@ const Login = () => {
             </div>
             
             <button type="submit" className="submit-button">
-              {language === 'en' ? 'Send OTP' : '发送验证码'}
+              {language === 'en' ? 'Send Reset Link' : '发送重置链接'}
             </button>
             
             <button type="button" className="link-text back-button" onClick={handleBackToLogin}>
@@ -591,94 +531,22 @@ const Login = () => {
           </form>
         </div>
       )}
-      
-      {forgotPasswordStep === 'otp' && (
+
+      {forgotPasswordStep === 'sent' && (
         <div className="login-content forgot-password-content" lang={language}>
-          <h2>{language === 'en' ? 'Verify OTP' : '验证码验证'}</h2>
+          <h2 dangerouslySetInnerHTML={{ 
+            __html: language === 'en' ? '<span style="color: #F0BDC0;">Check your email</span>' : '<span style="color: #F0BDC0;">请检查邮箱</span>' 
+          }}></h2>
           <p className="otp-instruction">
             {language === 'en' 
-              ? `We've sent a 6-digit code to ${forgotPasswordData.email}` 
-              : `我们已向 ${forgotPasswordData.email} 发送了6位验证码`}
+              ? `We sent a reset link to ${forgotPasswordData.email}. Open it to set a new password.` 
+              : `我们已向 ${forgotPasswordData.email} 发送重置链接，请打开链接设置新密码。`}
           </p>
-          <form className="registration-form" onSubmit={handleVerifyOTP}>
-            <div className="form-group">
-              <label htmlFor="forgot-otp">
-                {language === 'en' ? 'Verification Code' : '验证码'}
-                <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                id="forgot-otp"
-                name="otp"
-                value={forgotPasswordData.otp}
-                onChange={handleForgotPasswordChange}
-                placeholder={language === 'en' ? 'Enter 6-digit code' : '请输入6位验证码'}
-                maxLength={6}
-                className={forgotPasswordErrors.otp ? 'error' : ''}
-              />
-              {forgotPasswordErrors.otp && <span className="error-message">{forgotPasswordErrors.otp}</span>}
-            </div>
-            
-            <button type="submit" className="submit-button">
-              {language === 'en' ? 'Verify OTP' : '验证码验证'}
-            </button>
-            
-            <button type="button" className="link-text back-button" onClick={handleBackToLogin}>
-              {language === 'en' ? '← Back to Login' : '← 返回登录'}
-            </button>
-          </form>
+          <button type="button" className="link-text back-button" onClick={handleBackToLogin}>
+            {language === 'en' ? '← Back to Login' : '← 返回登录'}
+          </button>
         </div>
       )}
-      
-      {forgotPasswordStep === 'reset' && (
-        <div className="login-content forgot-password-content" lang={language}>
-          <h2>{language === 'en' ? 'Set New Password' : '设置新密码'}</h2>
-          <form className="registration-form" onSubmit={handleResetPassword}>
-            <div className="form-group">
-              <label htmlFor="forgot-new-password">
-                {language === 'en' ? 'New Password' : '新密码'}
-                <span className="required">*</span>
-              </label>
-              <input
-                type="password"
-                id="forgot-new-password"
-                name="newPassword"
-                value={forgotPasswordData.newPassword}
-                onChange={handleForgotPasswordChange}
-                placeholder={language === 'en' ? 'At least 8 characters' : '至少8个字符'}
-                className={forgotPasswordErrors.newPassword ? 'error' : ''}
-              />
-              {forgotPasswordErrors.newPassword && <span className="error-message">{forgotPasswordErrors.newPassword}</span>}
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="forgot-confirm-password">
-                {language === 'en' ? 'Confirm New Password' : '确认新密码'}
-                <span className="required">*</span>
-              </label>
-              <input
-                type="password"
-                id="forgot-confirm-password"
-                name="confirmNewPassword"
-                value={forgotPasswordData.confirmNewPassword}
-                onChange={handleForgotPasswordChange}
-                placeholder={language === 'en' ? 'Re-enter your new password' : '请再次输入您的新密码'}
-                className={forgotPasswordErrors.confirmNewPassword ? 'error' : ''}
-              />
-              {forgotPasswordErrors.confirmNewPassword && <span className="error-message">{forgotPasswordErrors.confirmNewPassword}</span>}
-            </div>
-            
-            <button type="submit" className="submit-button" dangerouslySetInnerHTML={{ 
-              __html: language === 'en' ? '<span style="color: #F0BDC0;">Reset Password</span>' : '<span style="color: #F0BDC0;">重置密码</span>' 
-            }}>
-            </button>
-            
-            <button type="button" className="link-text back-button" onClick={handleBackToLogin}>
-              {language === 'en' ? '← Back to Login' : '← 返回登录'}
-            </button>
-          </form>
-      </div>
-              )}
             </>
           )}
         </>

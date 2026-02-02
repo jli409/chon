@@ -186,9 +186,96 @@ Retrieves statistics for a specific question.
       "response_value": "B",
       "count": 15,
       "created_at": "2023-04-08T12:00:00.000Z",
-      "updated_at": "2023-04-08T12:00:00.000Z"
+        "updated_at": "2023-04-08T12:00:00.000Z"
     }
   ]
+}
+```
+
+### Email Verification Endpoints
+
+#### Send Verification Email
+
+```
+POST /api/email/send-verification
+```
+
+Sends a verification email to the user for email verification.
+
+**Request Body:**
+```json
+{
+  "email": "user@company.com",
+  "language": "en",  // optional: "en" or "zh"
+  "questionnaire_type": "mother"  // optional: "mother" or "other"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Verification email sent successfully",
+  "verificationToken": "unique_token_here"
+}
+```
+
+#### Verify Email Token
+
+```
+GET /api/email/verify/:token
+```
+
+Verifies the email verification token and returns a session token.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Email verified successfully",
+  "sessionToken": "session_token_here",
+  "email": "user@company.com"
+}
+```
+
+#### Resend Verification Email
+
+```
+POST /api/email/resend-verification
+```
+
+Resends the verification email to the user.
+
+**Request Body:**
+```json
+{
+  "email": "user@company.com",
+  "language": "en"  // optional
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Verification email resent successfully"
+}
+```
+
+#### Check Verification Status
+
+```
+GET /api/email/status/:email
+```
+
+Checks the verification status of an email.
+
+**Response:**
+```json
+{
+  "verified": true,
+  "email": "user@company.com",
+  "sessionToken": "session_token_here"  // if verified
 }
 ```
 
@@ -198,7 +285,13 @@ Retrieves statistics for a specific question.
 ```
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
+SENDGRID_API_KEY=your_sendgrid_api_key_optional
+FRONTEND_URL=http://localhost:5173
+EMAIL_FROM=noreply@chon.com
+EMAIL_FROM_NAME=CHON
 ```
+
+**Note:** Email sending requires SendGrid API key. If not provided, the app will run in development mode and print verification links to console.
 
 2. Run the database migrations in the `migrations` folder against your Supabase project.
 

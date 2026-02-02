@@ -1,0 +1,89 @@
+# --- Version control ---
+.git/
+.gitignore
+.svn/
+.hg/
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+
+# --- Node.js / TypeScript ---
+node_modules/
+npm-debug.log
+yarn-debug.log
+
+# --- Build outputs ---
+dist/
+build/
+out/
+
+# --- IDE / Editor / OS files ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# --- Environment and secrets ---
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+
+# --- Project-specific / AWS / Docker ---
+AWSCLIV2.pkg
+.ebextensions/
+.elasticbeanstalk/
+.local/
+local/
+tmp/
+temp/
+*.tmp
+
+# --- Documentation ---
+docs/
+*.md
+README*
+
+# --- Test / Debug ---
+test/
+tests/
+debug/
+*.log
+
+# --- Miscellaneous ---
+*.config.local
+*.local.yml
+
+# --- Docker files (do not ignore Dockerfile itself) ---
+Dockerfile*
+docker-compose*
+
+# --- Exclude frontend build artifacts and secrets ---
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+
+# --- Exclude backend build artifacts and secrets ---
+backend/__pycache__/
+backend/.DS_Store
+backend/.env*
+backend/.pytest_cache/
+backend/*.pyc
+backend/*.pyo
+backend/.local/
+backend/local/
+backend/tmp/
+backend/temp/
+backend/*.tmp
+
+# --- Exclude database outputs ---
+database/*.json
+
+database/output.json

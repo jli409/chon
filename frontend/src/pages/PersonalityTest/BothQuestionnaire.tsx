@@ -1,5 +1,5 @@
 import React from 'react';
-import { questionnaires, questionnaireConfigs, getQuestionsForSection, getSectionInfo } from './questionnaires';
+import { questionnaires, questionnaireConfigs, getQuestionsForSection, getSectionInfo, type Question } from './questionnaires';
 import SearchableDropdown from './SearchableDropdown';
 import EmailVerificationQuestion from './EmailVerificationQuestion';
 
@@ -60,7 +60,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
   finishQuestionnaire
 }) => {
   // Helper function to render question text
-  const renderQuestionText = (question: any) => {
+  const renderQuestionText = (question: Question) => {
     return (
       <h2 className="question-text">
         {language === 'en' ? question.textEn : question.textZh}
@@ -78,7 +78,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
   const page5Questions = getQuestionsForSection(bothQuestions, bothConfig, 4); // Section 4: About Motherhood
   
   // Get the final question (last one that's not in sections)
-  const page6Question: any = bothQuestions[bothQuestions.length - 1];
+  const page6Question = bothQuestions[bothQuestions.length - 1];
 
   return (
     <div className="questionnaire-content both-questionnaire" lang={language}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import './Home.css';
@@ -12,17 +12,17 @@ const Home = () => {
     return <span dangerouslySetInnerHTML={{ __html: wrappedHtml }} />;
   };
 
-  const debugLanguage = () => {
+  const debugLanguage = useCallback(() => {
     console.log('Current language in Home:', language);
     console.log('Current translations in Home:', t);
-  };
+  }, [language, t]);
 
   React.useEffect(() => {
     debugLanguage();
-  }, [language, t]);
+  }, [debugLanguage]);
 
   const handleCtaClick = () => {
-    navigate('/personality-test');
+    navigate('/personality-test/intro');
   };
 
   return (

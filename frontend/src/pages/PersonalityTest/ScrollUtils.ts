@@ -52,7 +52,7 @@ export const scrollToNextQuestion = (currentQuestionId: string): void => {
       setTimeout(() => {
         if (nextQuestionElement) {
           // Force a reflow to ensure accurate height measurement
-          nextQuestionElement.offsetHeight;
+          void nextQuestionElement.offsetHeight;
           
           // Check if question is taller than viewport
           const questionHeight = nextQuestionElement.getBoundingClientRect().height;
@@ -91,12 +91,10 @@ export const scrollToNextQuestion = (currentQuestionId: string): void => {
  * Show all questions when user manually scrolls
  */
 export let hasUserScrolled = false;
-let lastScrollY = 0;
 let scrollHandlerInitialY = 0;
 
 export const resetUserScroll = () => {
   hasUserScrolled = false;
-  lastScrollY = 0;
   scrollHandlerInitialY = window.scrollY;
 };
 
@@ -114,8 +112,6 @@ export const showAllQuestionsOnScroll = (): void => {
       // Detect actual user scroll from initial position
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - scrollHandlerInitialY);
-      const scrollDirection = currentScrollY < lastScrollY ? 'up' : 'down';
-      lastScrollY = currentScrollY;
       
       // Trigger if there's significant scroll movement (>150px from start for mobile)
       const isMobile = window.innerWidth <= 768;
@@ -196,7 +192,7 @@ export const scrollToFirstQuestionOfNextPage = (): void => {
       const firstQuestion = questions[0] as HTMLElement;
       if (firstQuestion) {
         // Force a reflow to ensure accurate height measurement
-        firstQuestion.offsetHeight;
+        void firstQuestion.offsetHeight;
         
         // Check if question is taller than viewport
         const questionHeight = firstQuestion.getBoundingClientRect().height;

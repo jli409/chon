@@ -20,6 +20,8 @@ const EmailVerificationQuestion: React.FC<EmailVerificationQuestionProps> = ({
     <div className="text-input-container">
       <input
         type="email"
+        id={`email-${questionId}`}
+        name={`email-${questionId}`}
         className="text-answer-input"
         value={value}
         onChange={(e) => onChange(e.target.value)}

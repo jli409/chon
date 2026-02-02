@@ -118,7 +118,7 @@ const translations: TranslationsType = {
     contact: {
       title: 'Contact Us',
       description: 'Interested in creating a more inclusive environment for mothers in your corporation?',
-      contactInfo: "If interested in corporate partnership, please reach out to us at <span style=\"color: #F0BDC0\">contact@chon.life</span>.",
+      contactInfo: "If interested in corporate partnership, please reach out to us at <span style=\"color: #F0BDC0\">contact@chonlife.com</span>.",
       form: {
         name: 'Name',
         email: 'Email',
@@ -190,7 +190,7 @@ const translations: TranslationsType = {
     contact: {
       title: '联系我们',
       description: '有兴趣在您的企业中为母亲创造更包容的环境吗？',
-      contactInfo: "如对企业合作感兴趣，请联系<span style=\"color: #F0BDC0\">contact@chon.life</span>。",
+      contactInfo: "如对企业合作感兴趣，请联系<span style=\"color: #F0BDC0\">contact@chonlife.com</span>。",
       form: {
         name: '姓名',
         email: '邮箱',

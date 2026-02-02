@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import Navigation from './components/Navigation/Navigation.tsx'
 import LanguageSelector from './components/LanguageSelector/LanguageSelector.tsx'
 import Home from './pages/Home/Home.tsx'
@@ -6,6 +6,8 @@ import PersonalityTest from './pages/PersonalityTest/PersonalityTest.tsx'
 import Contact from './pages/Contact/Contact.tsx'
 import Login from './pages/Login/Login.tsx'
 import NotFound from './pages/NotFound/NotFound.tsx'
+import ResetPassword from './pages/ResetPassword/ResetPassword.tsx'
+import AuthCallback from './pages/AuthCallback/AuthCallback.tsx'
 import { useLanguage } from './contexts/LanguageContext.tsx'
 import { useEffect, useState } from 'react'
 import './App.css'
@@ -75,8 +77,10 @@ function App() {
       {!shouldHideNavigation && <Navigation />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/personality-test" element={<Navigate to="/personality-test/intro" replace />} />
+        <Route path="/personality-test/results" element={<Results />} />
         <Route 
-          path="/personality-test" 
+          path="/personality-test/:step" 
           element={
             <PersonalityTest 
               onWhiteThemeChange={handleWhiteThemeChange} 
@@ -87,6 +91,8 @@ function App() {
         <Route path="/results" element={<Results />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!shouldHideNavigation && (

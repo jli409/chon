@@ -1,0 +1,34 @@
+services:
+  python-app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: python-app
+    restart: unless-stopped
+    init: true
+    # env_file: ./.env  # Uncomment if .env file exists
+    ports:
+      - "5000:5000"  # Flask app exposed on 5000
+    networks:
+      - appnet
+    depends_on:
+      - frontend-ts
+    # Add database dependencies here if required (see README)
+
+  frontend-ts:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-ts
+    restart: unless-stopped
+    init: true
+    # env_file: ./frontend/.env  # Uncomment if .env file exists
+    ports:
+      - "3000:3000"  # Node.js frontend exposed on 3000
+    networks:
+      - appnet
+    # If the frontend needs to talk to the backend, ensure CORS is configured
+
+networks:
+  appnet:
+    driver: bridge

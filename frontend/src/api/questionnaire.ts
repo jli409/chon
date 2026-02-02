@@ -23,7 +23,7 @@ export interface QuestionResponse {
  */
 export const saveIntroChoice = async (choice: string): Promise<boolean> => {
   try {
-    const response = await axios.post(`${API_URL}/api/intro-choice`, {
+    const response = await axios.post(`${API_URL}/intro-choice`, {
       choice: choice
     });
     
@@ -43,9 +43,10 @@ export const saveIntroChoice = async (choice: string): Promise<boolean> => {
 /**
  * 批量保存所有问卷回答到后端
  * @param responses 所有问题的回答数组
+ * @param userSessionId 用户会话ID，用于链接到individual user
  * @returns Promise，表示保存操作的结果
  */
-export const saveAllQuestionResponses = async (responses: QuestionResponse[]): Promise<boolean> => {
+export const saveAllQuestionResponses = async (responses: QuestionResponse[], userSessionId?: string): Promise<boolean> => {
   if (!responses || responses.length === 0) {
     console.warn('No responses to save');
     return false;
@@ -54,10 +55,19 @@ export const saveAllQuestionResponses = async (responses: QuestionResponse[]): P
   try {
     console.log(`Saving ${responses.length} responses to the backend...`);
     
+    // 构建请求数据
+    const requestData: Record<string, unknown> = {
+      responses
+    };
+    
+    // 添加user_session_id如果提供
+    if (userSessionId) {
+      requestData.user_session_id = userSessionId;
+      console.log(`Linking responses to user session: ${userSessionId}`);
+    }
+    
     // 使用批量API一次保存所有回答
-    await axios.post(`${API_URL}/api/batch-question-responses`, {
-      responses: responses
-    });
+    await axios.post(`${API_URL}/batch-question-responses`, requestData);
     
     console.log('Successfully saved all responses to backend');
     return true;

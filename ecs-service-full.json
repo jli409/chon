@@ -1,0 +1,156 @@
+{
+    "services": [
+        {
+            "serviceArn": "arn:aws:ecs:us-east-1:207995142959:service/chon-cluster/app-service",
+            "serviceName": "app-service",
+            "clusterArn": "arn:aws:ecs:us-east-1:207995142959:cluster/chon-cluster",
+            "loadBalancers": [
+                {
+                    "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:207995142959:targetgroup/backend-tg/631d6bc558b7c15c",
+                    "containerName": "python-app",
+                    "containerPort": 5000
+                },
+                {
+                    "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:207995142959:targetgroup/frontend-tg/aa3b47c9372f1226",
+                    "containerName": "frontend-ts",
+                    "containerPort": 3000
+                }
+            ],
+            "serviceRegistries": [],
+            "status": "ACTIVE",
+            "desiredCount": 1,
+            "runningCount": 0,
+            "pendingCount": 0,
+            "launchType": "FARGATE",
+            "platformVersion": "LATEST",
+            "platformFamily": "Linux",
+            "taskDefinition": "arn:aws:ecs:us-east-1:207995142959:task-definition/app-task:1",
+            "deploymentConfiguration": {
+                "deploymentCircuitBreaker": {
+                    "enable": false,
+                    "rollback": false
+                },
+                "maximumPercent": 200,
+                "minimumHealthyPercent": 100,
+                "strategy": "ROLLING",
+                "bakeTimeInMinutes": 0
+            },
+            "deployments": [
+                {
+                    "id": "ecs-svc/5701151167723101954",
+                    "status": "PRIMARY",
+                    "taskDefinition": "arn:aws:ecs:us-east-1:207995142959:task-definition/app-task:1",
+                    "desiredCount": 1,
+                    "pendingCount": 0,
+                    "runningCount": 0,
+                    "failedTasks": 0,
+                    "createdAt": "2025-11-30T11:45:48.437000-05:00",
+                    "updatedAt": "2025-11-30T11:46:11.546000-05:00",
+                    "launchType": "FARGATE",
+                    "platformVersion": "1.4.0",
+                    "platformFamily": "Linux",
+                    "networkConfiguration": {
+                        "awsvpcConfiguration": {
+                            "subnets": [
+                                "subnet-0d07d8f2e22b27a66",
+                                "subnet-04012d44897126735",
+                                "subnet-0b57d0837db931a81",
+                                "subnet-0721fe8f9f2cdc6e1",
+                                "subnet-09459cb719933931c",
+                                "subnet-01ac7b450b3aaadd3"
+                            ],
+                            "securityGroups": [
+                                "sg-0d24227b85e6bf911",
+                                "sg-04e081c3a024fa799"
+                            ],
+                            "assignPublicIp": "ENABLED"
+                        }
+                    },
+                    "rolloutState": "IN_PROGRESS",
+                    "rolloutStateReason": "ECS deployment ecs-svc/5701151167723101954 in progress."
+                },
+                {
+                    "id": "ecs-svc/1239331958634227014",
+                    "status": "ACTIVE",
+                    "taskDefinition": "arn:aws:ecs:us-east-1:207995142959:task-definition/app-task:1",
+                    "desiredCount": 0,
+                    "pendingCount": 0,
+                    "runningCount": 0,
+                    "failedTasks": 0,
+                    "createdAt": "2025-11-29T21:10:09.951000-05:00",
+                    "updatedAt": "2025-11-30T11:46:11.607000-05:00",
+                    "launchType": "FARGATE",
+                    "platformVersion": "1.4.0",
+                    "platformFamily": "Linux",
+                    "networkConfiguration": {
+                        "awsvpcConfiguration": {
+                            "subnets": [
+                                "subnet-0d07d8f2e22b27a66",
+                                "subnet-04012d44897126735",
+                                "subnet-0b57d0837db931a81",
+                                "subnet-0721fe8f9f2cdc6e1",
+                                "subnet-09459cb719933931c",
+                                "subnet-01ac7b450b3aaadd3"
+                            ],
+                            "securityGroups": [
+                                "sg-0d24227b85e6bf911"
+                            ],
+                            "assignPublicIp": "ENABLED"
+                        }
+                    },
+                    "rolloutState": "IN_PROGRESS",
+                    "rolloutStateReason": "ECS deployment ecs-svc/1239331958634227014 in progress."
+                }
+            ],
+            "roleArn": "arn:aws:iam::207995142959:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+            "events": [
+                {
+                    "id": "cf109ceb-8230-440e-9951-b9c7110cc5ab",
+                    "createdAt": "2025-11-30T09:27:49.402000-05:00",
+                    "message": "(service app-service) failed to launch a task with (error ECS was unable to assume the role 'arn:aws:iam::207995142959:role/ecsTaskExecutionRole' that was provided for this task. Please verify that the role being passed has the proper trust relationship and permissions and that your IAM user has permissions to pass this role.)."
+                },
+                {
+                    "id": "1fe5b84d-4f3d-49fc-851f-44db6d4ac39b",
+                    "createdAt": "2025-11-30T03:21:21.236000-05:00",
+                    "message": "(service app-service) failed to launch a task with (error ECS was unable to assume the role 'arn:aws:iam::207995142959:role/ecsTaskExecutionRole' that was provided for this task. Please verify that the role being passed has the proper trust relationship and permissions and that your IAM user has permissions to pass this role.)."
+                },
+                {
+                    "id": "49677821-287f-4fe8-99ba-f2d4793fb726",
+                    "createdAt": "2025-11-29T21:10:32.517000-05:00",
+                    "message": "(service app-service) failed to launch a task with (error ECS was unable to assume the role 'arn:aws:iam::207995142959:role/ecsTaskExecutionRole' that was provided for this task. Please verify that the role being passed has the proper trust relationship and permissions and that your IAM user has permissions to pass this role.)."
+                }
+            ],
+            "createdAt": "2025-11-29T21:10:09.951000-05:00",
+            "placementConstraints": [],
+            "placementStrategy": [],
+            "networkConfiguration": {
+                "awsvpcConfiguration": {
+                    "subnets": [
+                        "subnet-0d07d8f2e22b27a66",
+                        "subnet-04012d44897126735",
+                        "subnet-0b57d0837db931a81",
+                        "subnet-0721fe8f9f2cdc6e1",
+                        "subnet-09459cb719933931c",
+                        "subnet-01ac7b450b3aaadd3"
+                    ],
+                    "securityGroups": [
+                        "sg-0d24227b85e6bf911",
+                        "sg-04e081c3a024fa799"
+                    ],
+                    "assignPublicIp": "ENABLED"
+                }
+            },
+            "healthCheckGracePeriodSeconds": 0,
+            "schedulingStrategy": "REPLICA",
+            "deploymentController": {
+                "type": "ECS"
+            },
+            "createdBy": "arn:aws:iam::207995142959:root",
+            "enableECSManagedTags": false,
+            "propagateTags": "NONE",
+            "enableExecuteCommand": false,
+            "availabilityZoneRebalancing": "ENABLED"
+        }
+    ],
+    "failures": []
+}

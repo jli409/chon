@@ -68,8 +68,7 @@ export interface TagStats {
 }
 
 export const calculateTagStats = (
-  currentTagScores: Record<string, number[]>,
-  tagQuestionCounts: Record<string, number>
+  currentTagScores: Record<string, number[]>
 ): Record<string, TagStats> => {
   const tagStats: Record<string, TagStats> = {};
   
@@ -98,7 +97,12 @@ export const calculateTagStats = (
 };
 
 // Count questions per tag
-export const countQuestionsPerTag = (questions: any[]): Record<string, number> => {
+type QuestionLike = {
+  type: string;
+  tags?: string[];
+};
+
+export const countQuestionsPerTag = (questions: QuestionLike[]): Record<string, number> => {
   const tagQuestionCounts: Record<string, number> = {};
   
   questions.forEach(question => {

@@ -43,7 +43,7 @@ const Navigation = () => {
       if (hasAccount) {
         console.log('User has account, redirecting to results page...');
         e.preventDefault();
-        navigate('/results');
+        navigate('/personality-test/results');
         return;
       }
       
@@ -51,7 +51,7 @@ const Navigation = () => {
       if (hasResults) {
         console.log('User has results but no account, redirecting to results page...');
         e.preventDefault();
-        navigate('/results');
+        navigate('/personality-test/results');
         return;
       }
       

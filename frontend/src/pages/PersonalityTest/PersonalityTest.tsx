@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
 import LanguageSelector from '../../components/LanguageSelector/LanguageSelector.tsx';
 import './PersonalityTest.css';
@@ -8,12 +8,14 @@ import SearchableDropdown from './SearchableDropdown.tsx';
 import EmailVerificationQuestion from './EmailVerificationQuestion.tsx';
 import { scrollToNextQuestion, scrollToFirstQuestionOfNextPage, showAllQuestionsOnScroll, resetUserScroll } from './ScrollUtils.ts';
 import questionnaireApi, { prepareQuestionResponses, QuestionResponse } from '../../api/questionnaire.ts';
+import { supabase } from '../../lib/supabaseClient.ts';
+import userSessionApi from '../../api/userSession.ts';
 import { questionnaires, questionnaireConfigs, unifiedQuestions, Question, QuestionType, QuestionnaireType, QuestionnaireContext, getQuestionsForSection, getSectionInfo } from './questionnaires.ts';
 import { 
   scaleValueToPercentage, 
-  toChineseTag, 
+  toChineseTag,
+  toEnglishTag,
   calculateTagStats, 
-  countQuestionsPerTag,
   CHINESE_TAGS,
   type TagStats 
 } from '../../utils/tagUtils';
@@ -53,7 +55,7 @@ const MetaTags = () => {
 const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTestProps) => {
   const { t, language } = useLanguage();
   const navigate = useNavigate(); // 添加导航钩子
-  const location = useLocation();
+  const { step: stepSlug } = useParams<{ step?: string }>();
   const [step, setStep] = useState<TestStep>('intro');
   
   // Debug: log step changes
@@ -65,6 +67,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [userEmail, setUserEmail] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
+  const [verificationSent, setVerificationSent] = useState<boolean>(false);
+  const [isSendingVerification, setIsSendingVerification] = useState<boolean>(false);
+  const [verificationMessage, setVerificationMessage] = useState<string>('');
   const [typingText, setTypingText] = useState<string>('');
   const [isTyping, setIsTyping] = useState<boolean>(false);
   // Identity roles expansion for corporate
@@ -85,7 +90,6 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [showFifthPage, setShowFifthPage] = useState(false);
   const [showSixthPage, setShowSixthPage] = useState(false);
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
-  const [currentVisibleQuestionId, setCurrentVisibleQuestionId] = useState<string | null>(null);
   // 替换静态百分比为动态状态
   const [introStats, setIntroStats] = useState({
     yesCount: 0,
@@ -114,7 +118,20 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   });
   // Add state to track current questionnaire type
-  const [activeQuestionnaire, setActiveQuestionnaire] = useState<QuestionnaireType | null>(null);
+  const [activeQuestionnaire, setActiveQuestionnaire] = useState<QuestionnaireType | null>(() => {
+    try {
+      const savedQuestionnaire = localStorage.getItem('selectedQuestionnaireType');
+      if (savedQuestionnaire && ['mother', 'corporate', 'both', 'other'].includes(savedQuestionnaire)) {
+        return savedQuestionnaire as QuestionnaireType;
+      }
+    } catch (error) {
+      console.warn('Failed to read selectedQuestionnaireType from localStorage:', error);
+    }
+    return null;
+  });
+  
+  // User session tracking
+  const [userSessionId, setUserSessionId] = useState<string | null>(null);
   
   // Save active questionnaire type to localStorage when it changes
   useEffect(() => {
@@ -123,6 +140,15 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       console.log('Saved questionnaire type to localStorage:', activeQuestionnaire);
     }
   }, [activeQuestionnaire]);
+  
+  // Load user session ID from localStorage on mount
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('userSessionId');
+    if (savedSessionId) {
+      setUserSessionId(savedSessionId);
+      console.log('Loaded user session ID from localStorage:', savedSessionId);
+    }
+  }, []);
   // Add state to track secondary questionnaire for "both" option
   const [secondaryQuestionnaire, setSecondaryQuestionnaire] = useState<QuestionnaireType | null>(null);
   // Add state to track if we're showing the primary or secondary questionnaire
@@ -134,13 +160,49 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   const [tagScores, setTagScores] = useState<Record<string, number[]>>({});
   
   // Add new state for branch tracking after the existing state declarations
-  const [branchingPath, setBranchingPath] = useState<'default' | 'yes-path' | 'no-path'>('default');
-  const [hasBranchingQuestion, setHasBranchingQuestion] = useState(false);
   
   
+  const clearStoredProgressForNewEmail = useCallback(() => {
+    setAnswers({});
+    setPrimaryAnswers({});
+    setSecondaryAnswers({});
+    setTagScores({});
+    setShowFirstPage(true);
+    setShowSecondPage(false);
+    setShowThirdPage(false);
+    setShowFourthPage(false);
+    setShowFifthPage(false);
+    setShowSixthPage(false);
+
+    localStorage.removeItem('chon_personality_answers');
+    localStorage.removeItem('tagScores');
+    localStorage.removeItem('tagStats');
+    localStorage.removeItem('chon_personality_flow_step');
+
+    CHINESE_TAGS.forEach((tag) => {
+      const englishTag = toEnglishTag(tag);
+      localStorage.removeItem(`questionScores_${englishTag}`);
+    });
+  }, []);
+
+  const getQuestionnaireTypeFromIdentities = useCallback((identities: Set<IdentityType>): QuestionnaireType | null => {
+    if (identities.has('mother') && identities.has('corporate')) {
+      return 'both';
+    }
+    if (identities.has('mother')) {
+      return 'mother';
+    }
+    if (identities.has('corporate')) {
+      return 'corporate';
+    }
+    if (identities.has('other')) {
+      return 'other';
+    }
+    return null;
+  }, []);
 
   // Helper to get current questionnaire
-  const getCurrentQuestionnaire = (): QuestionnaireContext | null => {
+  const getCurrentQuestionnaire = useCallback((): QuestionnaireContext | null => {
     // When both mother and corporate are selected
     if (selectedIdentities.has('mother') && selectedIdentities.has('corporate')) {
       if (showingPrimaryQuestionnaire) {
@@ -152,22 +214,20 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     
     // Single selection case
     return activeQuestionnaire ? questionnaires[activeQuestionnaire] : null;
-  };
+  }, [activeQuestionnaire, secondaryQuestionnaire, selectedIdentities, showingPrimaryQuestionnaire]);
 
   // Helper to get current questions
-  const getCurrentQuestions = (): Question[] => {
+  const getCurrentQuestions = useCallback((): Question[] => {
     return getCurrentQuestionnaire()?.questions || [];
-  };
+  }, [getCurrentQuestionnaire]);
   
   // Helper to get total questions count
-  const getTotalQuestions = (): number => {
+  const getTotalQuestions = useCallback((): number => {
     return getCurrentQuestionnaire()?.totalQuestions || 0;
-  };
+  }, [getCurrentQuestionnaire]);
   
   // Function to show only a specific question by ID
   const showOnlyQuestion = (questionId: string) => {
-    setCurrentVisibleQuestionId(questionId);
-    
     // Reset scroll tracking to hide questions again
     resetUserScroll();
     
@@ -196,7 +256,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         // Special handling for question 5 and 8 to prevent scroll issues
         if (questionId.includes('5') || questionId.includes('8')) {
           // Force a reflow to ensure accurate height measurement
-          targetQuestion.offsetHeight;
+          void targetQuestion.offsetHeight;
           
           // Check if it's a tall question and position at top
           const questionHeight = targetQuestion.getBoundingClientRect().height;
@@ -324,14 +384,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       setAnswers(JSON.parse(savedAnswers));
     }
     
-    // Don't load saved step if it would hide the UI on a fresh page load
-    if (savedStep && isValidStep(savedStep)) {
-      console.log('Loading saved step from localStorage:', savedStep);
-      setStep(savedStep as TestStep);
-    } else {
-      // Reset to intro if no valid saved step
-      console.log('No valid saved step, starting at intro');
-      setStep('intro');
+    if (savedStep) {
+      console.log('Saved step found in localStorage:', savedStep);
     }
     
     if (savedIdentities) {
@@ -367,10 +421,127 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   }, []);
   
-  // 验证步骤值是否有效
-  const isValidStep = (step: string): boolean => {
-    return ['intro', 'identity', 'privacy', 'questionnaire'].includes(step);
-  };
+  const initializeQuestionnaireState = useCallback(() => {
+    setShowFirstPage(true);
+    setShowSecondPage(false);
+    setShowThirdPage(false);
+    setShowFourthPage(false);
+    setShowFifthPage(false);
+    setShowSixthPage(false);
+
+    if (activeQuestionnaire === 'both') {
+      setPrimaryAnswers({});
+      setSecondaryAnswers({});
+      setShowingPrimaryQuestionnaire(true);
+    }
+
+    setStep('questionnaire');
+  }, [activeQuestionnaire]);
+
+  const normalizeStepSlug = useCallback(() => {
+    if (!stepSlug) return 'intro';
+    const lower = stepSlug.toLowerCase();
+    const valid = ['intro', 'identity', 'verify', 'questionnaire'];
+    return valid.includes(lower) ? lower : 'intro';
+  }, [stepSlug]);
+
+  const goToStep = useCallback((slug: string, nextStep: TestStep) => {
+    setStep(nextStep);
+    navigate(`/personality-test/${slug}`);
+  }, [navigate]);
+
+  useEffect(() => {
+    const normalized = normalizeStepSlug();
+    if (normalized !== (stepSlug || 'intro')) {
+      navigate(`/personality-test/${normalized}`, { replace: true });
+      return;
+    }
+
+    if (normalized === 'intro') {
+      setStep('intro');
+    } else if (normalized === 'identity') {
+      setStep('identity');
+    } else if (normalized === 'verify') {
+      const savedStep = localStorage.getItem('chon_personality_step');
+      setStep(savedStep === 'email-verification' ? 'email-verification' : 'privacy');
+    } else if (normalized === 'questionnaire') {
+      setStep('questionnaire');
+    }
+  }, [navigate, normalizeStepSlug, stepSlug]);
+
+  useEffect(() => {
+    if (step === 'questionnaire') {
+      const completed = localStorage.getItem('chon_questionnaire_completed') === 'true';
+      if (completed) {
+        navigate('/personality-test/results', { replace: true });
+      }
+    }
+  }, [step, navigate]);
+
+  useEffect(() => {
+    const resumeFromEmailVerification = async () => {
+      const url = new URL(window.location.href);
+      const normalized = normalizeStepSlug();
+      const authCode = url.searchParams.get('code');
+      const hasAuthParams =
+        !!authCode ||
+        url.searchParams.get('type') === 'magiclink' ||
+        window.location.hash.includes('access_token');
+
+      if (authCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(authCode);
+        if (error) {
+          console.error('Supabase auth redirect error:', error);
+        }
+      }
+
+      const { data } = await supabase.auth.getSession();
+      const hasSession = !!data.session;
+
+      if (hasSession && (normalized === 'questionnaire' || hasAuthParams)) {
+        setVerificationSent(true);
+        setEmailError('');
+        initializeQuestionnaireState();
+        if (normalized !== 'questionnaire') {
+          navigate('/personality-test/questionnaire', { replace: true });
+        }
+      }
+
+      if (normalized === 'questionnaire' && !hasSession) {
+        setStep('email-verification');
+        navigate('/personality-test/verify', { replace: true });
+      }
+
+      if (hasAuthParams) {
+        url.searchParams.delete('code');
+        url.searchParams.delete('type');
+        const cleanedUrl = `${url.pathname}${url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''}`;
+        window.history.replaceState({}, document.title, cleanedUrl);
+      }
+    };
+
+    void resumeFromEmailVerification();
+  }, [initializeQuestionnaireState, navigate, normalizeStepSlug]);
+
+  useEffect(() => {
+    const enforceVerification = async () => {
+      const needsEmailVerification = selectedIdentities.has('mother') ||
+        selectedIdentities.has('corporate') ||
+        selectedIdentities.has('other') ||
+        selectedIdentities.has('both');
+
+      if (!needsEmailVerification || step !== 'questionnaire') {
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setStep('email-verification');
+      }
+    };
+
+    void enforceVerification();
+  }, [step, selectedIdentities]);
   
   // 保存答案到本地存储
   useEffect(() => {
@@ -388,6 +559,26 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   useEffect(() => {
     localStorage.setItem('chon_personality_step', step);
   }, [step]);
+
+  const flowStep = useMemo(() => {
+    switch (step) {
+      case 'intro':
+        return 1;
+      case 'identity':
+        return 2;
+      case 'privacy':
+      case 'email-verification':
+        return 3;
+      case 'questionnaire':
+        return 4;
+      default:
+        return 1;
+    }
+  }, [step]);
+
+  useEffect(() => {
+    localStorage.setItem('chon_personality_flow_step', flowStep.toString());
+  }, [flowStep]);
   
   // 保存身份选择到本地存储
   useEffect(() => {
@@ -442,7 +633,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       setTypingText(fullText);
       setIsTyping(false);
     }
-  }, [step, language]);
+  }, [getCurrentQuestionnaire, language, step]);
 
   // 根据步骤决定是否隐藏UI元素 - Make sure this runs immediately
   useEffect(() => {
@@ -472,11 +663,36 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
   }, [step]);
 
+  useEffect(() => {
+    if (
+      (step === 'privacy' || step === 'email-verification' || step === 'questionnaire') &&
+      (selectedIdentities.size === 0 || !activeQuestionnaire)
+    ) {
+      goToStep('intro', 'intro');
+    }
+  }, [activeQuestionnaire, goToStep, selectedIdentities.size, step]);
+
+  useEffect(() => {
+    if (activeQuestionnaire || selectedIdentities.size === 0) {
+      return;
+    }
+
+    if (selectedIdentities.has('mother') && selectedIdentities.has('corporate')) {
+      setActiveQuestionnaire('both');
+    } else if (selectedIdentities.has('mother')) {
+      setActiveQuestionnaire('mother');
+    } else if (selectedIdentities.has('corporate')) {
+      setActiveQuestionnaire('corporate');
+    } else if (selectedIdentities.has('other')) {
+      setActiveQuestionnaire('other');
+    }
+  }, [activeQuestionnaire, selectedIdentities]);
+
   // 添加获取intro统计数据的函数
-  const fetchIntroStats = async () => {
+  const fetchIntroStats = useCallback(async () => {
     try {
-      console.log("Fetching intro stats from:", `${API_URL}/api/intro-stats`);
-      const response = await fetch(`${API_URL}/api/intro-stats`);
+      console.log("Fetching intro stats from:", `${API_URL}/intro-stats`);
+      const response = await fetch(`${API_URL}/intro-stats`);
       
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
@@ -537,7 +753,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         loading: false
       });
     }
-  };
+  }, [localChoices.no, localChoices.yes]);
 
   // 在用户选择yes/no后获取最新统计数据
   useEffect(() => {
@@ -549,7 +765,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       
       return () => clearTimeout(timer);
     }
-  }, [userChoice]);
+  }, [fetchIntroStats, userChoice]);
   
   // Update stats immediately when local choices change (as fallback)
   useEffect(() => {
@@ -620,7 +836,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       
       return () => clearInterval(interval);
     }
-  }, [step]);
+  }, [fetchIntroStats, localChoices.no, localChoices.yes, step]);
 
   const handleOptionClick = async (choice: string) => {
     console.log("User clicked:", choice);
@@ -629,6 +845,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     // Mark that user has made a choice and persist to localStorage
     setHasUserChosen(true);
     localStorage.setItem('introUserHasChosen', 'true');
+    
+    // Store individual user's intro choice for user session
+    localStorage.setItem('introChoice', choice);
     
     // Update local tracking immediately and persist to localStorage
     setLocalChoices(prev => {
@@ -644,6 +863,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       // 实时保存intro choice到后端
       const success = await questionnaireApi.saveIntroChoice(choice);
       console.log("Save intro choice result:", success);
+      
+      // Note: User session will be created when questionnaire type is selected
+      // to include questionnaire_type and corporate_role
       
       // Don't fetch API data immediately to avoid overriding local data
       // The local useEffect will handle updating the display
@@ -662,7 +884,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     localStorage.removeItem('introUserHasChosen');
     setLocalChoices({yes: 0, no: 0});
     setHasUserChosen(false);
-    setStep('identity');
+    goToStep('identity', 'identity');
   };
 
   const handleIdentitySelect = (identity: IdentityType) => {
@@ -688,48 +910,65 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       }
     }
 
-    // Update active questionnaire based on selections
-    if (newSelectedIdentities.has('mother') && newSelectedIdentities.has('corporate')) {
-      // If both mother and corporate are selected, set 'both' questionnaire
-      setActiveQuestionnaire('both');
-    } else if (newSelectedIdentities.has('mother')) {
-      setActiveQuestionnaire('mother');
-    } else if (newSelectedIdentities.has('corporate')) {
-      setActiveQuestionnaire('corporate');
-    } else if (newSelectedIdentities.has('other')) {
-      setActiveQuestionnaire('other');
-    } else {
-      // If no identity is selected, clear the active questionnaire
-      setActiveQuestionnaire(null);
+    const nextQuestionnaire = getQuestionnaireTypeFromIdentities(newSelectedIdentities);
+    setActiveQuestionnaire(nextQuestionnaire);
+
+    const storedSessionType = localStorage.getItem('userSessionQuestionnaireType');
+    if (storedSessionType && nextQuestionnaire && storedSessionType !== nextQuestionnaire) {
+      clearStoredProgressForNewEmail();
+      setUserSessionId(null);
+      localStorage.removeItem('userSessionId');
+      localStorage.removeItem('userSessionEmail');
+      localStorage.removeItem('userSessionQuestionnaireType');
     }
 
     // 更新状态
     setSelectedIdentities(newSelectedIdentities);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedIdentities.size === 0) {
       return;
     }
 
-    // Set active questionnaire type based on selected identity
-    if (selectedIdentities.has('mother') && selectedIdentities.has('corporate')) {
-      // For "both" option, set the 'both' questionnaire
-      setActiveQuestionnaire('both');
-      setSecondaryQuestionnaire(null);
-    } else if (selectedIdentities.has('mother')) {
-      setActiveQuestionnaire('mother');
-      setSecondaryQuestionnaire(null);
-    } else if (selectedIdentities.has('corporate')) {
-      setActiveQuestionnaire('corporate');
-      setSecondaryQuestionnaire(null);
-    } else if (selectedIdentities.has('other')) {
-      setActiveQuestionnaire('other');
+    const questionnaireType = getQuestionnaireTypeFromIdentities(selectedIdentities);
+    if (questionnaireType) {
+      setActiveQuestionnaire(questionnaireType);
       setSecondaryQuestionnaire(null);
     }
 
+    // Create user session with questionnaire type and corporate role
+    const storedSessionType = localStorage.getItem('userSessionQuestionnaireType');
+    if (questionnaireType && (!userSessionId || storedSessionType !== questionnaireType)) {
+      try {
+        const introChoice = localStorage.getItem('introChoice');
+        const corporateRole = questionnaireType === 'corporate' ? (localStorage.getItem('selectedCorporateRole') || null) : null;
+        
+        console.log('Creating user session with:', {
+          introChoice,
+          corporateRole,
+          questionnaireType
+        });
+        
+        const session = await userSessionApi.createUserSession(
+          introChoice || undefined,
+          undefined, // email will be added later in email verification
+          questionnaireType,
+          corporateRole || undefined
+        );
+        
+        setUserSessionId(session.user_session_id);
+        localStorage.setItem('userSessionId', session.user_session_id);
+        localStorage.removeItem('userSessionEmail');
+        localStorage.setItem('userSessionQuestionnaireType', questionnaireType);
+        console.log('Created user session:', session.user_session_id, 'for questionnaire:', questionnaireType, 'with intro choice:', introChoice);
+      } catch (error) {
+        console.error('Error creating user session:', error);
+      }
+    }
+
     // Proceed to privacy statement
-    setStep('privacy');
+    goToStep('verify', 'privacy');
   };
 
   const handlePrivacyContinue = () => {
@@ -742,37 +981,14 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     if (needsEmailVerification) {
       // Go to email verification page
       setStep('email-verification');
+      navigate('/personality-test/verify');
     } else {
-      // 确保所有页面状态初始化
-      setShowFirstPage(true);
-      setShowSecondPage(false);
-      setShowThirdPage(false);
-      setShowFourthPage(false);
-      setShowFifthPage(false);
-      setShowSixthPage(false);
-      
-      // 如果是both类型，初始化primary和secondary答案容器
-      if (activeQuestionnaire === 'both') {
-        setPrimaryAnswers({});
-        setSecondaryAnswers({});
-        setShowingPrimaryQuestionnaire(true);
-      }
-      
-      // 设置为问卷步骤
-      setStep('questionnaire');
-      
-      // 通知父组件需要设置白色主题和隐藏UI
-      if (onWhiteThemeChange) {
-        onWhiteThemeChange(true);
-      }
-      
-      if (onHideUIChange) {
-        onHideUIChange(true);
-      }
+      initializeQuestionnaireState();
+      navigate('/personality-test/questionnaire');
     }
   };
 
-  const handleEmailVerificationContinue = () => {
+  const handleEmailVerificationContinue = async () => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
@@ -783,34 +999,76 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       return;
     }
     
-    // Email is valid, proceed to questionnaire
+    // Email is valid, send verification email via Supabase magic link
     setEmailError('');
-    
-    // 确保所有页面状态初始化
-    setShowFirstPage(true);
-    setShowSecondPage(false);
-    setShowThirdPage(false);
-    setShowFourthPage(false);
-    setShowFifthPage(false);
-    setShowSixthPage(false);
-    
-    // 如果是both类型，初始化primary和secondary答案容器
-    if (activeQuestionnaire === 'both') {
-      setPrimaryAnswers({});
-      setSecondaryAnswers({});
-      setShowingPrimaryQuestionnaire(true);
-    }
-    
-    // 设置为问卷步骤
-    setStep('questionnaire');
-    
-    // 通知父组件需要设置白色主题和隐藏UI
-    if (onWhiteThemeChange) {
-      onWhiteThemeChange(true);
-    }
-    
-    if (onHideUIChange) {
-      onHideUIChange(true);
+    setVerificationMessage('');
+    setIsSendingVerification(true);
+
+    try {
+      const storedSessionEmail = localStorage.getItem('userSessionEmail');
+      const needsNewSession = !userSessionId || !storedSessionEmail || storedSessionEmail !== userEmail;
+
+      if (needsNewSession && activeQuestionnaire) {
+        clearStoredProgressForNewEmail();
+        setUserSessionId(null);
+        localStorage.removeItem('userSessionId');
+        localStorage.removeItem('userSessionEmail');
+        localStorage.removeItem('userSessionQuestionnaireType');
+
+        const introChoice = localStorage.getItem('introChoice');
+        const corporateRole = activeQuestionnaire === 'corporate' ? (localStorage.getItem('selectedCorporateRole') || null) : null;
+        const session = await userSessionApi.createUserSession(
+          introChoice || undefined,
+          userEmail,
+          activeQuestionnaire,
+          corporateRole || undefined
+        );
+        setUserSessionId(session.user_session_id);
+        localStorage.setItem('userSessionId', session.user_session_id);
+        localStorage.setItem('userSessionEmail', userEmail);
+        localStorage.setItem('userSessionQuestionnaireType', activeQuestionnaire);
+      }
+
+      localStorage.setItem(
+        'post_auth_return',
+        JSON.stringify({
+          path: `${window.location.pathname}${window.location.search}`,
+          step: 'verify',
+          ts: Date.now()
+        })
+      );
+
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: userEmail,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      localStorage.setItem('pendingVerificationEmail', userEmail);
+      if (activeQuestionnaire) {
+        localStorage.setItem('activeQuestionnaire', activeQuestionnaire);
+      }
+
+      setVerificationSent(true);
+      setVerificationMessage(
+        language === 'en'
+          ? 'Verification link sent. Please check your inbox and click the link to continue.'
+          : '验证链接已发送，请检查邮箱并点击链接继续。'
+      );
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      setEmailError(language === 'en' 
+        ? 'Failed to send verification email. Please try again.' 
+        : '发送验证邮件失败，请重试。');
+    } finally {
+      setIsSendingVerification(false);
     }
   };
 
@@ -820,27 +1078,21 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
 
   // Handle answer selection for multiple choice questions
   const handleMultipleChoiceAnswer = (questionId: string, optionId: string) => {
+    const normalizedQuestionId = String(questionId);
     const currentAnswers = getCurrentAnswers();
+    if (currentAnswers[normalizedQuestionId]) {
+      return;
+    }
     setCurrentAnswers({
       ...currentAnswers,
-      [questionId]: optionId
+      [normalizedQuestionId]: optionId
     });
     
-    // Add branching logic for specific question (e.g., corporate manager question 1)
-    if (questionId === 'corporate_1') {
-      setHasBranchingQuestion(true);
-      if (optionId === 'A') { // Yes
-        setBranchingPath('yes-path');
-      } else if (optionId === 'B') { // No
-        setBranchingPath('no-path');
-      }
-    }
-    
     // Update tag scores
-    updateTagScores(questionId, optionId);
+    updateTagScores(normalizedQuestionId, optionId);
     
     // Auto-finish if this is question 25 (final question)
-    if (questionId === '25') {
+    if (normalizedQuestionId === '25') {
       // Wait a moment for the answer to be visually registered, then finish
       setTimeout(() => {
         finishQuestionnaire();
@@ -849,61 +1101,66 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     }
     
     // Check if this is the last question in the section
-    if (isLastQuestionInSection(questionId)) {
+    if (isLastQuestionInSection(normalizedQuestionId)) {
       // Show continue button (keep last question visible)
       setTimeout(() => {
         showContinueButton();
       }, 300);
     } else {
       // Find and show next question
-      const currentNum = parseInt(questionId.split('_')[1]) || 0;
-      const prefix = questionId.split('_')[0];
+      const currentNum = parseInt(normalizedQuestionId.split('_')[1]) || 0;
+      const prefix = normalizedQuestionId.split('_')[0];
       const nextQuestionId = `${prefix}_${currentNum + 1}`;
       
       // Show next question and scroll to it
       setTimeout(() => {
         showOnlyQuestion(nextQuestionId);
-        scrollToNextQuestion(questionId);
+        scrollToNextQuestion(normalizedQuestionId);
       }, 100);
     }
   };
 
   // Handle text input for free text questions
   const handleTextAnswer = (questionId: string, text: string) => {
+    const normalizedQuestionId = String(questionId);
     const currentAnswers = getCurrentAnswers();
+    if (currentAnswers[normalizedQuestionId]?.trim()) {
+      return;
+    }
     // Only update answer when there's text content
     if (text.trim()) {
       setCurrentAnswers({
         ...currentAnswers,
-        [questionId]: text
+        [normalizedQuestionId]: text
       });
     } else {
       // Remove the answer if text is empty to accurately track progress
       const newAnswers = {...currentAnswers};
-      delete newAnswers[questionId];
+      delete newAnswers[normalizedQuestionId];
       setCurrentAnswers(newAnswers);
     }
   };
 
   // Handle Enter key press for text inputs
   const handleTextInputKeyPress = (questionId: string, event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && getCurrentAnswers()[questionId]?.trim()) {
+    const normalizedQuestionId = String(questionId);
+    if (event.key === 'Enter' && getCurrentAnswers()[normalizedQuestionId]?.trim()) {
       // Check if this is the last question in the section
-      if (isLastQuestionInSection(questionId)) {
+      if (isLastQuestionInSection(normalizedQuestionId)) {
         // Show continue button
         setTimeout(() => {
           showContinueButton();
         }, 300);
       } else {
         // Find and show next question
-        const currentNum = parseInt(questionId.split('_')[1]) || 0;
-        const prefix = questionId.split('_')[0];
+        const currentNum = parseInt(normalizedQuestionId.split('_')[1]) || 0;
+        const prefix = normalizedQuestionId.split('_')[0];
         const nextQuestionId = `${prefix}_${currentNum + 1}`;
         
         // Show next question and scroll to it
         setTimeout(() => {
           showOnlyQuestion(nextQuestionId);
-          scrollToNextQuestion(questionId);
+          scrollToNextQuestion(normalizedQuestionId);
         }, 100);
       }
     }
@@ -911,74 +1168,86 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
 
   // Handle scale question answer
   const handleScaleAnswer = (questionId: string, value: string) => {
+    const normalizedQuestionId = String(questionId);
     const currentAnswers = getCurrentAnswers();
+    if (currentAnswers[normalizedQuestionId]) {
+      return;
+    }
     setCurrentAnswers({
       ...currentAnswers,
-      [questionId]: value
+      [normalizedQuestionId]: value
     });
     
     // Update tag scores
-    updateTagScores(questionId, value);
+    updateTagScores(normalizedQuestionId, value);
     
     // Check if this is the last question in the section
-    if (isLastQuestionInSection(questionId)) {
+    if (isLastQuestionInSection(normalizedQuestionId)) {
       // Show continue button (keep last question visible)
       setTimeout(() => {
         showContinueButton();
       }, 300);
     } else {
       // Find and show next question
-      const currentNum = parseInt(questionId.split('_')[1]) || 0;
-      const prefix = questionId.split('_')[0];
+      const currentNum = parseInt(normalizedQuestionId.split('_')[1]) || 0;
+      const prefix = normalizedQuestionId.split('_')[0];
       const nextQuestionId = `${prefix}_${currentNum + 1}`;
       
       // Show next question and scroll to it
       setTimeout(() => {
         showOnlyQuestion(nextQuestionId);
-        scrollToNextQuestion(questionId);
+        scrollToNextQuestion(normalizedQuestionId);
       }, 100);
     }
   };
 
   // Handle multi-select answer (stores comma-separated option ids)
   const handleMultiSelectAnswer = (questionId: string, values: string[]) => {
+    const normalizedQuestionId = String(questionId);
     const currentAnswers = getCurrentAnswers();
+    if (currentAnswers[normalizedQuestionId]) {
+      return;
+    }
     if (values.length > 0) {
       setCurrentAnswers({
         ...currentAnswers,
-        [questionId]: values.join(',')
+        [normalizedQuestionId]: values.join(',')
       });
     } else {
       const newAnswers = { ...currentAnswers };
-      delete newAnswers[questionId];
+      delete newAnswers[normalizedQuestionId];
       setCurrentAnswers(newAnswers);
     }
   };
 
   // Handle searchable dropdown answer
   const handleSearchableDropdownAnswer = (questionId: string, optionId: string) => {
+    const normalizedQuestionId = String(questionId);
     const currentAnswers = getCurrentAnswers();
+    if (currentAnswers[normalizedQuestionId]) {
+      return;
+    }
     setCurrentAnswers({
       ...currentAnswers,
-      [questionId]: optionId
+      [normalizedQuestionId]: optionId
     });
     
     // Check if this is the last question in the section
-    if (isLastQuestionInSection(questionId)) {
+    if (isLastQuestionInSection(normalizedQuestionId)) {
       // Show continue button (keep last question visible)
       setTimeout(() => {
         showContinueButton();
       }, 300);
     } else {
       // Find and show next question
-      const currentNum = parseInt(questionId.split('_')[1]) || 0;
-      const prefix = questionId.split('_')[0];
+      const currentNum = parseInt(normalizedQuestionId.split('_')[1]) || 0;
+      const prefix = normalizedQuestionId.split('_')[0];
       const nextQuestionId = `${prefix}_${currentNum + 1}`;
       
       // Show next question and scroll to it
       setTimeout(() => {
         showOnlyQuestion(nextQuestionId);
-        scrollToNextQuestion(questionId);
+        scrollToNextQuestion(normalizedQuestionId);
       }, 100);
     }
   };
@@ -1034,7 +1303,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       case 'other':
         return renderOtherQuestionnaire(questions);
       case 'both':
-        return renderBothQuestionnaire(questions);
+        return renderBothQuestionnaire();
       default:
         return null;
     }
@@ -2745,7 +3014,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     );
   };
 
-  const renderBothQuestionnaire = (questions: Question[]) => {
+  const renderBothQuestionnaire = () => {
     return (
       <BothQuestionnaire
         language={language}
@@ -2775,7 +3044,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   // 完成问卷并跳转到结果页面的函数
-  const finishQuestionnaire = () => {
+  const finishQuestionnaire = async () => {
     // 计算结果并保存
     calculateTagResults();
     
@@ -2792,7 +3061,6 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     } else if (activeQuestionnaire) {
       // 对于单一问卷
       const questions = questionnaires[activeQuestionnaire].questions;
-      const currentQuestionnaire = questionnaires[activeQuestionnaire];
       // 直接使用问题ID，无需映射
       allResponses = prepareQuestionResponses(
         activeQuestionnaire, 
@@ -2801,17 +3069,120 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       );
     }
     
-    // 一次性保存所有回答
-    questionnaireApi.saveAllQuestionResponses(allResponses)
-      .then(() => {
-        // 保存成功后跳转到结果页面
-        navigate('/results');
-      })
-      .catch((error) => {
-        console.error('Error during questionnaire completion:', error);
-        // 即使保存失败，仍然跳转到结果页面
-        navigate('/results');
-      });
+    let effectiveSessionId = userSessionId || localStorage.getItem('userSessionId');
+
+    if (!effectiveSessionId && activeQuestionnaire) {
+      try {
+        const introChoice = localStorage.getItem('introChoice');
+        const sessionEmail =
+          localStorage.getItem('userSessionEmail') ||
+          localStorage.getItem('pendingVerificationEmail') ||
+          userEmail ||
+          undefined;
+        const corporateRole = activeQuestionnaire === 'corporate'
+          ? (localStorage.getItem('selectedCorporateRole') || null)
+          : null;
+
+        const session = await userSessionApi.createUserSession(
+          introChoice || undefined,
+          sessionEmail || undefined,
+          activeQuestionnaire,
+          corporateRole || undefined
+        );
+
+        effectiveSessionId = session.user_session_id;
+        setUserSessionId(session.user_session_id);
+        localStorage.setItem('userSessionId', session.user_session_id);
+        if (sessionEmail) {
+          localStorage.setItem('userSessionEmail', sessionEmail);
+        }
+        localStorage.setItem('userSessionQuestionnaireType', activeQuestionnaire);
+      } catch (error) {
+        console.error('Error creating user session before save:', error);
+      }
+    }
+
+    // Save to backend
+    try {
+      // 一次性保存所有回答 (with user_session_id for individual tracking)
+      await questionnaireApi.saveAllQuestionResponses(allResponses, effectiveSessionId || undefined);
+      
+      // If we have a user session, save tag scores and statistics to backend
+      if (effectiveSessionId) {
+        // Collect tag scores from localStorage
+        const tagScoresToSave: Array<{tag_english: string, unified_question_id: number, score: number}> = [];
+        
+        CHINESE_TAGS.forEach(chineseTag => {
+          const englishTag = toEnglishTag(chineseTag);
+          const savedMap = localStorage.getItem(`questionScores_${englishTag}`);
+          if (savedMap) {
+            try {
+              const questionScoreMap = JSON.parse(savedMap);
+              
+              // Convert each question score to unified_question_id format
+              Object.entries(questionScoreMap).forEach(([questionId, score]) => {
+                // Extract unified ID from questionId like "mother_5" -> 5
+                const idParts = questionId.split('_');
+                const idNum = parseInt(idParts[idParts.length - 1]);
+                
+                // Find question in unifiedQuestions array
+                const question = Object.values(unifiedQuestions).find((q) => q?.unifiedId === idNum);
+                
+                if (question?.unifiedId) {
+                  tagScoresToSave.push({
+                    tag_english: englishTag,
+                    unified_question_id: question.unifiedId,
+                    score: score as number
+                  });
+                }
+              });
+            } catch (e) {
+              console.error(`Error parsing tag scores for ${englishTag}:`, e);
+            }
+          }
+        });
+        
+        console.log('Saving tag scores to backend:', tagScoresToSave.length);
+        if (tagScoresToSave.length > 0) {
+          await userSessionApi.saveTagScores(effectiveSessionId, tagScoresToSave);
+        }
+        
+        // Collect tag statistics from localStorage
+        const tagStatsStr = localStorage.getItem('tagStats');
+        if (tagStatsStr) {
+          try {
+            const tagStats = JSON.parse(tagStatsStr) as Record<string, TagStats>;
+            const statisticsToSave = Object.entries(tagStats).map(([chineseTag, stats]) => ({
+              tag_english: toEnglishTag(chineseTag),
+              user_score: stats.userScore,
+              total_possible_score: stats.totalPossibleScore,
+              score_percentage: stats.scorePercentage,
+              answered_questions: stats.answeredQuestions,
+              question_25_bonus_applied: false, // Will be updated in Results page
+              question_25_bonus_tag: undefined
+            }));
+            
+            console.log('Saving tag statistics to backend:', statisticsToSave.length);
+            if (statisticsToSave.length > 0) {
+              await userSessionApi.saveTagStatistics(effectiveSessionId, statisticsToSave);
+            }
+          } catch (e) {
+            console.error('Error saving tag statistics:', e);
+          }
+        }
+      }
+      
+      // 保存成功后跳转到结果页面
+      localStorage.setItem('chon_questionnaire_completed', 'true');
+      localStorage.setItem('chon_personality_flow_step', '5');
+      navigate('/personality-test/results');
+    } catch (error) {
+      console.error('Error during questionnaire completion:', error);
+      // 即使保存失败，仍然跳转到结果页面
+      localStorage.setItem('chon_questionnaire_completed', 'true');
+      localStorage.setItem('chon_personality_flow_step', '5');
+      navigate('/personality-test/results');
+    }
   };
 
   // Exit button that appears only on questionnaire and privacy screens
@@ -2975,6 +3346,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
                         handleIdentitySelect('corporate');
                       }
                       setSelectedCorporateRole(role);
+                      localStorage.setItem('selectedCorporateRole', role);
                     }}
                   >
                     <span>{role}</span>
@@ -3113,12 +3485,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       const chineseTag = toChineseTag(englishTag);
       if (!chineseTag) return;
       
-      const savedMap = localStorage.getItem(`questionScores_${chineseTag}`);
+      // Use English tag for localStorage key
+      const savedMap = localStorage.getItem(`questionScores_${englishTag}`);
       if (savedMap) {
         try {
           questionScoreMap[chineseTag] = JSON.parse(savedMap);
         } catch (e) {
-          console.error(`解析标签 ${chineseTag} 的问题分数映射出错:`, e);
+          console.error(`解析标签 ${englishTag} 的问题分数映射出错:`, e);
           questionScoreMap[chineseTag] = {};
         }
       } else {
@@ -3128,8 +3501,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
       // 更新当前问题的分数
       questionScoreMap[chineseTag][questionId] = score;
       
-      // 保存更新后的映射
-      localStorage.setItem(`questionScores_${chineseTag}`, JSON.stringify(questionScoreMap[chineseTag]));
+      // 保存更新后的映射 (using English tag for localStorage key)
+      localStorage.setItem(`questionScores_${englishTag}`, JSON.stringify(questionScoreMap[chineseTag]));
       
       // 将所有问题的分数转换为数组
       if (!newTagScores[chineseTag]) {
@@ -3156,14 +3529,9 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   };
 
   // 计算并保存每个标签的统计数据（总分、平均分、比例等）
-  const calculateAndSaveTagStats = (currentTagScores: Record<string, number[]>) => {
-    const questions = getCurrentQuestions();
-    
-    // 计算每个标签下有多少量表问题
-    const tagQuestionCounts = countQuestionsPerTag(questions);
-    
+  const calculateAndSaveTagStats = useCallback((currentTagScores: Record<string, number[]>) => {
     // 计算每个标签的统计数据
-    const tagStats = calculateTagStats(currentTagScores, tagQuestionCounts);
+    const tagStats = calculateTagStats(currentTagScores);
     
     // 保存标签统计数据到本地存储
     localStorage.setItem('tagStats', JSON.stringify(tagStats));
@@ -3173,54 +3541,41 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     console.table(tagStats);
     
     return tagStats;
-  };
-
-  // 获取标签统计数据
-  const getTagStats = (): Record<string, any> => {
-    const savedStats = localStorage.getItem('tagStats');
-    if (savedStats) {
-      try {
-        return JSON.parse(savedStats);
-      } catch (e) {
-        console.error('Error parsing saved tag statistics:', e);
-        return {};
-      }
-    }
-    return {};
-  };
+  }, []);
 
   // 在useEffect中添加从localStorage读取标签得分和统计数据的代码
   useEffect(() => {
     // 使用集中定义的标签
     const loadedTagScores: Record<string, number[]> = {};
     
-    // 从问题分数映射中加载标签分数
-    CHINESE_TAGS.forEach(tag => {
-      const savedMap = localStorage.getItem(`questionScores_${tag}`);
+    // 从问题分数映射中加载标签分数 (use English tags for localStorage keys)
+    CHINESE_TAGS.forEach(chineseTag => {
+      const englishTag = toEnglishTag(chineseTag);
+      const savedMap = localStorage.getItem(`questionScores_${englishTag}`);
       if (savedMap) {
         try {
           const questionScoreMap = JSON.parse(savedMap);
           // 将问题分数映射的值填入数组
-          loadedTagScores[tag] = Object.values(questionScoreMap);
-          console.log(`成功加载标签 ${tag} 的问题分数映射:`, questionScoreMap);
+          loadedTagScores[chineseTag] = Object.values(questionScoreMap);
+          console.log(`成功加载标签 ${englishTag} 的问题分数映射:`, questionScoreMap);
         } catch (e) {
-          console.error(`解析标签 ${tag} 的问题分数映射出错:`, e);
-          loadedTagScores[tag] = [];
+          console.error(`解析标签 ${englishTag} 的问题分数映射出错:`, e);
+          loadedTagScores[chineseTag] = [];
         }
       } else {
-        // 尝试从旧格式加载
+        // 尝试从旧格式加载 (旧版本使用中文标签作为key)
         const savedTagScores = localStorage.getItem('tagScores');
         if (savedTagScores) {
           try {
             const parsedScores = JSON.parse(savedTagScores);
-            if (parsedScores[tag]) {
-              loadedTagScores[tag] = parsedScores[tag];
+            if (parsedScores[chineseTag]) {
+              loadedTagScores[chineseTag] = parsedScores[chineseTag];
             } else {
-              loadedTagScores[tag] = [];
+              loadedTagScores[chineseTag] = [];
             }
           } catch (e) {
             console.error('解析旧格式标签分数出错:', e);
-            loadedTagScores[tag] = [];
+            loadedTagScores[chineseTag] = [];
           }
         }
       }
@@ -3236,7 +3591,7 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
         calculateAndSaveTagStats(loadedTagScores);
       }
     }
-  }, []);
+  }, [calculateAndSaveTagStats]);
 
   // 计算每个标签的总分和平均分
   const calculateTagResults = () => {
@@ -3259,34 +3614,6 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     return results;
   };
 
-  // 导出结果的函数，可以在需要导出用户结果时调用
-  const exportResults = () => {
-    const tagResults = calculateTagResults();
-    const allAnswers = {
-      primary: primaryAnswers,
-      secondary: secondaryAnswers
-    };
-    
-    // 在这里你可以加入导出逻辑，例如发送到服务器或下载为文件
-    console.log('Tag Results:', tagResults);
-    console.log('All Answers:', allAnswers);
-    
-    // 示例：将结果转换为JSON并下载
-    const resultsBlob = new Blob(
-      [JSON.stringify({ tagResults, allAnswers }, null, 2)], 
-      { type: 'application/json' }
-    );
-    
-    const url = URL.createObjectURL(resultsBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `personality_test_results_${new Date().toISOString()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const renderPrivacyStatement = () => {
     const currentQuestionnaire = getCurrentQuestionnaire();
     
@@ -3296,12 +3623,6 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     
     // 根据问卷类型添加相应的CSS类
     const privacyClass = currentQuestionnaire.type === 'other' ? 'other-privacy' : 'mother-privacy';
-    
-    // 添加换行的隐私文本 - 英文版本
-    const privacyTextEn = "<strong style=\"font-size: 1.2em;\">Data Usage and Privacy Statement</strong><br><br>At CHON, your privacy is fundamental. We only collect the information necessary to deliver meaningful insights, and we protect it with the highest standards of security and integrity.<br><br><hr><br><br><strong style=\"font-size: 1.2em;\">For Individual Participants</strong><br><br>Your personal information will be used solely for the following purposes:<br><ul><li>To verify your eligibility for specific sections of the survey</li><li>To support demographic and statistical analysis across participant groups</li><li>To generate your personalized CHON personality profile</li></ul>";
-    
-    // 中文版本的隐私文本 - 优化中文段落结构
-    const privacyTextZh = "<strong style=\"font-size: 1.2em;\">数据使用与隐私声明</strong><br><br>在 CHON，我们将您的隐私视为基本原则。我们仅收集实现分析目的所必需的信息，并以最高标准保障数据的安全与完整性。<br><br><hr><br><br><strong style=\"font-size: 1.2em;\">针对个人参与者</strong><br><br>您的个人信息将仅用于以下用途：<br><ul><li>验证您是否符合特定问卷部分的参与资格</li><li>用于不同人群的统计与人口特征分析</li><li>生成您的个性化 CHON 性格分析报告</li></ul>";
     
     return (
       <div className={`privacy-statement ${privacyClass}`} lang={language} style={{ overflowX: 'hidden', maxWidth: '100%' }}>
@@ -3346,6 +3667,8 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               onChange={(e) => {
                 setUserEmail(e.target.value);
                 setEmailError('');
+                setVerificationSent(false);
+                setVerificationMessage('');
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -3361,13 +3684,26 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
               {emailError}
             </div>
           )}
+
+          {verificationMessage && (
+            <div className="email-verification-status">
+              {verificationMessage}
+            </div>
+          )}
           
           <button 
             className="email-continue-button"
             onClick={handleEmailVerificationContinue}
             lang={language}
+            disabled={isSendingVerification}
           >
-            <span>{language === 'en' ? 'CONTINUE' : '继续'}</span>
+            <span>
+              {isSendingVerification
+                ? (language === 'en' ? 'SENDING...' : '发送中...')
+                : verificationSent
+                  ? (language === 'en' ? 'RESEND LINK' : '重新发送')
+                  : (language === 'en' ? 'CONTINUE' : '继续')}
+            </span>
             <span className="continue-arrow">→</span>
           </button>
         </div>

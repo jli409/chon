@@ -921,6 +921,15 @@
   font-family: 'Kaisei Decol', serif;
 }
 
+.email-verification-status {
+  color: #2e7d32;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-family: 'Kaisei Decol', serif;
+}
+
 .email-continue-button {
   width: 100%;
   max-width: 400px;

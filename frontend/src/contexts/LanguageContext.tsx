@@ -15,6 +15,7 @@ const defaultValue: LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType>(defaultValue);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLanguage = () => useContext(LanguageContext);
 
 interface LanguageProviderProps {
@@ -37,9 +38,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   };
   
   useEffect(() => {
-    localStorage.setItem('language', 'en');
+    localStorage.setItem('language', language);
     console.log('Current language:', language);
-  }, []);
+  }, [language]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

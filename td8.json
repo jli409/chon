@@ -1,0 +1,94 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "python-app",
+            "image": "207995142959.dkr.ecr.us-east-1.amazonaws.com/python-app:20251230-122736",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 5000,
+                    "hostPort": 5000,
+                    "protocol": "tcp",
+                    "name": "python-app-5000-tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "PORT",
+                    "value": "5000"
+                },
+                {
+                    "name": "SUPABASE_URL",
+                    "value": "https://rablbpsyyyyaxllfkidw.supabase.co"
+                },
+                {
+                    "name": "SUPABASE_KEY",
+                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhYmxicHN5eXl5YXhsbGZraWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODU4MDEsImV4cCI6MjA4NDc2MTgwMX0.om6x0TUYWVMD1bYfK0XHQ0olfWpU289XD-KIrI-MOD0"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/python-app",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "systemControls": []
+        },
+        {
+            "name": "frontend-ts",
+            "image": "207995142959.dkr.ecr.us-east-1.amazonaws.com/frontend-ts:FIX80",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp",
+                    "name": "frontend-ts-80-tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "SUPABASE_URL",
+                    "value": "https://rablbpsyyyyaxllfkidw.supabase.co"
+                },
+                {
+                    "name": "SUPABASE_KEY",
+                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhYmxicHN5eXl5YXhsbGZraWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxODU4MDEsImV4cCI6MjA4NDc2MTgwMX0.om6x0TUYWVMD1bYfK0XHQ0olfWpU289XD-KIrI-MOD0"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "dependsOn": [
+                {
+                    "containerName": "python-app",
+                    "condition": "START"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/frontend-ts",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "app-task",
+    "executionRoleArn": "arn:aws:iam::207995142959:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "2048"
+}

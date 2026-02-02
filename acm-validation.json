@@ -1,0 +1,45 @@
+{
+    "Comment": "ACM DNS validation record",
+    "Changes": [
+      {
+        "Action": "UPSERT",
+        "ResourceRecordSet": {
+          "Name": "_b95902c24dcf2fd07cc0deaca2ac7dea.app.chonlife.com.",
+          "Type": "CNAME",
+          "TTL": 300,
+          "ResourceRecords": [
+            {
+              "Value": "_186403a8453d5978b744bd8cc5a9c1c6.jkddzztszm.acm-validations.aws."
+            }
+          ]
+        }
+      },
+      {
+        "Action": "UPSERT",
+        "ResourceRecordSet": {
+          "Name": "_3a329eb82680b5305e582e11f5542021.www.chonlife.com.",
+          "Type": "CNAME",
+          "TTL": 300,
+          "ResourceRecords": [
+            {
+              "Value": "_a4ef66f675afa3e6839777857f308726.jkddzztszm.acm-validations.aws."
+            }
+          ]
+        }
+      },
+      {
+        "Action": "UPSERT",
+        "ResourceRecordSet": {
+          "Name": "_27296926f1fb3ca07694eb09d6f10d2e.chonlife.com.",
+          "Type": "CNAME",
+          "TTL": 300,
+          "ResourceRecords": [
+            {
+              "Value": "_99388f55750b11a126d3b2030df463b9.jkddzztszm.acm-validations.aws."
+            }
+          ]
+        }
+      }
+    ]
+  }
+  
