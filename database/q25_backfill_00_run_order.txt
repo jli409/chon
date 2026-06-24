@@ -1,0 +1,99 @@
+Q25 backfill — full runthrough (PostgreSQL / Supabase SQL editor)
+================================================================================
+
+Prerequisites
+-------------
+- Backup or use a staging project if unsure.
+- You have service role / SQL access to run DDL and DML.
+- application.py already writes canonical Q25 rows for new sessions (optional).
+
+Session rule (step 02 only)
+---------------------------
+q25_backfill_02_preview.sql builds a TEMP table of sessions that appear in
+question_responses.user_session_ids (typed questionnaires only). All previews
+in that file use that table. Run the whole file in ONE execution (same DB
+connection). Temp tables drop when the session ends.
+
+--------------------------------------------------------------------------------
+STEP 1 — q25_backfill_01_diagnostic.sql
+--------------------------------------------------------------------------------
+Purpose
+  Aggregate counts: typed sessions, who already has canonical final-slot Q25
+  (other_29 + oid 25, etc.), who has legacy *_unified_25 rows, who might be
+  sourced from character_matches / tag_statistics / Q25-shaped QR.
+
+Action
+  Run the single SELECT. Read the row.
+
+Decision
+  - If missing_final_but_have_unified_25 or missing_final_but_qr_letter > 0,
+    step 03 can likely insert.
+  - If everything is zero except sessions_typed, check questionnaire_type and
+    question_responses linkage.
+
+--------------------------------------------------------------------------------
+STEP 2 — q25_backfill_02_preview.sql
+--------------------------------------------------------------------------------
+Purpose
+  (A) CREATE TEMP TABLE _chon_q25_preview_sessions — only user_sessions whose
+      id appears in at least one question_responses.user_session_ids array,
+      and questionnaire_type is mother | corporate | other | both.
+  (B) SELECT * FROM that table + COUNT(*) — your filtered “generated table”.
+  (C) DEBUG flags for those sessions still missing canonical final row.
+  (D) PREVIEW rows that INSERT (1) in step 03 would add.
+  (E) PREVIEW rows that INSERT (2) in step 03 would add (copy from *_unified_25).
+
+Action
+  Execute the ENTIRE file in one go (do not run only the last SELECT).
+
+Verify
+  - Table (B) is non-empty if you have any typed sessions linked to QR.
+  - (D) and (E) show the same sessions you expect before mutating.
+
+Optional
+  DROP TABLE IF EXISTS _chon_q25_preview_sessions;
+  (only if you need to clear the temp table in the same session before re-run)
+
+--------------------------------------------------------------------------------
+STEP 3 — q25_backfill_03_insert_canonical_question_responses.sql
+--------------------------------------------------------------------------------
+Purpose
+  INSERT (1): canonical final row (e.g. other_29 + original_question_id 25)
+            from CM / tag_statistics / Q25-shaped question_responses /
+            final-slot question_id match.
+  INSERT (2): if still missing, copy letter from {type}_unified_25 + oid 25.
+
+Action
+  Run the full file (both INSERT statements).
+
+Verify
+  SELECT * FROM question_responses
+  WHERE original_question_id = 25
+    AND question_id IN ('mother_33','corporate_33','other_29','both_45')
+  ORDER BY id DESC LIMIT 50;
+
+--------------------------------------------------------------------------------
+STEP 4 — q25_backfill_04_sync_character_matches_tag_statistics.sql
+--------------------------------------------------------------------------------
+Purpose
+  In a transaction: resolve latest Q25 per session from question_responses into
+  a temp table, then UPDATE character_matches.question_25_answer and
+  tag_statistics question_25_bonus_* columns.
+
+Action
+  Run the full script. To dry-run, edit the file: replace COMMIT with ROLLBACK.
+
+Verify
+  Spot-check character_matches and tag_statistics for a known session_id.
+
+--------------------------------------------------------------------------------
+Optional / overlap
+--------------------------------------------------------------------------------
+database/update_q25_from_question_responses.sql
+  PREVIEW only: compare resolved Q25 vs DB before step 4.
+  You do not need its APPLY if you already ran step 4 (same sync intent).
+
+Legacy pointer
+--------------
+database/backfill_insert_missing_q25_question_responses.sql — points at this
+numbered sequence; do not use the old monolith.

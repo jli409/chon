@@ -329,6 +329,13 @@
   animation: fadeInRight 0.8s ease-out 1.0s forwards;
   opacity: 0;
   padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workplace-description-row {
+  margin: 0;
 }
 
 .user-results h3 {

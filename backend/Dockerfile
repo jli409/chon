@@ -1,20 +1,25 @@
+# Alternative path to the same API image. Build from **repository root** — not from backend/.
+#   docker build -f backend/Dockerfile -t chon-api .
+#
+# application.py lives at the repo root; there is no app.py here. A previous version used
+# `gunicorn app:app`, which fails because the Flask app object is `application` in application.py.
+
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --prefer-binary -r requirements.txt
 
-# Copy application code
-COPY . .
+COPY application.py .
 
-# Expose port
-EXPOSE 5001
+RUN groupadd -r appuser && useradd -m -g appuser appuser
+RUN chown -R appuser:appuser /app
 
-# Set environment to production
-ENV FLASK_ENV=production
+USER appuser
 
-# Run with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "4", "--timeout", "120", "app:app"]
+ENV PORT=5000
+EXPOSE 5000
 
+CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --threads 4 --timeout 120 application:application"]

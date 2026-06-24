@@ -78,9 +78,7 @@ CREATE TABLE user_sessions (
     questionnaire_type VARCHAR(50) CHECK (questionnaire_type IN ('mother', 'corporate', 'other', 'both')),
     corporate_role VARCHAR(100),
     email_verified BOOLEAN DEFAULT FALSE,
-    verification_token VARCHAR(255) UNIQUE,
     session_token VARCHAR(255) UNIQUE,
-    verification_token_expires_at TIMESTAMP WITH TIME ZONE,
     questionnaire_completed BOOLEAN DEFAULT FALSE,
     character_match VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -98,9 +96,7 @@ CREATE TABLE user_sessions (
 | `questionnaire_type` | VARCHAR(50) | 'mother', 'corporate', 'other', 'both' |
 | `corporate_role` | VARCHAR(100) | Role if corporate (e.g., 'CEO', 'VP') |
 | `email_verified` | BOOLEAN | Email verification status |
-| `verification_token` | VARCHAR(255) | Email verification token |
 | `session_token` | VARCHAR(255) | Session authentication token |
-| `verification_token_expires_at` | TIMESTAMP | When verification expires |
 | `questionnaire_completed` | BOOLEAN | Completion status |
 | `character_match` | VARCHAR(50) | Best matched character |
 | `created_at` | TIMESTAMP | When session created |
@@ -111,7 +107,6 @@ CREATE TABLE user_sessions (
 ### Indexes
 - PRIMARY KEY on `id`
 - INDEX on `email`
-- INDEX on `verification_token`
 - INDEX on `session_token`
 - INDEX on `questionnaire_type`
 - INDEX on `questionnaire_completed`
@@ -131,16 +126,16 @@ CREATE TABLE user_sessions (
 ```sql
 CREATE TABLE question_responses (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1),
-    user_session_id UUID REFERENCES user_sessions(id) ON DELETE CASCADE,
     questionnaire_type VARCHAR(20) CHECK (questionnaire_type IN ('mother', 'corporate', 'other', 'both')),
     question_id VARCHAR(50) NOT NULL,
     original_question_id INTEGER NOT NULL,
-    question_type VARCHAR(20) CHECK (question_type IN ('multiple-choice', 'scale-question', 'text-input')),
+    question_type VARCHAR(20) CHECK (question_type IN ('multiple-choice', 'scale-question', 'text-input', 'text-with-unit', 'email', 'multi-select', 'searchable-dropdown')),
     response_value VARCHAR(50),
     response_text TEXT,
     is_text_response BOOLEAN DEFAULT FALSE,
     score INTEGER CHECK (score >= 0 AND score <= 100),
     count INTEGER DEFAULT 1,
+    user_session_ids UUID[] NOT NULL DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -150,33 +145,33 @@ CREATE TABLE question_responses (
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | INTEGER | Auto-incrementing integer starting from 1 (PRIMARY KEY) |
-| `user_session_id` | UUID | Links to user_sessions (FOREIGN KEY) |
 | `questionnaire_type` | VARCHAR(20) | Which questionnaire |
 | `question_id` | VARCHAR(50) | Question identifier (e.g., 'mother_5') |
 | `original_question_id` | INTEGER | Unified question number |
-| `question_type` | VARCHAR(20) | Type of question |
+| `question_type` | VARCHAR(20) | Type of question (includes text-with-unit, email, multi-select, searchable-dropdown) |
 | `response_value` | VARCHAR(50) | Answer for MC/scale (e.g., 'A', '3') |
 | `response_text` | TEXT | Answer for text inputs |
 | `is_text_response` | BOOLEAN | Flag for text vs other |
 | `score` | INTEGER | Calculated score (0-100) for scale questions |
 | `count` | INTEGER | Aggregate count (for old data) |
+| `user_session_ids` | UUID[] | Contributing user session UUIDs (aggregate MC/scale; text rows typically one id) |
 | `created_at` | TIMESTAMP | When answered |
 | `updated_at` | TIMESTAMP | Last updated |
 
 ### Example Data
 ```
 ┌────┬──────────────────────────────────┬────────────────────┬──────────────┬──────────────────┬──────────────┬────────────┬────────┐
-│ id │ user_session_id                  │ questionnaire_type │ question_id │ question_type    │ response_   │ score │ is_text │
+│ id │ user_session_ids                 │ questionnaire_type │ question_id │ question_type    │ response_   │ score │ is_text │
 │    │                                  │                    │             │                  │ value        │       │ response│
 ├────┼──────────────────────────────────┼────────────────────┼──────────────┼──────────────────┼──────────────┼────────┼────────┤
-│ 1  │ abc-123-xyz                      │ mother            │ mother_5    │ scale-question  │ 4            │ 80    │ FALSE  │
-│ 2  │ abc-123-xyz                      │ mother            │ mother_8    │ text-input      │ NULL         │ NULL  │ TRUE   │
+│ 1  │ {abc-123-xyz}                    │ mother            │ mother_5    │ scale-question  │ 4            │ 80    │ FALSE  │
+│ 2  │ {abc-123-xyz}                    │ mother            │ mother_8    │ text-input      │ NULL         │ NULL  │ TRUE   │
 └────┴──────────────────────────────────┴────────────────────┴──────────────┴──────────────────┴──────────────┴────────┴────────┘
 ```
 
 ### Indexes
 - PRIMARY KEY on `id`
-- INDEX on `user_session_id`
+- Optional GIN index on `user_session_ids` for membership queries
 - INDEX on `questionnaire_type, question_id`
 - INDEX on `is_text_response`
 
@@ -463,6 +458,8 @@ CREATE TABLE user_accounts (
 
 **Purpose:** Backward compatibility view for text responses
 
+**Migration note:** This view historically selected `question_responses.user_session_id`. Before dropping that column in Postgres, the view must be dropped first (see `database/migrate_question_responses_drop_user_session_id.sql`). Do not add new views that reference `question_responses.user_session_id` without updating that migration.
+
 ### Schema
 ```sql
 CREATE VIEW text_responses AS
@@ -472,7 +469,7 @@ SELECT
     question_id,
     original_question_id,
     response_text,
-    user_session_id,
+    CASE WHEN cardinality(user_session_ids) >= 1 THEN user_session_ids[1] ELSE NULL END AS user_session_id,
     created_at,
     updated_at
 FROM question_responses
@@ -491,7 +488,7 @@ user_sessions (main)
     ├── tag_scores (FK: user_session_id)
     ├── tag_statistics (FK: user_session_id)
     ├── character_matches (FK: user_session_id)
-    ├── question_responses (FK: user_session_id)
+    ├── question_responses (user_session_ids uuid[]; no FK column)
     ├── email_verifications (FK: user_session_id)
     └── user_accounts (FK: user_session_id)
 
@@ -509,7 +506,7 @@ Get all data for a specific user:
 SELECT * FROM user_sessions WHERE id = 'YOUR-SESSION-ID';
 
 -- All question responses
-SELECT * FROM question_responses WHERE user_session_id = 'YOUR-SESSION-ID';
+SELECT * FROM question_responses WHERE 'YOUR-SESSION-ID'::uuid = ANY(user_session_ids);
 
 -- Tag scores
 SELECT * FROM tag_scores WHERE user_session_id = 'YOUR-SESSION-ID';
@@ -530,6 +527,7 @@ SELECT * FROM user_accounts WHERE user_session_id = 'YOUR-SESSION-ID';
 
 -- Text responses only (using view)
 SELECT * FROM text_responses WHERE user_session_id = 'YOUR-SESSION-ID';
+-- (view exposes first session id from user_session_ids for text rows)
 ```
 
 ---
@@ -555,7 +553,7 @@ SELECT * FROM text_responses WHERE user_session_id = 'YOUR-SESSION-ID';
 
 5. Answer Questions
    └─> question_responses (all types) ✅
-   └─> Links to user_session_id ✅
+   └─> `user_session_ids` lists contributing sessions ✅
 
 6. Calculate Scores
    └─> tag_scores (per question per tag) ✅
@@ -579,7 +577,7 @@ SELECT * FROM text_responses WHERE user_session_id = 'YOUR-SESSION-ID';
 | User account | `user_accounts` | ✅ | ❌ | Email + password hash |
 | Questionnaire type | `user_sessions` | ✅ | ❌ | Per user |
 | Corporate role | `user_sessions` | ✅ | ❌ | Per user |
-| Question answers | `question_responses` | ✅ | ⚠️ | Both (old=aggregate, new=individual) |
+| Question answers | `question_responses` | ✅ | ✅ | Aggregate rows + `user_session_ids` |
 | Text responses | `question_responses` | ✅ | ❌ | Consolidated with is_text_response flag |
 | Tag scores | `tag_scores` | ✅ | ❌ | Per question per tag |
 | Tag statistics | `tag_statistics` | ✅ | ❌ | Calculated totals |
@@ -606,7 +604,6 @@ All tables have RLS enabled with public access policies:
 ### Behavior
 - When a user is created or email confirmation changes in `auth.users`, a trigger updates:
   - `user_sessions.email_verified`
-  - `user_sessions.verification_token` / `session_token` (set to auth user id)
   - `email_verifications.is_verified` / `verified_at`
 
 ### Migration
@@ -684,4 +681,3 @@ WHERE questionnaire_type = 'corporate' AND corporate_role IS NOT NULL
 GROUP BY corporate_role
 ORDER BY count DESC;
 ```
-

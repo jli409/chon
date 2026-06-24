@@ -1,10 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { toEnglishTag } from '../../utils/tagUtils';
-import { sortCharactersByMatch, applyQuestion25Bonus } from '../../utils/characterMatching';
+import type { TagStats } from '../../utils/tagUtils';
+import {
+  buildCharacterMatchRowsFromSorted,
+  buildFinalScoresForMatching,
+  CHARACTER_MATCH_SORT_INPUT,
+  normalizeTagStatsForMatching,
+  sortCharactersForPersistence
+} from '../../utils/characterMatchRows';
 import userSessionApi from '../../api/userSession';
+import { questionnaires, type QuestionnaireType } from '../PersonalityTest/questionnaires';
+import odinImage from '../../assets/characters/odin.jpg';
+import wukongImage from '../../assets/characters/wukong.jpg';
+import prometheusImage from '../../assets/characters/prometheus.jpg';
+import nuwaImage from '../../assets/characters/nuwa.jpg';
+import athenaImage from '../../assets/characters/athena.jpg';
+import venusImage from '../../assets/characters/venus.jpg';
 import './Results.css';
+
+type ResultsLocationState = {
+  resultsBootstrap?: {
+    tagStats: Record<string, TagStats>;
+    q25Letter: string;
+  };
+};
 
 interface CardData {
   id: string;
@@ -17,8 +37,8 @@ interface CardData {
     zh: string;
   };
   description: {
-    en: string;
-    zh: string;
+    en: string[];
+    zh: string[];
   };
   mythology: {
     en: string;
@@ -494,8 +514,71 @@ const cardsData: CardData[] = [
       zh: '超卓指挥官'
     },
     description: {
-      en: 'As Odin, you excel in roles that demand sharp analytical thinking and strategic foresight. You are highly self-aware, allowing you to navigate complex challenges with precision. Your objectivity and ability to assess situations with clarity make you a strong decision-maker in high-stakes environments. While your social interactions may be selective, your ability to remain composed under pressure ensures that you command respect in leadership roles. You thrive in careers such as executive leadership, strategic consulting, and high-level problem-solving roles where precision and critical thinking are essential.',
-      zh: '作为奥丁，你擅长从事需要敏锐分析思维和战略远见的工作。你有很强的自我意识，能够准确地驾驭复杂的挑战。你的客观性和清晰评估局势的能力使你在高风险环境中成为强有力的决策者。虽然你的社会交往可能是有选择性的，但你在压力下保持镇定的能力确保你在领导岗位上得到尊重。你在行政领导、战略咨询和高层次问题解决等对精确性和批判性思维至关重要的职业中都能茁壮成长。'
+      en: [
+        'From the old market order you call Ymir,',
+        'Darkness has the upperhand,',
+        'Where competition is win-lose only,',
+        'No ground for collaboration,',
+        'Where market need is undetermined,',
+        'Everyone was scrambling all over the place.'
+        '',
+        'You dissect, lead and attack with brothers by your side,',
+        'From complexity of market demand and risk of corporate structure,',
+        'The reborn economic world reshaped now prevails;',
+        'You possess the eye that sees through the delusion, confusion, frustration',
+        'Of any unpredictable market order;',
+        '',
+        'For signs of economic boom,',
+        'You look into gold-copper ratio;',
+        'For signs of AI boom,',
+        'You look into technology infrastructure.',
+        '',
+        'In objectivity you decide,',
+        'In sovereign you reign,',
+        'And it’s all you who guides in the face of shine or rain,',
+        'At a high position that demands precision and analyzation,',
+        'While commanding Huginns and Muninns,',
+        'Geris and Frekis by your side;',
+        '',
+        'Polishing your weapon for the Ragnarök',
+        'As the cyclic market meets its fate,',
+        'And there ain\'t no Fenrir this time.'
+        ],
+      zh: [
+        '在你称作伊米尔的旧市场秩序中，',
+        '黑暗统治着大地，',
+        '竞争只论输赢，毫无合作共利；',
+        '市场需求无人看清，众人皆在四处奔忙。',
+        '',
+        '你同兄弟们并肩，分析、带领、进攻。',
+        '在市场需求交错的脉络里，',
+        '在企业结构潜藏的风险里，',
+        '一个重生的经济世界，',
+        '被你重新塑起。'
+        '不论多混乱的市场秩序，',
+        '你的眼睛都能看穿困惑、迷失、挫败。',
+        '',
+        '寻找经济繁荣的讯号时，',
+        '你注视金铜比率的走向；',
+        '寻找人工智能浪潮的讯号时，',
+        '你观察科技基础设施的土壤。',
+        '',
+        '以客观做判断，',
+        '以掌控定决策；',
+        '无论风雨还是烈日，始终是你领着众人向前。',
+        '身处需要精准与分析的高位，',
+        '福金与雾尼在天际盘旋，',
+        '基利与库力奇守在身边。',
+        '',
+        '你擦亮手中的兵刃，',
+        '等待诸神黄昏的那一天；',
+        '当周期循环的市场，',
+        '终于迎来命运之战。',
+        '',
+        '但这一次，',
+        '芬里尔不会出现。',
+      ]
+
     },
     mythology: {
       en: 'Odin, the chief of the Norse gods, is the god of wisdom, war, and poetry. He rules from his throne in Asgard, accompanied by his two ravens, Huginn (Thought) and Muninn (Memory), who bring him knowledge from across the world. A master of strategy and foresight, Odin is both a ruthless warrior and a wise ruler, shaping destinies and preparing for Ragnarok.',
@@ -503,13 +586,13 @@ const cardsData: CardData[] = [
     },
     tagRanges: {
       selfAwareness: [80, 100],
-      dedication: [20, 50],
+      dedication: [20, 60],
       socialIntelligence: [30, 60],
-      emotionalRegulation: [20, 50],
+      emotionalRegulation: [40, 60],
       objectivity: [60, 80],
-      coreEndurance: [0, 60]
+      coreEndurance: [40, 60]
     },
-    image: '/images/characters/odin.jpg'
+    image: odinImage
   },
   {
     id: 'wukong',
@@ -522,8 +605,56 @@ const cardsData: CardData[] = [
       zh: '魅力冒险家'
     },
     description: {
-      en: 'As Wukong, you bring a balance of self-awareness, emotional intelligence, and resilience to the workplace. Your ability to connect with others effortlessly makes you a natural leader, inspiring teams with both your confidence and adaptability. You thrive in dynamic environments where creativity, risk-taking, and influence drive results, embracing challenges with enthusiasm. Your endurance allows you to sustain peak performance over extended periods, making you well-suited for roles that require both leadership and a pioneering spirit. Careers in entrepreneurship, public relations, and innovation-driven industries would align well with your adventurous and engaging nature.',
-      zh: '作为大圣，你在工作中兼顾了自我意识、情商和应变能力。你能毫不费力地与他人建立联系，这使你成为一名天生的领导者，用自信和适应能力激励团队。你能在充满活力的环境中茁壮成长，以创造力、冒险精神和影响力推动工作取得成果，热情迎接挑战。你的耐力使你能够长期保持巅峰状态，这使你非常适合担任既需要领导力又需要开拓精神的职位。创业、公共关系和创新驱动型行业的职业与你的冒险精神和参与性非常吻合。'
+      en: [
+        'As firm as the rock that you are born from,',
+        'You are adaptive, adjustive, accommodative,',
+        'At a speed that no-one can rival;',
+        '',
+        'From Mount Huaguo where you lead,',
+        'Where the pack of monkeys follow you,',
+        'You connect with all',
+        'And bring concrete results, erasing death, without difficulties,',
+        'Like turning the hand, but not of The Buddha, of course.',
+        '',
+        'From Puti Zushi whom you learn,',
+        'Where your innate naughty spirit',
+        'Now gives rise to adventurousness,',
+        'You transform in 72 forms in passion and creation,',
+        'Just like how you push forward work progress in diverse directions.',
+        '',
+        'Against rigid corporate world of the old market order of Heaven,',
+        'You grow, challenge, and inspire;',
+        'Along the journey to the West with your team,',
+        'You protect, pioneer, and pivot with',
+        'One Somersault Cloud and the stock price goes up by 108,000 miles;',
+        'Learning the guidance of The Budda,',
+        'You are the Victorious Fighting Buddha.',
+      ],
+      zh: [
+        '坚如诞生出的磐石，',
+        '你灵活善变、融会贯通，',
+        '常人望而不可及。',
+        '',
+        '自你领导着的花果山，',
+        '猴群相竞跟随，',
+        '你与所带领团队交好，',
+        '带来实际结果，抹灭死亡，',
+        '易如反掌，当然并非如来佛祖之掌。',
+        '',
+        '从拜师菩提祖师，',
+        '你的冒险精神源自自己天生的淘气灵动，',
+        '你带着热情和创造力掌握七十二变，',
+        '正如你朝着多方向发展推动工作一般。',
+        '',
+        '挑战古板天庭般的陈腐商业企业，',
+        '你成长、挑战、启发；',
+        '跟你的团队一同赴往西天，',
+        '你保护、引领、调整，',
+        '一个筋斗云股价随之上涨十万八千里；',
+        '随佛祖的指导，',
+        '你就是斗战胜佛。',
+      ]
+
     },
     mythology: {
       en: 'Wukong, from Journey to the West, is a mischievous, incredibly powerful trickster born from a stone. With unmatched speed, strength, and shapeshifting abilities, he defied Heaven, battled celestial armies, and even erased his name from the "Book of Death". His journey toward enlightenment under the Buddha transformed him from an unruly warrior into a disciplined protector. He embodies freedom, wit, and unbreakable determination, always challenging the rules set before him.',
@@ -531,13 +662,13 @@ const cardsData: CardData[] = [
     },
     tagRanges: {
       selfAwareness: [40, 60],
-      dedication: [0, 40],
+      dedication: [40, 60],
       socialIntelligence: [40, 70],
       emotionalRegulation: [80, 100],
       objectivity: [40, 60],
       coreEndurance: [40, 60]
     },
-    image: '/images/characters/wukong.jpg'
+    image: wukongImage
   },
   {
     id: 'prometheus',
@@ -550,22 +681,76 @@ const cardsData: CardData[] = [
       zh: '无私贡献者'
     },
     description: {
-      en: 'As Prometheus, your unwavering dedication to your work sets you apart. You thrive in environments that require deep commitment and a willingness to go beyond expectations. While you may not always seek recognition from your peers, your ability to sacrifice for the greater good makes you the most important asset to any team. Your endurance and persistence enable you to push through challenges, though managing emotional resilience is key to sustaining long-term success. You perform exceptionally well in mission-driven fields such as research, humanitarian work, and social entrepreneurship, where your innovation and dedication can create long lasting impacts for all.',
-      zh: '作为普罗米修斯，你对工作坚定不移的奉献精神使你与众不同。你在需要深度投入和愿意超越期望的环境中茁壮成长。虽然你可能并不总是寻求同伴的认可，但你为大局牺牲的能力使你成为任何团队最宝贵的的资产。你的耐力和毅力使你能够克服挑战，尽管管理好情绪恢复力是保持长期成功的关键。在研究、人道主义工作和社会创业等以使命为导向的领域，你的表现尤为出色，你的创新能力和奉献精神能为所有人带来长久的影响。'
+      en: [
+        'Before fire was brought from Olympus,',
+        'Where others see the world as it is,',
+        'You see the world as it could become;',
+        'Where others accept the limits of today,',
+        'You look toward the needs of tomorrow.',
+        '',
+        'Climbing beyond what is deemed mortals’ ability,',
+        'You pursue knowledge not for possession,',
+        'But for the benefit of those who may never know your name.',
+        '',
+        'You understand that meaningful progress rarely begins with comfort.',
+        'It begins with responsibility,',
+        'With the courage to challenge what is accepted,',
+        'And the willingness to carry burdens that others cannot yet see.',
+        ''
+        'The work that matters most is often invisible at first:',
+        'A discovery before its application,',
+        'An idea before its recognition,',
+        'A sacrifice before its reward.',
+        '',
+        'Yet you move forward regardless,',
+        'As the keeper of the sacred flame,',
+        'You illuminate paths that others may follow,',
+        'And transform possibility into progress,',
+        'One spark at a time.'
+      ],
+      zh: [
+        '在火种被带离奥林匹斯之前，',
+        '当他人看见世界的现状，',
+        '你看见世界本可以成为的模样；',
+        '当他人接受当下的边界，',
+        '你思考未来真正需要什么。',
+        '',
+        '攀登凡人无法抵达的高处，',
+        '你追寻知识并非为了占有，',
+        '而是为了让更多人从中受益。',
+        '',
+        '你明白，',
+        '真正有意义的进步很少诞生于安逸。',
+        '它诞生于责任，',
+        '诞生于质疑既有秩序的勇气，',
+        '也诞生于承担无人看见之重的决心。',
+        '',
+        '最重要的贡献往往最先隐于无形：',
+        '一项发现早于应用，',
+        '一个理念早于认可，',
+        '一次付出早于回报。',
+        '',
+        '然而你依然向前，',
+        '作为同守护火种的先驱，',
+        '你照亮后来者前行的道路，',
+        '将可能化为现实，',
+        '将微光汇聚成文明。',
+      ]
+
     },
     mythology: {
       en: 'Prometheus, a Titan of Greek mythology, is the bringer of fire and civilization to humanity. Defying Zeus, he stole fire from Olympus and gifted it to mankind, enabling progress, creativity, and technology. A symbol of defiance, sacrifice, and innovation, Prometheus represents the relentless pursuit of knowledge and the innovative attempt of challenging authority.',
       zh: '普罗米修斯是希腊神话中的泰坦巨人，他为人类带来了火种和文明。他反抗宙斯，从奥林匹斯山盗取了火种，并将其赐予人类，使人类获得了进步、创造力和技术。作为反抗、牺牲和创新的象征，普罗米修斯代表着对知识的不懈追求和挑战权威的创新。'
     },
     tagRanges: {
-      selfAwareness: [0, 40],
+      selfAwareness: [30, 60],
       dedication: [80, 100],
       socialIntelligence: [30, 60],
-      emotionalRegulation: [10, 50],
+      emotionalRegulation: [30, 50],
       objectivity: [30, 70],
       coreEndurance: [60, 80]
     },
-    image: '/images/characters/prometheus.jpg'
+    image: prometheusImage
   },
   {
     id: 'nuwa',
@@ -578,8 +763,59 @@ const cardsData: CardData[] = [
       zh: '赋能创造者'
     },
     description: {
-      en: 'As Nüwa, you are a visionary force of resilience and innovation in the workplace. Your ability to create, transform, and inspire allows you to lead with both empathy and enduring purpose. You thrive in environments that demand adaptability and endurance, bringing ideas to life and guiding teams toward meaningful impact. Your talent for harmonizing different perspectives makes you a catalyst for change, fostering collaboration and creativity. Careers in visionary leadership, human-centered design, and social innovation align perfectly with your ability to build, nurture, and empower.',
-      zh: '作为女娲，你是坚韧与创新的化身。你与生俱来的创造力、变革力和感召力，让你既能以同理心领导团队，又能坚守长远使命。在需要快速适应的环境中，你总能游刃有余，将创意转化为现实，并带领团队创造真正的影响力。你善于融合不同观点，这种天赋使你成为推动变革的关键人物，能够有效促进团队协作并激发创新思维。在愿景型领导、人性化设计和社会创新等领域，你建设、培育和赋能他人的能力将得到最大发挥。这些岗位正需要你这种既能构建体系，又能赋能团队的特殊才能。'
+      en: [
+        'Systematic is your thought,',
+        'Such that when the sky falls into pieces,',
+        'You smelt the stone to patch the sky.',
+        'In rainbow color of the stone you create,',
+        'Bring to order the world you will sustain.',
+        '',
+        'From here, the seed of resilience, creation, and reformation is',
+        'Planted within you, or rather,',
+        'You are the seed.',
+        'From you, you create others in the best form of you,',
+        'From clay, from Earth, from the ground that gives rise to everything.',
+        '',
+        'Same in work,',
+        'No issues in any projects comparable to the sky you fix,',
+        'With finesse and ease, you transform ideas to concrete creation,',
+        'Just as the Five-colored stone,',
+        'Because from you, all is bright and colorful.',
+        '',
+        'Same with teammates,',
+        'You listen to and combine different viewpoints,',
+        'Push forward changes involving people,',
+        'Build, cultivate, and empower others to maximum,',
+        'Just as from clay and water alone,',
+        'You create and give life.',
+      ],
+      zh: [
+        '系统如你的思维体系，',
+        '当天崩塌成碎片之时，',
+        '你炼石补天。',
+        '在你所炼就的五彩石的五光十色之中，',
+        '你从秩序中带来你将要维系的世界。',
+        '',
+        '从此，韧性、创造、改变的种子',
+        '在你这生根发芽，倒不如说，',
+        '你就是这颗种子。',
+        '源自你，你以你最美的模样创造他人，',
+        '源自泥土、大地，源自孕育出万物的土壤。',
+        '',
+        '工作同理，',
+        '没有问题能跟你所补的天相提并论，',
+        '游刃有余之中，你把创意转化为创造，',
+        '正如五色石一般，',
+        '因为源自你，尽为光彩明亮。',
+        '',
+        '团队同理，',
+        '你倾听并融合不同观点，',
+        '带动众人推动改变，',
+        '打造、孕育、赋能他人到其最佳水平，',
+        '正如仅仅从泥土和水当中，',
+        '你创造和赋予生命。',
+      ]
+
     },
     mythology: {
       en: "Nüwa, one of the most revered figures in Chinese mythology, is the goddess of creation, balance, and restoration. According to legend, she created humanity from clay and, when the heavens cracked, she patched the sky with five-colored stones, restoring order to the world. Often depicted with a serpent's lower body, she embodies nurturing power, ingenuity, creation, and harmony, ensuring the world remains whole and sustainable.",
@@ -593,7 +829,7 @@ const cardsData: CardData[] = [
       objectivity: [40, 60],
       coreEndurance: [80, 100]
     },
-    image: '/images/characters/nuwa.jpg'
+    image: nuwaImage
   },
   {
     id: 'athena',
@@ -606,8 +842,71 @@ const cardsData: CardData[] = [
       zh: '战略守护者'
     },
     description: {
-      en: 'As Athena, you embody wisdom, strategic thinking, and protective leadership. Your ability to analyze complex situations with clarity and objectivity makes you a trusted advisor and decision-maker. You excel in roles that require careful planning, ethical judgment, and the ability to guide others through challenging circumstances. Your balanced approach to emotional regulation and social intelligence allows you to maintain composure while building meaningful professional relationships. You thrive in careers such as strategic consulting, legal professions, project management, and executive leadership where wisdom and strategic foresight are essential.',
-      zh: '作为雅典娜，你体现了智慧、战略思维和保护性领导力。你能够清晰客观地分析复杂情况，这使你成为值得信赖的顾问和决策者。你在需要仔细规划、道德判断和引导他人度过挑战性环境的角色中表现出色。你在情绪调节和社交智能方面的平衡方法使你能够在建立有意义的专业关系的同时保持镇定。你在战略咨询、法律职业、项目管理和行政领导等需要智慧和战略远见的职业中茁壮成长。'
+      en: [
+        'Born fully armored from the mind of Zeus,',
+        'Needs no childhood phase,',
+        'No “learning by mistakes,”',
+        'And certainly no motivational LinkedIn posts.',
+        '',
+        'From the summit where wisdom overlooks ambition,',
+        'You watch markets move before they know they are moving;',
+        'Where others chase answers,',
+        'You question the question itself.',
+        '',
+        'With owl-eyed clarity,',
+        'You separate signal from noise,',
+        'Trend from fashion,',
+        'And strategy from whatever was discussed',
+        'In that three-hour meeting that could have been an email.',
+        '',
+        'You do not charge into battle like Ares,',
+        'For victory is not measured by noise;',
+        'You redraw the battlefield,',
+        'And somehow the outcome arrives before the conflict begins.',
+        '',
+        'Among architects, researchers, governors and builders,',
+        'You design systems that outlive their creators;',
+        'When the corporate labyrinth grows impossible to navigate,',
+        'You draw the map,',
+        'For every company eventually faces its Minotaur.',
+        'Others sharpen their swords.',
+        'You sharpen the assumptions.',
+        'For that is the true monster.',
+      ],
+      
+      zh: [
+        '从宙斯的头颅中全副武装诞生，',
+        '没有实习期，',
+        '没有试错期，',
+        '更不需要朋友圈鸡汤来激励自己。',
+        '',
+        '站在智慧俯瞰野心的高处，',
+        '当市场还未意识到变化时，',
+        '你已经看见了方向；',
+        '别人忙着寻找答案，',
+        '你先思考问题是否问对。',
+        '',
+        '如猫头鹰般锐利的目光，',
+        '让你分得清讯号与噪音，',
+        '趋势与潮流，',
+        '战略与那场本来可以用邮件解决的三小时会议。',
+        '',
+        '你不像阿瑞斯那样高举长矛冲锋，',
+        '因为真正的胜利，',
+        '从来不靠声音大小决定；',
+        '你重新绘制战场，',
+        '于是结果往往在战斗开始前便已注定。',
+        '',
+        '在研究者、建筑师、管理者与开拓者之间，',
+        '你设计能够超越创造者寿命的系统；',
+        '当企业迷宫变得无人能够看懂时，',
+        '你成为画地图的人。',
+        '因为每家公司终究都会遇见自己的牛头怪。',
+        '别人磨利刀剑，',
+        '而你审视假设，',
+        '因为此才是真正的怪兽。'
+      ]
+
     },
     mythology: {
       en: 'Athena, the Greek goddess of wisdom, warfare, and crafts, is known for her strategic mind and protective nature. Born fully grown from Zeus\'s head, she represents rational thought, justice, and the defense of civilization. Unlike Ares, the god of war, Athena embodies strategic warfare and the protection of cities. She is the patron of heroes, offering guidance and wisdom to those who seek righteous paths.',
@@ -621,7 +920,7 @@ const cardsData: CardData[] = [
       objectivity: [70, 100],
       coreEndurance: [40, 60]
     },
-    image: '/images/characters/athena.jpg'
+    image: athenaImage
   },
   {
     id: 'venus',
@@ -634,8 +933,74 @@ const cardsData: CardData[] = [
       zh: '外交联络者'
     },
     description: {
-      en: 'As Venus, you are the master of social dynamics and relationship-building. Your natural charisma and emotional intelligence make you an influential presence in any professional work space. You thrive in roles that require collaboration, persuasion, and interpersonal finesse. Your ability to navigate complex interactions ensures that you excel in positions where communication and adaptability are key. While you may need to manage endurance in long-term high-pressure settings, your ability to inspire and connect makes you an ideal fit for careers in diplomacy, marketing, public relations, and client-facing leadership roles.',
-      zh: '作为维纳斯，你是社交艺术和人际关系的大师。天生的魅力和高情商，使你在任何工作场合都能成为极具影响力的存在。在需要团队协作、说服技巧和人际交往能力的岗位上，你总能大放异彩。你擅长处理复杂的社交互动，这使得你在沟通能力和适应力至关重要的职位上表现尤为出色。虽然你可能需要注意在长期高压环境中的耐力管理，但你激励他人、建立联结的天赋，让你特别适合外交、市场营销、公共关系等需要面向客户的领导岗位。'
+      en: [
+        'From the foam where sea and sky meet, you rise,',
+        'Understanding desire before people put so into words,',
+        'Since not every reason people love something',
+        'Can be found in a spreadsheet.',
+        '',
+        'You build with insight into the human heart.',
+        'Where others focus on features,',
+        'You focus on experiences.',
+        'Where others question functionality,',
+        'You dive into emotions .',
+        '',
+        'Like the tide that shapes the shoreline over time,',
+        'You recognize subtle needs, hidden aspirations,',
+        'And opportunities others overlook.',
+        'You see patterns before trends,',
+        'And desires before demands.',
+        '',
+        'In moments of uncertainty,',
+        'You sense what people are searching for.',
+        'In moments of change,',
+        'You understand what they are unwilling to lose.',
+        '',
+        'Your gift is not persuasion through pressure,',
+        'But attraction through meaning.',
+        'Not convincing people to care,',
+        'But creation through caring.',
+        '',
+        'You bring beauty to utility,',
+        'Emotion to creation.',
+        'For every great product ultimately succeeds not because of itself,',
+        'But because people genuinely love it.'
+      ],
+
+      zh: [
+        '你自海天交汇的浪花之中起身而出，',
+        '理解人们尚未说出口的渴望，',
+        '因为并非所有喜爱',
+        '都能从报表中找到答案。',
+        '',
+        '你用对人性的洞察创造价值。',
+        '当他人关注产品特征，',
+        '你关注带来体验；',
+        '当他人询问产品功能，',
+        '你专注情绪价值。',
+        '',
+        '如同潮汐悄然塑造海岸，',
+        '你看见那些细微的需求、未被满足的期待，',
+        '以及被忽略的机会。',
+        '在趋势形成前看见规律，',
+        '在需求表达前理解渴望。',
+        '',
+        '在迷茫之中，',
+        '你知道人们正在寻找什么；',
+        '在变革之中，',
+        '你理解人们最不愿失去什么。',
+        ''
+        '你的力量并非来自说服，',
+        '而是来自真正的吸引力。',
+        '不是迫使人们在意，',
+        '而是源自在意的创造。',
+        '',
+        '你为功能赋予美感，',
+        '为创新注入情感。',
+        '因为任何伟大的产品之所以成功，',
+        '最终并不只是因为它本身，',
+        '而是因为人们无法自拔的真心喜爱。',
+      ]
     },
     mythology: {
       en: 'Venus is the Roman goddess of love, beauty, passion, and attraction. Born from sea foam, she captivates gods and mortals alike, influencing love, art, and pleasure. Her power extends beyond romance—she governs persuasion, charm, and the irresistible force of desire. As a symbol of both beauty and emotion, Venus represents the the joy of life and the eternal dance of attraction.',
@@ -649,13 +1014,14 @@ const cardsData: CardData[] = [
       objectivity: [30, 60],
       coreEndurance: [20, 50]
     },
-    image: '/images/characters/venus.jpg'
+    image: venusImage
   }
 ];
 
 const Results: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [tagScores, setTagScores] = useState<Record<string, number>>({});
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [cards, setCards] = useState<CardData[]>([]);
@@ -704,65 +1070,20 @@ const Results: React.FC = () => {
     coreEndurance: { en: 'Core Endurance', zh: '核心耐力' }
   };
 
-  useEffect(() => {
-    const getMockStats = () => {
-      return {
-        '自我意识': {
-          userScore: 40,
-          totalPossibleScore: 50,
-          scorePercentage: 85,
-          averageScore: 4,
-          answeredQuestions: 10
-        },
-        '奉献精神': {
-          userScore: 36,
-          totalPossibleScore: 45,
-          scorePercentage: 80,
-          averageScore: 4,
-          answeredQuestions: 9
-        },
-        '社交情商': {
-          userScore: 42,
-          totalPossibleScore: 60,
-          scorePercentage: 75,
-          averageScore: 3.5,
-          answeredQuestions: 12
-        },
-        '情绪调节': {
-          userScore: 32,
-          totalPossibleScore: 40,
-          scorePercentage: 84,
-          averageScore: 4,
-          answeredQuestions: 8
-        },
-        '客观能力': {
-          userScore: 45,
-          totalPossibleScore: 55,
-          scorePercentage: 88,
-          averageScore: 4.1,
-          answeredQuestions: 11
-        },
-        '核心耐力': {
-          userScore: 50,
-          totalPossibleScore: 65,
-          scorePercentage: 82,
-          averageScore: 3.85,
-          answeredQuestions: 13
-        }
-      };
-    };
+  useLayoutEffect(() => {
+    const bootstrap = (location.state as ResultsLocationState | null)?.resultsBootstrap;
 
-    const getTagStats = () => {
+    const getTagStatsFromStorage = (): Record<string, TagStats> | null => {
       const savedStats = localStorage.getItem('tagStats');
       if (savedStats) {
         try {
-          return JSON.parse(savedStats);
+          return JSON.parse(savedStats) as Record<string, TagStats>;
         } catch (e) {
           console.error('Error parsing saved tag statistics:', e);
-          return getMockStats();
+          return null;
         }
       }
-      return getMockStats();
+      return null;
     };
 
     const resolveQuestion25Answer = () => {
@@ -771,18 +1092,13 @@ const Results: React.FC = () => {
         try {
           const answers = JSON.parse(savedAnswers);
           if (answers && typeof answers === 'object') {
-            if (answers['25']) {
-              return answers['25'] as string;
+            const savedQuestionnaireType = (localStorage.getItem('userSessionQuestionnaireType') ||
+              localStorage.getItem('activeQuestionnaire') ||
+              'mother') as QuestionnaireType;
+            const question25 = questionnaires[savedQuestionnaireType]?.questions.find(q => q.unifiedId === 25);
+            if (question25 && answers[question25.id]) {
+              return answers[question25.id] as string;
             }
-            const fallbackMap: Record<string, string> = {
-              'mother': 'mother_33',
-              'corporate': 'corporate_33',
-              'other': 'other_32',
-              'both': 'both_44'
-            };
-            const savedQuestionnaireType = localStorage.getItem('selectedQuestionnaireType') || 'mother';
-            const fallbackId = fallbackMap[savedQuestionnaireType] || fallbackMap.mother;
-            return answers[fallbackId] as string | undefined;
           }
         } catch (e) {
           console.error('Error parsing answers:', e);
@@ -791,114 +1107,136 @@ const Results: React.FC = () => {
       return undefined;
     };
 
-    const hydrateResults = () => {
-      const stats = getTagStats();
-      const userScores: Record<string, number> = {};
-      Object.keys(stats).forEach(tag => {
-        if (stats[tag] && typeof stats[tag].scorePercentage === 'number') {
-          const engKey = toEnglishTag(tag);
-          userScores[engKey] = stats[tag].scorePercentage;
-        }
-      });
-
-      const otherTags = ['selfAwareness', 'dedication', 'socialIntelligence', 'emotionalRegulation', 'objectivity'];
-      const validScores = otherTags.map(tag => userScores[tag]).filter(v => typeof v === 'number');
-      if (validScores.length === 5) {
-        const avg = validScores.reduce((a, b) => a + b, 0) / 5;
-        const coreStat = stats['核心耐力'];
-        if (!coreStat || typeof coreStat.scorePercentage !== 'number' || isNaN(coreStat.scorePercentage)) {
-          console.error('Invalid core endurance score detected:', coreStat);
-          return false;
-        }
-        let adjustedCore = coreStat.scorePercentage;
-        if (avg > 60) {
-          adjustedCore += (avg - 60);
-        }
-        userScores['coreEndurance'] = Math.min(100, Math.max(0, adjustedCore));
+    const hydrateResults = (): boolean => {
+      const stats = bootstrap?.tagStats ?? getTagStatsFromStorage();
+      if (!stats) {
+        return false;
       }
 
-      const question25Answer = resolveQuestion25Answer();
-      let finalScores = userScores;
-      if (question25Answer) {
-        finalScores = applyQuestion25Bonus(userScores, question25Answer);
+      const q25Letter = (() => {
+        if (bootstrap) {
+          const t = (bootstrap.q25Letter || '').trim();
+          return /^[A-Fa-f]$/.test(t) ? t.toUpperCase() : '';
+        }
+        const question25Raw = resolveQuestion25Answer();
+        return question25Raw && /^[A-Fa-f]$/.test(String(question25Raw).trim())
+          ? String(question25Raw).trim().toUpperCase()
+          : '';
+      })();
+
+      const normalizedStats = normalizeTagStatsForMatching(stats);
+      const finalScores = buildFinalScoresForMatching(normalizedStats, q25Letter);
+      if (!finalScores) {
+        console.error('Invalid tag stats for results display after normalization.');
+        return false;
       }
 
       setTagScores(finalScores);
 
-      if (Object.keys(finalScores).length > 0) {
-        const sortedCards = sortCharactersByMatch(finalScores, cardsData, question25Answer);
-        setCards(sortedCards);
-        setActiveCardIndex(0);
-        setMatchedCard(sortedCards[0]);
-
-        const userSessionId = localStorage.getItem('userSessionId');
-        if (userSessionId) {
-          const matches = cardsData.map((character) => {
-            let inRangeCount = 0;
-            let outOfRangeDiffSum = 0;
-
-            Object.entries(character.tagRanges).forEach(([tag, range]) => {
-              const userScore = finalScores[tag];
-              if (userScore !== undefined) {
-                if (userScore >= range[0] && userScore <= range[1]) {
-                  inRangeCount++;
-                } else if (userScore < range[0]) {
-                  outOfRangeDiffSum += range[0] - userScore;
-                } else {
-                  outOfRangeDiffSum += userScore - range[1];
-                }
-              }
-            });
-
-            const rank = sortedCards.findIndex(c => c.id === character.id) + 1;
-            const finalPercentage = (inRangeCount / 6) * 100;
-
-            return {
-              character_id: character.id.toLowerCase(),
-              match_rank: rank,
-              in_range_count: inRangeCount,
-              out_of_range_diff_sum: outOfRangeDiffSum,
-              final_percentage: Math.round(finalPercentage),
-              question_25_answer: question25Answer || undefined
-            };
-          });
-
-          userSessionApi.saveCharacterMatches(userSessionId, matches)
-            .then(bestMatch => {
-              console.log('Character matches saved to backend, best match:', bestMatch);
-            })
-            .catch(error => {
-              console.error('Error saving character matches:', error);
-            });
-        }
+      const sortedMinimal = sortCharactersForPersistence(finalScores, q25Letter || undefined);
+      if (sortedMinimal.length !== CHARACTER_MATCH_SORT_INPUT.length) {
+        console.error(
+          'Character ranking must include all',
+          CHARACTER_MATCH_SORT_INPUT.length,
+          'characters; got',
+          sortedMinimal.length
+        );
+        setCards(cardsData);
+        setMatchedCard(cardsData[0]);
+        setImagesLoaded(true);
         return true;
       }
 
-      setCards(cardsData);
-      return false;
+      const sortedCards = sortedMinimal
+        .map(m => cardsData.find(c => c.id === m.id))
+        .filter((c): c is CardData => Boolean(c));
+      if (sortedCards.length !== cardsData.length) {
+        console.error('Could not map sorted characters to full card data.');
+        setCards(cardsData);
+        setMatchedCard(cardsData[0]);
+        setImagesLoaded(true);
+        return true;
+      }
+
+      setCards(sortedCards);
+      setActiveCardIndex(0);
+      setMatchedCard(sortedCards[0]);
+      setImagesLoaded(true);
+
+      const userSessionId = localStorage.getItem('userSessionId');
+      if (userSessionId) {
+        const saveKey = `characterMatchesSaved_${userSessionId}`;
+        if (!localStorage.getItem(saveKey)) {
+          const matches = buildCharacterMatchRowsFromSorted(
+            sortedMinimal,
+            finalScores,
+            q25Letter || undefined
+          );
+
+          void userSessionApi
+            .saveCharacterMatches(userSessionId, matches)
+            .then((result) => {
+              localStorage.setItem(saveKey, 'true');
+              console.log('Character matches saved to backend, best match:', result.bestMatch);
+            })
+            .catch((err) => {
+              localStorage.removeItem(saveKey);
+              console.error('Character matches were not saved; user can retry after reloading Results.', err);
+            });
+        }
+      }
+      return true;
     };
 
     const didHydrate = hydrateResults();
     if (!didHydrate) {
       let attempts = 0;
-      const interval = setInterval(() => {
+      const interval = window.setInterval(() => {
         attempts += 1;
         const success = hydrateResults();
-        if (success || attempts >= 5) {
-          clearInterval(interval);
+        if (success || attempts >= 10) {
+          window.clearInterval(interval);
+          if (!success) {
+            navigate('/personality-test/intro');
+          }
         }
-      }, 500);
-      return () => clearInterval(interval);
+      }, 100);
+      return () => window.clearInterval(interval);
     }
     return undefined;
-  }, []);
+  }, [location.key, navigate]);
+
+  const normalizeEmail = (value?: string | null) => (value || '').trim().toLowerCase();
+
+  const getVerifiedEmail = () => {
+    return normalizeEmail(
+      localStorage.getItem('userSessionEmail') ||
+      localStorage.getItem('pendingVerificationEmail')
+    );
+  };
+
+  const getAccountEmail = () => {
+    const accountRaw = localStorage.getItem('userAccount');
+    if (!accountRaw) return '';
+    try {
+      const account = JSON.parse(accountRaw) as { email?: string };
+      return normalizeEmail(account.email);
+    } catch (error) {
+      console.error('Error parsing userAccount from localStorage:', error);
+      return '';
+    }
+  };
 
   // Check if user is logged in
   useEffect(() => {
     const checkLoginStatus = () => {
       const hasAccount = localStorage.getItem('userAccount');
-      console.log('Checking login status:', { hasAccount, isLoggedIn: !!hasAccount });
-      setIsLoggedIn(!!hasAccount);
+      const verifiedEmail = getVerifiedEmail();
+      const accountEmail = getAccountEmail();
+      const emailMatch = Boolean(verifiedEmail && accountEmail && verifiedEmail === accountEmail);
+      const isAuthenticated = Boolean(hasAccount && emailMatch);
+      console.log('Checking login status:', { hasAccount, isLoggedIn: isAuthenticated, emailMatch });
+      setIsLoggedIn(isAuthenticated);
     };
     
     // Check immediately
@@ -950,7 +1288,7 @@ const Results: React.FC = () => {
       return;
     }
     target.dataset.fallbackApplied = 'true';
-    target.src = '/images/molecule.jpg';
+    target.src = '/images/molecule.png';
     
     // 添加样式防止闪烁
     target.style.objectFit = 'cover';
@@ -987,7 +1325,7 @@ const Results: React.FC = () => {
           {!isLoggedIn && (
             <button 
               className="create-account-button-desktop"
-              onClick={() => navigate('/login', { state: { mode: 'register' } })}
+              onClick={() => navigate('/login', { state: { flow: 'create-account' } })}
             >
               {language === 'en' ? 'Create Account' : '创建账户'}
             </button>
@@ -1011,7 +1349,9 @@ const Results: React.FC = () => {
           {/* Only show workplace description for the most matched character */}
           {activeCardIndex === 0 && (
             <div className="workplace-description">
-              <p>{language === 'en' ? matchedCard.description.en : matchedCard.description.zh}</p>
+              {(language === 'en' ? matchedCard.description.en : matchedCard.description.zh).map((row, index) => (
+                <p key={index} className="workplace-description-row">{row}</p>
+              ))}
             </div>
           )}
           
@@ -1042,7 +1382,7 @@ const Results: React.FC = () => {
           {!isLoggedIn && (
             <button 
               className="create-account-button-mobile"
-              onClick={() => navigate('/login', { state: { mode: 'register' } })}
+              onClick={() => navigate('/login', { state: { flow: 'create-account' } })}
             >
               {language === 'en' ? 'Create Account' : '创建账户'}
             </button>
@@ -1063,7 +1403,7 @@ const Results: React.FC = () => {
                 src={card.image} 
                 alt={language === 'en' ? card.name.en : card.name.zh}
                 className="dock-card-image"
-                onError={(e) => handleImageError(e, '50x50')}
+                onError={handleImageError}
                 loading="eager"
                 decoding="async"
               />

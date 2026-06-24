@@ -67,6 +67,128 @@ export interface TagStats {
   answeredQuestions: number;
 }
 
+/** Minimal shape for resolving which English tags a question affects. */
+export type TagsResolvableQuestion = {
+  tags?: string[];
+  conditionalTags?: {
+    male?: string[];
+    female?: string[];
+  };
+};
+
+/**
+ * Effective English tags for scoring: uses `tags`, or `conditionalTags` based on Q1 sex
+ * (A = female, B = male in unified question 1).
+ */
+export const resolveEffectiveTagEnglishList = (
+  question: TagsResolvableQuestion,
+  biologicalSexAnswer: string | null | undefined
+): string[] => {
+  if (question.tags && question.tags.length > 0) {
+    return [...question.tags];
+  }
+  const ct = question.conditionalTags;
+  if (!ct) {
+    return [];
+  }
+  const sex = biologicalSexAnswer?.trim().toUpperCase();
+  if (sex === 'A' && ct.female?.length) {
+    return [...ct.female];
+  }
+  if (sex === 'B' && ct.male?.length) {
+    return [...ct.male];
+  }
+  return [];
+};
+
+/**
+ * Rebuild per-tag score arrays from `questionScores_<englishTag>` localStorage keys
+ * (same source as incremental updates). Prefer this over React state at submit time.
+ */
+export const buildTagScoreArraysFromLocalStorage = (): Record<string, number[]> => {
+  const loadedTagScores: Record<string, number[]> = {};
+  CHINESE_TAGS.forEach((chineseTag) => {
+    const englishTag = toEnglishTag(chineseTag);
+    const savedMap = localStorage.getItem(`questionScores_${englishTag}`);
+    if (savedMap) {
+      try {
+        const questionScoreMap = JSON.parse(savedMap) as Record<string, number>;
+        loadedTagScores[chineseTag] = Object.values(questionScoreMap);
+      } catch {
+        loadedTagScores[chineseTag] = [];
+      }
+    } else {
+      loadedTagScores[chineseTag] = [];
+    }
+  });
+  return loadedTagScores;
+};
+
+/** Minimal question shape for replaying scores from a full answer map (must match `updateTagScores` rules). */
+export type QuestionForTagReconstruction = TagsResolvableQuestion & {
+  id: string;
+  type: string;
+  unifiedId?: number;
+};
+
+/**
+ * Rebuild `questionScores_<tag>` maps from the merged answer object so tag stats match answers on submit.
+ * Important after flows that no longer clear local tag state (e.g. same session + email edits on verify).
+ */
+export const rebuildQuestionScoreMapsFromMergedAnswers = (
+  mergedAnswers: Record<string, string>,
+  questions: QuestionForTagReconstruction[]
+): Record<string, number[]> => {
+  const q1 = questions.find((q) => q.unifiedId === 1);
+  const sex = q1 ? mergedAnswers[q1.id] : undefined;
+  const perEnglish: Record<string, Record<string, number>> = {};
+  for (const en of ENGLISH_TAGS) {
+    perEnglish[en] = {};
+  }
+
+  for (const q of questions) {
+    const val = mergedAnswers[q.id];
+    if (val == null) {
+      continue;
+    }
+    const strVal = typeof val === 'string' ? val : String(val);
+    if (strVal.trim() === '') {
+      continue;
+    }
+    const englishTags = resolveEffectiveTagEnglishList(q, sex);
+    if (englishTags.length === 0) {
+      continue;
+    }
+    const raw = q.type === 'scale-question' ? scaleValueToPercentage(strVal) : 0;
+    const score = Number.isFinite(raw) ? raw : 0;
+    for (const en of englishTags) {
+      perEnglish[en][q.id] = score;
+    }
+  }
+
+  const tagScores: Record<string, number[]> = {};
+  for (const chineseTag of CHINESE_TAGS) {
+    const en = toEnglishTag(chineseTag);
+    const map = perEnglish[en] || {};
+    try {
+      localStorage.setItem(`questionScores_${en}`, JSON.stringify(map));
+    } catch (e) {
+      throw new Error(
+        `Could not save tag working data (${en}). Storage may be full or blocked — try clearing site data for this site. ${e instanceof Error ? e.message : ''}`.trim()
+      );
+    }
+    tagScores[chineseTag] = Object.values(map);
+  }
+  try {
+    localStorage.setItem('tagScores', JSON.stringify(tagScores));
+  } catch (e) {
+    throw new Error(
+      `Could not save tag summary to storage. ${e instanceof Error ? e.message : String(e)}`.trim()
+    );
+  }
+  return tagScores;
+};
+
 export const calculateTagStats = (
   currentTagScores: Record<string, number[]>
 ): Record<string, TagStats> => {
@@ -74,8 +196,8 @@ export const calculateTagStats = (
   
   CHINESE_TAGS.forEach(chineseTag => {
     const scores = currentTagScores[chineseTag] || [];
-    // Only count valid scores (greater than 0)
-    const validScores = scores.filter(score => score > 0);
+    // Only count valid scores (greater than 0, finite — avoids NaN from bad storage)
+    const validScores = scores.filter((score) => score > 0 && Number.isFinite(score));
     const userScore = validScores.reduce((sum, score) => sum + score, 0);
     const answeredQuestions = validScores.length;
     // Use answered questions count instead of total possible questions count

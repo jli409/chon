@@ -1,0 +1,14 @@
+-- =============================================================================
+-- DEPRECATED as a single runnable script — use numbered files instead.
+-- =============================================================================
+--
+-- Run order (see q25_backfill_00_run_order.txt):
+--
+--   1. q25_backfill_01_diagnostic.sql
+--   2. q25_backfill_02_preview.sql
+--   3. q25_backfill_03_insert_canonical_question_responses.sql
+--   4. q25_backfill_04_sync_character_matches_tag_statistics.sql
+--
+-- Optional preview/compare: update_q25_from_question_responses.sql (PREVIEW only)
+--
+-- =============================================================================

@@ -1529,26 +1529,74 @@ export const questionnaireConfigs: Record<QuestionnaireType, QuestionnaireConfig
       {
         title: { en: 'About Professional Work & Teamwork', zh: '关于专业工作与团队合作' },
         startIndex: 4,
-        endIndex: 12
+        endIndex: 11
       },
       {
         title: { en: 'About Us, CHON', zh: '关于我们，CHON' },
-        startIndex: 13,
-        endIndex: 22
+        startIndex: 12,
+        endIndex: 20
       },
       {
         title: { en: 'About Motherhood', zh: '关于母亲身份' },
-        startIndex: 23,
-        endIndex: 30
+        startIndex: 21,
+        endIndex: 27
       },
       {
         title: { en: 'Final Question', zh: '最终问题' },
-        startIndex: 31,
-        endIndex: 31
+        startIndex: 28,
+        endIndex: 28
       }
     ],
-    questionModifications: {},
-    totalQuestions: 32
+      conditionalModifications: {
+      81: [
+      {
+        condition: {
+          questionId: 4,
+          answer: 'B' // No corporate experience
+        },
+        modifications: {
+          textEn: 'Does your team foster personal growth and well-being?',
+          textZh: '您的团队是否同时重视个人发展和身心健康？'
+        }
+      }
+    ],
+    20: [
+      {
+        condition: {
+          questionId: 4,
+          answer: 'B' // No corporate experience
+        },
+        modifications: {
+          textEn: 'Does your team value “soft skills” of responsibility, empathy, and communication? ',
+          textZh: '您的团队认可软实力（例如责任心、同理心、沟通能力）吗？'
+        }
+      }
+    ],
+    84: [
+      {
+        condition: {
+          questionId: 4,
+          answer: 'B' // No corporate experience
+        },
+        modifications: {
+          textEn: 'Do you support or care for teammates?',
+          textZh: '您是否会给予队友支持或关心？'
+        }
+      }
+    ],
+    87: [
+      {
+        condition: {
+          questionId: 4,
+          answer: 'B' // No corporate experience
+        },
+        modifications: {
+          textEn: 'Could you reach out to teammates when facing challenges?',
+          textZh: '面对困难或需要帮助时，您能否与同事或上级沟通？'
+        }
+      }
+    ]},
+    totalQuestions: 29
   },
   both: {
     type: 'both',

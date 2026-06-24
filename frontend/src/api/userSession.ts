@@ -1,6 +1,22 @@
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
+import { getApiBaseUrl } from '../config/apiBaseUrl';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const axiosErrorMessage = (error: unknown, fallback: string): string => {
+  if (isAxiosError(error)) {
+    const body = error.response?.data as { error?: string } | undefined;
+    if (typeof body?.error === 'string' && body.error.trim()) {
+      return body.error.trim();
+    }
+    if (error.response?.status) {
+      return `${fallback} (HTTP ${error.response.status})`;
+    }
+    return error.message || fallback;
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+};
 
 export interface UserSession {
   user_session_id: string;
@@ -33,6 +49,41 @@ export interface CharacterMatch {
 }
 
 /**
+ * Persist email on the intro-created session (verification completes via email link only).
+ */
+export const patchUserSessionEmail = async (
+  userSessionId: string,
+  email: string
+): Promise<boolean> => {
+  return patchUserSession(userSessionId, { email });
+};
+
+export type PatchUserSessionPayload = {
+  email?: string;
+  questionnaire_type?: string;
+  corporate_role?: string | null;
+};
+
+/**
+ * Partially update a user session (email, questionnaire_type from identity, corporate_role).
+ */
+export const patchUserSession = async (
+  userSessionId: string,
+  payload: PatchUserSessionPayload
+): Promise<boolean> => {
+  try {
+    const response = await axios.patch(
+      `${getApiBaseUrl()}/user-sessions/${encodeURIComponent(userSessionId)}`,
+      payload
+    );
+    return response.data?.success === true;
+  } catch (error) {
+    console.error('Error patching user session:', error);
+    return false;
+  }
+};
+
+/**
  * Create a new user session
  */
 export const createUserSession = async (
@@ -42,7 +93,7 @@ export const createUserSession = async (
   corporateRole?: string
 ): Promise<UserSession> => {
   try {
-    const response = await axios.post(`${API_URL}/user-sessions`, {
+    const response = await axios.post(`${getApiBaseUrl()}/user-sessions`, {
       intro_choice: introChoice,
       email,
       questionnaire_type: questionnaireType,
@@ -70,18 +121,25 @@ export const createUserSession = async (
 export const saveTagScores = async (
   userSessionId: string,
   tagScores: TagScore[]
-): Promise<boolean> => {
+): Promise<void> => {
   try {
-    const response = await axios.post(`${API_URL}/tag-scores`, {
+    const response = await axios.post(`${getApiBaseUrl()}/tag-scores`, {
       user_session_id: userSessionId,
       tag_scores: tagScores
     });
-    
+
     console.log('Tag scores saved:', response.data);
-    return response.data.success === true;
-  } catch (error) {
+    if (response.data?.success !== true) {
+      const msg =
+        typeof response.data?.error === 'string' ? response.data.error : 'Tag scores were not accepted.';
+      throw new Error(msg);
+    }
+  } catch (error: unknown) {
     console.error('Error saving tag scores:', error);
-    return false;
+    if (isAxiosError(error)) {
+      throw new Error(axiosErrorMessage(error, 'Could not save tag scores.'));
+    }
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };
 
@@ -91,39 +149,62 @@ export const saveTagScores = async (
 export const saveTagStatistics = async (
   userSessionId: string,
   statistics: TagStatistics[]
-): Promise<boolean> => {
+): Promise<void> => {
   try {
-    const response = await axios.post(`${API_URL}/tag-statistics`, {
+    const response = await axios.post(`${getApiBaseUrl()}/tag-statistics`, {
       user_session_id: userSessionId,
       statistics: statistics
     });
-    
+
     console.log('Tag statistics saved:', response.data);
-    return response.data.success === true;
-  } catch (error) {
+    if (response.data?.success !== true) {
+      const msg =
+        typeof response.data?.error === 'string' ? response.data.error : 'Tag statistics were not accepted.';
+      throw new Error(msg);
+    }
+  } catch (error: unknown) {
     console.error('Error saving tag statistics:', error);
-    return false;
+    if (isAxiosError(error)) {
+      throw new Error(axiosErrorMessage(error, 'Could not save tag statistics.'));
+    }
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };
 
 /**
  * Save character matches for a user session
  */
+export type SaveCharacterMatchesResult = {
+  success: boolean;
+  bestMatch: string | null;
+};
+
 export const saveCharacterMatches = async (
   userSessionId: string,
   matches: CharacterMatch[]
-): Promise<string | null> => {
+): Promise<SaveCharacterMatchesResult> => {
   try {
-    const response = await axios.post(`${API_URL}/character-matches`, {
+    const response = await axios.post(`${getApiBaseUrl()}/character-matches`, {
       user_session_id: userSessionId,
       matches: matches
     });
-    
-    console.log('Character matches saved:', response.data);
-    return response.data.best_match || null;
-  } catch (error) {
+    if (response.data?.success) {
+      console.log('Character matches saved:', response.data);
+      return {
+        success: true,
+        bestMatch: (response.data.best_match as string | undefined) ?? null
+      };
+    }
+    const msg =
+      typeof response.data?.error === 'string' ? response.data.error : 'Character matches were not accepted.';
+    console.error('Character matches save rejected by API:', response.data);
+    throw new Error(msg);
+  } catch (error: unknown) {
     console.error('Error saving character matches:', error);
-    return null;
+    if (isAxiosError(error)) {
+      throw new Error(axiosErrorMessage(error, 'Could not save character matches.'));
+    }
+    throw error instanceof Error ? error : new Error(String(error));
   }
 };
 
@@ -132,7 +213,7 @@ export const saveCharacterMatches = async (
  */
 export const getUserSession = async (sessionId: string): Promise<Record<string, unknown> | null> => {
   try {
-    const response = await axios.get(`${API_URL}/user-sessions/${sessionId}`);
+    const response = await axios.get(`${getApiBaseUrl()}/user-sessions/${sessionId}`);
     return response.data;
   } catch (error) {
     console.error('Error getting user session:', error);
@@ -140,11 +221,37 @@ export const getUserSession = async (sessionId: string): Promise<Record<string, 
   }
 };
 
+/**
+ * Load saved MC/text answers from the backend (per-session rows on question_responses).
+ */
+export const fetchSavedQuestionnaireAnswers = async (
+  userSessionId: string
+): Promise<{ questionnaireType: string; answers: Record<string, string> } | null> => {
+  try {
+    const response = await axios.get(
+      `${getApiBaseUrl()}/user-sessions/${encodeURIComponent(userSessionId)}/saved-questionnaire-answers`
+    );
+    if (response.data?.success && response.data.answers) {
+      return {
+        questionnaireType: String(response.data.questionnaire_type || 'mother'),
+        answers: response.data.answers as Record<string, string>,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching saved questionnaire answers:', error);
+    return null;
+  }
+};
+
 export default {
   createUserSession,
+  patchUserSessionEmail,
+  patchUserSession,
   saveTagScores,
   saveTagStatistics,
   saveCharacterMatches,
-  getUserSession
+  getUserSession,
+  fetchSavedQuestionnaireAnswers,
 };
 

@@ -1,0 +1,14 @@
+Run these files in order:
+
+1. 01_preview_q25_rows.sql
+2. 02_preview_downstream_rows.sql
+3. 03_rebuild_tag_statistics.sql
+4. 04a_reset_tag_statistics_baseline.sql
+5. 04b_apply_q25_bonus.sql
+6. 05a_delete_character_matches.sql
+7. 05b_insert_character_matches_compact.sql
+8. 05c_update_user_sessions_from_matches.sql
+9. 06_postcheck_tag_statistics.sql
+10. 07_postcheck_character_matches.sql
+
+Each SQL file is self-contained. You can run them one at a time in a SQL editor.

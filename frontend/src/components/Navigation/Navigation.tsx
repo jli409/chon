@@ -18,7 +18,7 @@ const Navigation = () => {
       case 'CONTACT US':
         return t.navigation.contact;
       case 'LOGIN':
-        return t.navigation.login || 'Login';
+        return t.navigation.login || 'Account';
       default:
         return routeName;
     }

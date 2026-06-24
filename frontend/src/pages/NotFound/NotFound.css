@@ -16,10 +16,10 @@
   right: 0;
   width: 70%;
   height: 70%;
-  background-image: url('/images/molecule.jpg');
+  background-image: url('/images/molecule.png');
   background-repeat: no-repeat;
-  background-position: center right;
-  background-size: contain;
+  background-position: calc(100% + 5%) 50%;
+  background-size: 120% 120%;
   opacity: 0.15;
   pointer-events: none;
   z-index: 0;

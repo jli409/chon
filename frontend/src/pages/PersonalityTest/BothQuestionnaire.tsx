@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { questionnaires, questionnaireConfigs, getQuestionsForSection, getSectionInfo, type Question } from './questionnaires';
 import SearchableDropdown from './SearchableDropdown';
 import EmailVerificationQuestion from './EmailVerificationQuestion';
@@ -59,6 +59,46 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
   calculatedQuestionnaireProgress,
   finishQuestionnaire
 }) => {
+  const textWithUnitAdvanceTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (textWithUnitAdvanceTimerRef.current) {
+        window.clearTimeout(textWithUnitAdvanceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const advanceWithinPage = (questionId: string, questions: Question[]) => {
+    const currentIndex = questions.findIndex(q => q.id === questionId);
+    if (currentIndex < 0 || currentIndex >= questions.length - 1) {
+      return;
+    }
+
+    const nextQuestion = questions[currentIndex + 1];
+    showOnlyQuestion(nextQuestion.id);
+    scrollToNextQuestion(questionId);
+  };
+
+  const handleTextWithUnitAnswer = (questionId: string, text: string, questions: Question[]) => {
+    handleTextAnswer(questionId, text);
+
+    if (textWithUnitAdvanceTimerRef.current) {
+      window.clearTimeout(textWithUnitAdvanceTimerRef.current);
+      textWithUnitAdvanceTimerRef.current = null;
+    }
+
+    const [value] = text.split('_');
+    if (!value.trim()) {
+      return;
+    }
+
+    textWithUnitAdvanceTimerRef.current = window.setTimeout(() => {
+      advanceWithinPage(questionId, questions);
+      textWithUnitAdvanceTimerRef.current = null;
+    }, 650);
+  };
+
   // Helper function to render question text
   const renderQuestionText = (question: Question) => {
     return (
@@ -126,16 +166,11 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                     value={getCurrentAnswers()[question.id]?.split('_')[0] || ''}
                     onChange={(e) => {
                       const unit = getCurrentAnswers()[question.id]?.split('_')[1] || 'kg';
-                      handleTextAnswer(question.id, `${e.target.value}_${unit}`);
+                      handleTextWithUnitAnswer(question.id, `${e.target.value}_${unit}`, page1Questions);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && getCurrentAnswers()[question.id]) {
-                        const currentIndex = page1Questions.findIndex(q => q.id === question.id);
-                        if (currentIndex < page1Questions.length - 1) {
-                          const nextQuestion = page1Questions[currentIndex + 1];
-                          showOnlyQuestion(nextQuestion.id);
-                          scrollToNextQuestion(question.id);
-                        }
+                        advanceWithinPage(question.id, page1Questions);
                       }
                     }}
                     placeholder={language === 'en' ? 'Enter weight' : '输入体重'}
@@ -149,7 +184,7 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                       selectedValue={getCurrentAnswers()[question.id]?.split('_')[1] || 'kg'}
                       onSelect={(unitId: string) => {
                         const value = getCurrentAnswers()[question.id]?.split('_')[0] || '';
-                        handleTextAnswer(question.id, `${value}_${unitId}`);
+                        handleTextWithUnitAnswer(question.id, `${value}_${unitId}`, page1Questions);
                       }}
                       language={language as 'en' | 'zh'}
                     />
@@ -645,11 +680,8 @@ const BothQuestionnaire: React.FC<BothQuestionnaireProps> = ({
                     key={option.id}
                     className={`answer-option ${getCurrentAnswers()[page6Question.id] === option.id ? 'selected' : ''}`}
                     onClick={() => {
+                      // handleMultipleChoiceAnswer schedules finishQuestionnaire with Q25 in the payload
                       handleMultipleChoiceAnswer(page6Question.id, option.id);
-                      // Auto-finish after answering question 25
-                      setTimeout(() => {
-                        finishQuestionnaire();
-                      }, 500);
                     }}
                   >
                     <p>{option.id}) {language === 'en' ? option.textEn : option.textZh}</p>

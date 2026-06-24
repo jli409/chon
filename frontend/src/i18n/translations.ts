@@ -77,7 +77,7 @@ const translations: TranslationsType = {
       home: 'HOME',
       personalityTest: 'PERSONALITY TEST',
       contact: 'CONTACT US',
-      login: 'LOGIN',
+      login: 'ACCOUNT',
     },
     home: {
     paragraphs: [
@@ -150,7 +150,7 @@ const translations: TranslationsType = {
       home: '首页',
       personalityTest: '性格测试',
       contact: '联系我们',
-      login: '登录',
+      login: '账户',
     },
     home: {
     paragraphs: [

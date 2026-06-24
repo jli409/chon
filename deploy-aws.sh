@@ -42,10 +42,12 @@ read -p "Enter option (1-4): " option
 case $option in
     1)
         echo -e "${YELLOW}Deploying Backend to Elastic Beanstalk...${NC}"
-        cd backend
+        # application.py and requirements.txt are at repo root — do not deploy from backend/ only.
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        cd "$SCRIPT_DIR"
         eb init -p python-3.11 chon-backend --region us-east-1
         eb create chon-backend-prod
-        eb setenv SUPABASE_URL=$SUPABASE_URL SUPABASE_KEY=$SUPABASE_KEY
+        eb setenv SUPABASE_URL="$SUPABASE_URL" SUPABASE_KEY="$SUPABASE_KEY"
         eb deploy
         ;;
     2)

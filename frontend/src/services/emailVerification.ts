@@ -1,9 +1,14 @@
-// Email Verification Service
-// This service handles email verification for corporate managers
+// Email verification for account creation (after questionnaire).
+// **Send:** Supabase Auth ``signInWithOtp`` (magic link). Postmark via CHON API is optional fallback.
+// **Complete:** Supabase link → ``/auth/callback`` (or ``/login``) → session + ``POST /auth/callback`` sync.
+// Postmark fallback: ``GET /email/verify/:token>``.
 
 import axios from 'axios';
+import { supabase } from '../lib/supabaseClient.ts';
+import { getApiBaseUrl } from '../config/apiBaseUrl';
+import { parseChonSessionIdFromSearch } from '../utils/chonSessionUrl.ts';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const VALID_QT = new Set(['mother', 'corporate', 'other', 'both']);
 
 export interface EmailVerificationResponse {
   success: boolean;
@@ -15,9 +20,18 @@ export interface EmailVerificationResponse {
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (axios.isAxiosError(error)) {
-    const message = error.response?.data?.error;
-    if (typeof message === 'string') {
-      return message;
+    const data = error.response?.data as { error?: string; message?: string } | undefined;
+    const fromBody =
+      (typeof data?.error === 'string' && data.error.trim()) ||
+      (typeof data?.message === 'string' && data.message.trim());
+    if (fromBody) {
+      return fromBody;
+    }
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      return 'Could not reach the API. Check that the site can reach the backend (URL / CORS / VPN).';
+    }
+    if (error.response?.status === 503) {
+      return 'Email service unavailable (server may be missing POSTMARK_SERVER_TOKEN or Postmark rejected the send).';
     }
   }
 
@@ -29,7 +43,36 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 /**
- * Send verification email to the user
+ * Send a Supabase Auth magic-link email (primary account-verification path).
+ * Redirect lands on ``/auth/callback`` with ``sid`` so CHON session is restored before DB sync.
+ */
+export const sendSupabaseOtpVerificationLink = async (
+  email: string,
+  userSessionId: string
+): Promise<EmailVerificationResponse> => {
+  const redirectUrl = `${window.location.origin}/auth/callback?sid=${encodeURIComponent(userSessionId)}&mode=register`;
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: {
+      emailRedirectTo: redirectUrl,
+      shouldCreateUser: true,
+    },
+  });
+  if (error) {
+    return {
+      success: false,
+      message: error.message || 'Supabase could not send the verification email.',
+    };
+  }
+  return {
+    success: true,
+    message:
+      'Magic link sent. Check your inbox for the email from Supabase Auth and open the link to continue creating your account.',
+  };
+};
+
+/**
+ * Send verification via CHON API + Postmark (preferred when ``POSTMARK_SERVER_TOKEN`` is configured).
  * @param email - User's professional email address
  * @param language - Language preference ('en' or 'zh')
  * @returns Promise with verification response
@@ -46,7 +89,7 @@ export const sendVerificationEmail = async (email: string, language: string = 'e
       requestData.user_session_id = userSessionId;
     }
     
-    const response = await axios.post(`${API_URL}/email/send-verification`, requestData);
+    const response = await axios.post(`${getApiBaseUrl()}/email/send-verification`, requestData);
     
     if (response.data.success) {
       console.log('Verification email sent successfully');
@@ -78,13 +121,89 @@ export const sendVerificationEmail = async (email: string, language: string = 'e
 };
 
 /**
- * Verify email token
- * @param token - Verification token from email link
- * @returns Promise with verification status
+ * After Supabase magic-link session exists, sync verification into CHON DB
+ * (``email_verifications`` + ``user_sessions.email_verified``) via POST ``/auth/callback``.
  */
+export const syncEmailVerificationWithChonBackend = async (): Promise<boolean> => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const email = session?.user?.email?.trim();
+    const authUserId = session?.user?.id;
+    if (!email || !authUserId) {
+      return false;
+    }
+
+    const rawQt =
+      localStorage.getItem('userSessionQuestionnaireType') ||
+      localStorage.getItem('selectedQuestionnaireType') ||
+      localStorage.getItem('activeQuestionnaire');
+    const questionnaire_type =
+      rawQt && VALID_QT.has(rawQt) ? rawQt : undefined;
+
+    const userSessionId =
+      localStorage.getItem('userSessionId')?.trim() ||
+      parseChonSessionIdFromSearch(new URLSearchParams(window.location.search)) ||
+      undefined;
+
+    if (userSessionId && !localStorage.getItem('userSessionId')) {
+      localStorage.setItem('userSessionId', userSessionId);
+    }
+
+    const response = await axios.post<{
+      success?: boolean;
+      userSessionId?: string;
+      user_session_id?: string;
+    }>(
+      `${getApiBaseUrl()}/auth/callback`,
+      {
+        email,
+        auth_user_id: authUserId,
+        ...(questionnaire_type ? { questionnaire_type } : {}),
+        ...(userSessionId ? { user_session_id: userSessionId } : {}),
+      },
+      { validateStatus: () => true }
+    );
+
+    const data = response.data;
+    if (response.status < 200 || response.status >= 300 || data?.success !== true) {
+      console.error('auth/callback failed:', response.status, data);
+      return false;
+    }
+
+    const sid =
+      (typeof data?.userSessionId === 'string' && data.userSessionId.trim()) ||
+      (typeof data?.user_session_id === 'string' && data.user_session_id.trim()) ||
+      '';
+    if (sid) {
+      localStorage.setItem('userSessionId', sid);
+    }
+
+    localStorage.setItem('emailVerified', 'true');
+    const normalizedEmail = email.trim().toLowerCase();
+    localStorage.setItem('verifiedEmail', normalizedEmail);
+    localStorage.setItem('userSessionEmail', normalizedEmail);
+    return true;
+  } catch (error: unknown) {
+    console.error('syncEmailVerificationWithChonBackend failed:', error);
+    return false;
+  }
+};
+
+/** Call GET /email/verify/:token (Postmark magic-link flow). */
 export const verifyEmailToken = async (token: string): Promise<EmailVerificationResponse> => {
   try {
-    const response = await axios.get(`${API_URL}/email/verify/${token}`);
+    let verifyUrl = `${getApiBaseUrl()}/email/verify/${encodeURIComponent(token)}`;
+    try {
+      const sid = parseChonSessionIdFromSearch(new URLSearchParams(window.location.search));
+      if (sid) {
+        verifyUrl += `?sid=${encodeURIComponent(sid)}`;
+      }
+    } catch {
+      /* ignore */
+    }
+    const response = await axios.get(verifyUrl);
     
     if (response.data.success) {
       console.log('Email verified successfully');
@@ -92,7 +211,10 @@ export const verifyEmailToken = async (token: string): Promise<EmailVerification
       // Store verification status and session token
       localStorage.setItem('emailVerified', 'true');
       if (response.data.sessionToken) {
-        localStorage.setItem('sessionToken', response.data.sessionToken);
+        const sid = response.data.sessionToken as string;
+        localStorage.setItem('sessionToken', sid);
+        // Backend session_token is user_sessions.id — keep userSessionId in sync for API calls.
+        localStorage.setItem('userSessionId', sid);
       }
       if (response.data.email) {
         localStorage.setItem('verifiedEmail', response.data.email);
@@ -100,7 +222,7 @@ export const verifyEmailToken = async (token: string): Promise<EmailVerification
       
       return {
         success: true,
-        message: response.data.message || 'Email verified successfully! You can now continue with the questionnaire.',
+        message: response.data.message || 'Email verified successfully! You can now create your account.',
         sessionToken: response.data.sessionToken,
         email: response.data.email
       };
@@ -133,13 +255,22 @@ export const isEmailVerified = (): boolean => {
  * @param language - Language preference ('en' or 'zh')
  * @returns Promise with verification response
  */
-export const resendVerificationEmail = async (email: string, language: string = 'en', questionnaireType: string = 'mother'): Promise<EmailVerificationResponse> => {
+export const resendVerificationEmail = async (
+  email: string,
+  language: string = 'en',
+  questionnaireType: string = 'mother',
+  userSessionId?: string
+): Promise<EmailVerificationResponse> => {
   try {
-    const response = await axios.post(`${API_URL}/email/resend-verification`, {
+    const body: Record<string, unknown> = {
       email,
       language,
       questionnaire_type: questionnaireType
-    });
+    };
+    if (userSessionId) {
+      body.user_session_id = userSessionId;
+    }
+    const response = await axios.post(`${getApiBaseUrl()}/email/resend-verification`, body);
     
     if (response.data.success) {
       return {
@@ -170,4 +301,3 @@ export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
-

@@ -1,4 +1,5 @@
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import PersonalityTestIndexRedirect from './components/PersonalityTestIndexRedirect.tsx'
 import Navigation from './components/Navigation/Navigation.tsx'
 import LanguageSelector from './components/LanguageSelector/LanguageSelector.tsx'
 import Home from './pages/Home/Home.tsx'
@@ -18,26 +19,10 @@ function App() {
   const [whiteTheme, setWhiteTheme] = useState(false);
   const [hideUI, setHideUI] = useState(false);
   const location = useLocation();
-  const isPersonalityTest = location.pathname.includes('/personality-test');
+  const isPersonalityTest = location.pathname.startsWith('/personality-test') &&
+    !location.pathname.startsWith('/personality-test/results');
 
-  // Force clear problematic localStorage on mount if needed
   useEffect(() => {
-    // If we're on home page and localStorage has problematic state, clear it
-    if (!isPersonalityTest) {
-      const savedStep = localStorage.getItem('chon_personality_step');
-      if (savedStep === 'questionnaire' || savedStep === 'privacy' || savedStep === 'email-verification') {
-        console.warn('Clearing problematic localStorage state:', savedStep);
-        localStorage.removeItem('chon_personality_step');
-        localStorage.removeItem('chon_personality_show_first_page');
-        localStorage.removeItem('chon_personality_show_second_page');
-        localStorage.removeItem('chon_personality_show_third_page');
-        localStorage.removeItem('chon_personality_show_fourth_page');
-        localStorage.removeItem('chon_personality_show_fifth_page');
-        localStorage.removeItem('chon_personality_show_sixth_page');
-      }
-    }
-    
-    // Always ensure initial state is correct
     console.log('App mounted, isPersonalityTest:', isPersonalityTest, 'hideUI:', hideUI);
   }, [isPersonalityTest, hideUI]);
 
@@ -77,7 +62,7 @@ function App() {
       {!shouldHideNavigation && <Navigation />}
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/personality-test" element={<Navigate to="/personality-test/intro" replace />} />
+        <Route path="/personality-test" element={<PersonalityTestIndexRedirect />} />
         <Route path="/personality-test/results" element={<Results />} />
         <Route 
           path="/personality-test/:step" 

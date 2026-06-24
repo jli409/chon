@@ -1,17 +1,60 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext.tsx';
-import { toEnglishTag } from '../../utils/tagUtils';
-import { findBestMatchCharacter } from '../../utils/characterMatching';
+import { calculateTagStats, toEnglishTag } from '../../utils/tagUtils';
+import { sortCharactersByMatch } from '../../utils/characterMatching';
+import { questionnaires, type QuestionnaireType } from '../PersonalityTest/questionnaires.ts';
 import { supabase } from '../../lib/supabaseClient.ts';
+import AccountEmailVerification from '../../components/AccountEmailVerification/AccountEmailVerification.tsx';
+import { getApiBaseUrl } from '../../config/apiBaseUrl.ts';
+import {
+  applyLoginSnapshotPayload,
+  type ChonLoginSnapshotPayload
+} from '../../utils/loginSnapshotStorage.ts';
+import odinImage from '../../assets/characters/odin.jpg';
+import wukongImage from '../../assets/characters/wukong.jpg';
+import prometheusImage from '../../assets/characters/prometheus.jpg';
+import nuwaImage from '../../assets/characters/nuwa.jpg';
+import athenaImage from '../../assets/characters/athena.jpg';
+import venusImage from '../../assets/characters/venus.jpg';
 import './Login.css';
+
+function interpretChonLoginResponse(
+  res: Response,
+  raw: string,
+  defaultInvalid: string
+): { type: 'ok'; data: ChonLoginSnapshotPayload } | { type: 'auth'; message: string } | { type: 'bad_response' } {
+  let data: unknown;
+  try {
+    data = raw.trim() ? JSON.parse(raw) : {};
+  } catch {
+    return { type: 'bad_response' };
+  }
+  if (!data || typeof data !== 'object') {
+    return { type: 'bad_response' };
+  }
+  const o = data as Record<string, unknown>;
+  if (res.ok && res.status === 200 && o.success === true) {
+    return { type: 'ok', data: o as ChonLoginSnapshotPayload };
+  }
+  const serverErr = typeof o.error === 'string' ? o.error.trim() : '';
+  return { type: 'auth', message: serverErr || defaultInvalid };
+}
 
 const Login = () => {
   const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const mode = (location.state as { mode?: string })?.mode || 'login';
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const locationState = (location.state as { flow?: string; mode?: string }) || {};
+  const wantsCreateAccount =
+    locationState.flow === 'create-account' ||
+    locationState.mode === 'register' ||
+    searchParams.get('mode') === 'register' ||
+    Boolean(searchParams.get('verify'));
+  const [accountPhase, setAccountPhase] = useState<'verify' | 'register'>(() =>
+    localStorage.getItem('emailVerified') === 'true' ? 'register' : 'verify'
+  );
   
   const [formData, setFormData] = useState({
     email: '',
@@ -23,6 +66,8 @@ const Login = () => {
     password: '',
     confirmPassword: ''
   });
+  /** Inline API error (replaces alert) so failed login stays on the form. */
+  const [loginSubmitError, setLoginSubmitError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mostFittedCharacter, setMostFittedCharacter] = useState<{
     id: string;
@@ -39,38 +84,88 @@ const Login = () => {
     email: ''
   });
 
+  const resolveTagStats = () => {
+    const tagStatsRaw = localStorage.getItem('tagStats');
+    if (tagStatsRaw) {
+      try {
+        return JSON.parse(tagStatsRaw) as Record<string, { scorePercentage?: number }>;
+      } catch (error) {
+        console.error('Error parsing tagStats from localStorage:', error);
+      }
+    }
+
+    const tagScoresRaw = localStorage.getItem('tagScores');
+    if (tagScoresRaw) {
+      try {
+        const tagScores = JSON.parse(tagScoresRaw) as Record<string, number[]>;
+        return calculateTagStats(tagScores) as Record<string, { scorePercentage?: number }>;
+      } catch (error) {
+        console.error('Error parsing tagScores from localStorage:', error);
+      }
+    }
+
+    return null;
+  };
+
+  const normalizeEmail = (value?: string | null) => (value || '').trim().toLowerCase();
+
+  const getVerifiedEmail = () => {
+    return normalizeEmail(
+      localStorage.getItem('verifiedEmail') ||
+      localStorage.getItem('userSessionEmail') ||
+      localStorage.getItem('pendingVerificationEmail')
+    );
+  };
+
+  const getAccountEmail = () => {
+    const accountRaw = localStorage.getItem('userAccount');
+    if (!accountRaw) return '';
+    try {
+      const account = JSON.parse(accountRaw) as { email?: string };
+      return normalizeEmail(account.email);
+    } catch (error) {
+      console.error('Error parsing userAccount from localStorage:', error);
+      return '';
+    }
+  };
+  const verifiedEmailNormalized = getVerifiedEmail();
+  const isRegisterMode = wantsCreateAccount && accountPhase === 'register';
+  const isVerifyMode = wantsCreateAccount && accountPhase === 'verify';
+  const shouldHideEmailField = isRegisterMode && Boolean(verifiedEmailNormalized);
+
   // Check if user is logged in and get most fitted character
   useEffect(() => {
-    const checkLoginStatus = () => {
+    const checkLoginStatus = async () => {
       const hasAccount = localStorage.getItem('userAccount');
-      const hasResults = localStorage.getItem('tagStats');
+      const tagStats = resolveTagStats();
+      const hasResults = Boolean(tagStats);
+      const isAuthenticated = Boolean(hasAccount);
       
-      if (hasAccount && hasResults) {
+      if (isAuthenticated && hasResults) {
         setIsLoggedIn(true);
         
         // Get the most fitted character from results
-        const tagStats = JSON.parse(hasResults);
         const cardsData = [
           {
             id: 'odin',
             name: { en: 'Odin', zh: '奥丁' },
-            image: '/images/characters/odin.jpg',
+            image: odinImage,
             tagRanges: {
               selfAwareness: [80, 100] as [number, number],
-              dedication: [20, 50] as [number, number],
+              dedication: [20, 60] as [number, number],
               socialIntelligence: [30, 60] as [number, number],
-              emotionalRegulation: [20, 50] as [number, number],
+              emotionalRegulation: [40, 60] as [number, number],
               objectivity: [60, 80] as [number, number],
-              coreEndurance: [0, 60] as [number, number]
+              coreEndurance: [40, 60] as [number, number]
             }
           },
           {
             id: 'wukong',
             name: { en: 'Wukong', zh: '大圣' },
-            image: '/images/characters/wukong.jpg',
+            image: wukongImage,
             tagRanges: {
               selfAwareness: [40, 60] as [number, number],
-              dedication: [0, 40] as [number, number],
+              dedication: [40, 60] as [number, number],
               socialIntelligence: [40, 70] as [number, number],
               emotionalRegulation: [80, 100] as [number, number],
               objectivity: [40, 60] as [number, number],
@@ -80,12 +175,12 @@ const Login = () => {
           {
             id: 'prometheus',
             name: { en: 'Prometheus', zh: '普罗米修斯' },
-            image: '/images/characters/prometheus.jpg',
+            image: prometheusImage,
             tagRanges: {
-              selfAwareness: [0, 40] as [number, number],
+              selfAwareness: [30, 60] as [number, number],
               dedication: [80, 100] as [number, number],
               socialIntelligence: [30, 60] as [number, number],
-              emotionalRegulation: [10, 50] as [number, number],
+              emotionalRegulation: [30, 50] as [number, number],
               objectivity: [30, 70] as [number, number],
               coreEndurance: [60, 80] as [number, number]
             }
@@ -93,7 +188,7 @@ const Login = () => {
           {
             id: 'nuwa',
             name: { en: 'Nüwa', zh: '女娲' },
-            image: '/images/characters/nuwa.jpg',
+            image: nuwaImage,
             tagRanges: {
               selfAwareness: [0, 40] as [number, number],
               dedication: [50, 80] as [number, number],
@@ -106,7 +201,7 @@ const Login = () => {
           {
             id: 'athena',
             name: { en: 'Athena', zh: '雅典娜' },
-            image: '/images/characters/athena.jpg',
+            image: athenaImage,
             tagRanges: {
               selfAwareness: [60, 80] as [number, number],
               dedication: [0, 40] as [number, number],
@@ -119,7 +214,7 @@ const Login = () => {
           {
             id: 'venus',
             name: { en: 'Venus', zh: '维纳斯' },
-            image: '/images/characters/venus.jpg',
+            image: venusImage,
             tagRanges: {
               selfAwareness: [60, 80] as [number, number],
               dedication: [40, 60] as [number, number],
@@ -131,27 +226,78 @@ const Login = () => {
           }
         ];
 
-        // Calculate user scores and find best match using sum of squares
+        // Calculate user scores and find best match using same logic as Results
         const userScores: Record<string, number> = {};
-        Object.keys(tagStats).forEach(tag => {
-          if (tagStats[tag] && typeof tagStats[tag].scorePercentage === 'number') {
+        Object.keys(tagStats || {}).forEach(tag => {
+          if (tagStats?.[tag] && typeof tagStats[tag].scorePercentage === 'number') {
             const engKey = toEnglishTag(tag);
             if (engKey) {
-              userScores[engKey] = tagStats[tag].scorePercentage;
+              userScores[engKey] = tagStats[tag].scorePercentage as number;
             }
           }
         });
 
-        // Find best match using sum of squares difference
-        const bestMatch = findBestMatchCharacter(userScores, cardsData);
-        setMostFittedCharacter(bestMatch);
+        const otherTags = ['selfAwareness', 'dedication', 'socialIntelligence', 'emotionalRegulation', 'objectivity'];
+        const validScores = otherTags.map(tag => userScores[tag]).filter(v => typeof v === 'number');
+        if (validScores.length === 5) {
+          const avg = validScores.reduce((a, b) => a + b, 0) / 5;
+          const coreStat = tagStats?.['核心耐力'];
+          if (coreStat && typeof coreStat.scorePercentage === 'number' && !isNaN(coreStat.scorePercentage)) {
+            let adjustedCore = coreStat.scorePercentage;
+            if (avg > 60) {
+              adjustedCore += (avg - 60);
+            }
+            userScores['coreEndurance'] = Math.min(100, Math.max(0, adjustedCore));
+          }
+        }
+
+        const resolveQuestion25Answer = () => {
+          const savedAnswers = localStorage.getItem('chon_personality_answers');
+          if (savedAnswers) {
+            try {
+              const answers = JSON.parse(savedAnswers);
+              if (answers && typeof answers === 'object') {
+                const savedQuestionnaireType = (localStorage.getItem('userSessionQuestionnaireType') ||
+                  localStorage.getItem('activeQuestionnaire') ||
+                  'mother') as QuestionnaireType;
+                const question25 = questionnaires[savedQuestionnaireType]?.questions.find(q => q.unifiedId === 25);
+                if (question25 && answers[question25.id]) {
+                  return answers[question25.id] as string;
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing answers:', e);
+            }
+          }
+          return undefined;
+        };
+
+        const question25Answer = resolveQuestion25Answer();
+        const sortedCards = sortCharactersByMatch(userScores, cardsData, question25Answer);
+        setMostFittedCharacter(sortedCards[0]);
       } else {
         setIsLoggedIn(false);
         setMostFittedCharacter(null);
       }
     };
 
-    checkLoginStatus();
+    void checkLoginStatus();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      void checkLoginStatus();
+    });
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (['userAccount', 'tagStats'].includes(e.key || '')) {
+        void checkLoginStatus();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +313,19 @@ const Login = () => {
         [name]: ''
       }));
     }
+    if (loginSubmitError) {
+      setLoginSubmitError('');
+    }
   };
+
+  useEffect(() => {
+    if (shouldHideEmailField && verifiedEmailNormalized) {
+      setFormData(prev => ({
+        ...prev,
+        email: verifiedEmailNormalized
+      }));
+    }
+  }, [shouldHideEmailField, verifiedEmailNormalized]);
 
   const validateForm = () => {
     const newErrors = {
@@ -176,14 +334,31 @@ const Login = () => {
       confirmPassword: ''
     };
     let isValid = true;
+    const verifiedEmail = verifiedEmailNormalized;
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email) {
-      newErrors.email = language === 'en' ? 'Email is required' : '电子邮件为必填项';
+    if (!shouldHideEmailField) {
+      if (!formData.email) {
+        newErrors.email = language === 'en' ? 'Email is required' : '电子邮件为必填项';
+        isValid = false;
+      } else if (!emailRegex.test(formData.email)) {
+        newErrors.email = language === 'en' ? 'Invalid email format' : '电子邮件格式无效';
+        isValid = false;
+      }
+    } else if (isRegisterMode && !verifiedEmail) {
+      newErrors.email = language === 'en'
+        ? 'Please verify your email before creating an account.'
+        : '请先验证邮箱再创建账号。';
       isValid = false;
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = language === 'en' ? 'Invalid email format' : '电子邮件格式无效';
+    } else if (
+      isRegisterMode &&
+      verifiedEmail &&
+      formData.email.trim().toLowerCase() !== verifiedEmail
+    ) {
+      newErrors.email = language === 'en'
+        ? 'Please use the same email you verified.'
+        : '请使用已验证的邮箱。';
       isValid = false;
     }
 
@@ -191,13 +366,13 @@ const Login = () => {
     if (!formData.password) {
       newErrors.password = language === 'en' ? 'Password is required' : '密码为必填项';
       isValid = false;
-    } else if (mode === 'register' && formData.password.length < 8) {
+    } else if (isRegisterMode && formData.password.length < 8) {
       newErrors.password = language === 'en' ? 'Password must be at least 8 characters' : '密码至少需要8个字符';
       isValid = false;
     }
 
     // Confirm password validation (only for registration)
-    if (mode === 'register') {
+    if (isRegisterMode) {
       if (!formData.confirmPassword) {
         newErrors.confirmPassword = language === 'en' ? 'Please confirm your password' : '请确认您的密码';
         isValid = false;
@@ -214,54 +389,143 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      const register = async () => {
+      const submit = async () => {
         try {
-          const userSessionId = localStorage.getItem('userSessionId');
-          if (userSessionId) {
-            const response = await fetch(`${API_URL}/user-accounts`, {
+          if (!isRegisterMode) {
+            setLoginSubmitError('');
+            const defaultInvalid =
+              language === 'en' ? 'Invalid email or password.' : '邮箱或密码不正确。';
+            const loginRes = await fetch(`${getApiBaseUrl()}/user-accounts/login`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                email: formData.email,
-                password: formData.password,
-                user_session_id: userSessionId
+                email: formData.email.trim().toLowerCase(),
+                password: formData.password
               })
             });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(errorText || 'Failed to create user account');
+            const raw = await loginRes.text();
+            const interpreted = interpretChonLoginResponse(loginRes, raw, defaultInvalid);
+            if (interpreted.type === 'bad_response') {
+              setLoginSubmitError(
+                language === 'en'
+                  ? 'Login could not reach the API (invalid response). Set VITE_API_URL at build time or proxy /api to Flask — see apiBaseUrl.ts.'
+                  : '无法连接登录接口（返回无效）。请配置 VITE_API_URL 或将 /api 反向代理到后端。'
+              );
+              return;
             }
+            if (interpreted.type === 'auth') {
+              setLoginSubmitError(interpreted.message);
+              return;
+            }
+
+            const loginJson = interpreted.data;
+
+            localStorage.setItem(
+              'userAccount',
+              JSON.stringify({
+                email: formData.email.trim().toLowerCase(),
+                createdAt: new Date().toISOString()
+              })
+            );
+
+            const hasResults = applyLoginSnapshotPayload(loginJson, formData.email);
+            if (hasResults) {
+              navigate('/personality-test/results');
+            } else {
+              navigate('/personality-test/intro');
+            }
+            return;
           }
 
-          // Save account data to localStorage
-          const accountData = {
-            email: formData.email,
-            password: formData.password,
-            createdAt: new Date().toISOString()
-          };
-          localStorage.setItem('userAccount', JSON.stringify(accountData));
+          const userSessionId = localStorage.getItem('userSessionId');
+          if (!userSessionId) {
+            alert(language === 'en'
+              ? 'No test session found. Please complete the personality test first.'
+              : '未找到测试会话，请先完成性格测试。');
+            return;
+          }
+
+          if (localStorage.getItem('emailVerified') !== 'true') {
+            alert(language === 'en'
+              ? 'Please verify your email before creating an account.'
+              : '请先验证邮箱再创建账号。');
+            setAccountPhase('verify');
+            return;
+          }
+
+          const response = await fetch(`${getApiBaseUrl()}/user-accounts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              user_session_id: userSessionId
+            })
+          });
+
+          if (!response.ok) {
+            if (response.status === 409) {
+              alert(language === 'en'
+                ? 'An account with this email already exists. Please Log in.'
+                : '该邮箱已存在账号，请直接登录。');
+              return;
+            }
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to create user account');
+          }
+
+          localStorage.setItem(
+            'userAccount',
+            JSON.stringify({
+              email: formData.email.trim().toLowerCase(),
+              createdAt: new Date().toISOString()
+            })
+          );
           
-          console.log('Account created and saved:', accountData);
-          console.log('localStorage userAccount:', localStorage.getItem('userAccount'));
           alert(language === 'en' ? 'Account created successfully!' : '账号创建成功！');
-          
-          // Redirect to results if test has been taken
-          const hasResults = localStorage.getItem('tagStats');
+
+          const snapRes = await fetch(`${getApiBaseUrl()}/user-accounts/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: formData.email.trim().toLowerCase(),
+              password: formData.password
+            })
+          });
+          const snapRaw = await snapRes.text();
+          const snapInterpreted = interpretChonLoginResponse(
+            snapRes,
+            snapRaw,
+            language === 'en' ? 'Invalid email or password.' : '邮箱或密码不正确。'
+          );
+          const hasResults =
+            snapInterpreted.type === 'ok'
+              ? applyLoginSnapshotPayload(snapInterpreted.data, formData.email)
+              : false;
           if (hasResults) {
             navigate('/personality-test/results');
           } else {
             navigate('/personality-test/intro');
           }
         } catch (error) {
-          console.error('Account creation failed:', error);
-          alert(language === 'en' ? 'Failed to create account. Please try again.' : '创建账号失败，请重试。');
+          console.error('Account action failed:', error);
+          if (!isRegisterMode) {
+            setLoginSubmitError(
+              language === 'en' ? 'Login failed. Please try again.' : '登录失败，请重试。'
+            );
+          } else {
+            alert(
+              language === 'en'
+                ? 'Failed to create account. Please try again.'
+                : '创建账号失败，请重试。'
+            );
+          }
         }
       };
 
-      void register();
+      void submit();
     }
   };
 
@@ -317,6 +581,29 @@ const Login = () => {
     }
 
     try {
+      const checkResponse = await fetch(`${getApiBaseUrl()}/user-accounts/exists`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotPasswordData.email })
+      });
+      if (!checkResponse.ok) {
+        throw new Error('Failed to verify account');
+      }
+      const checkData = await checkResponse.json();
+      const exists =
+        checkData?.exists === true ||
+        checkData?.exists === 'true' ||
+        checkData?.exists === 1;
+      if (!exists) {
+        setForgotPasswordErrors(prev => ({
+          ...prev,
+          email: language === 'en'
+            ? 'No account found with this email.'
+            : '该邮箱未找到账号。'
+        }));
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/reset-password`;
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordData.email, {
         redirectTo: redirectUrl
@@ -358,10 +645,6 @@ const Login = () => {
                 src={mostFittedCharacter?.image} 
                 alt={language === 'en' ? mostFittedCharacter?.name?.en : mostFittedCharacter?.name?.zh}
                 className="character-image"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = '/images/characters/odin.jpg'; // fallback
-                }}
               />
               <h2 className="character-name">
                 {language === 'en' ? mostFittedCharacter?.name?.en : mostFittedCharacter?.name?.zh}
@@ -386,31 +669,57 @@ const Login = () => {
         // Not logged in state - show login/register form or forgot password forms
         <>
           {forgotPasswordStep === 'none' ? (
+            isVerifyMode ? (
+              <AccountEmailVerification
+                onVerified={(email) => {
+                  setFormData((prev) => ({ ...prev, email: email || prev.email }));
+                  setAccountPhase('register');
+                }}
+                onBack={() => navigate('/personality-test/results')}
+              />
+            ) : (
             <>
               <h1 lang={language}>
-                {mode === 'register' 
+                {isRegisterMode
                   ? (language === 'en' ? 'Create Account' : '创建账号')
                   : (language === 'en' ? 'Login' : '登录')}
               </h1>
       <div className="login-content" lang={language}>
         <form className="registration-form" onSubmit={handleSubmit}>
+          {!isRegisterMode ? (
+            loginSubmitError ? (
+            <p className="login-submit-error" role="alert">
+              {loginSubmitError}
+            </p>
+          ) : null) : null}
           {/* Email Field */}
-          <div className="form-group">
-            <label htmlFor="email">
-              {language === 'en' ? 'Email' : '电子邮件'}
-              <span className="required">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder={language === 'en' ? 'Enter your email' : '请输入您的电子邮件'}
-              className={errors.email ? 'error' : ''}
-            />
-            {errors.email && <span className="error-message">{errors.email}</span>}
-          </div>
+          {!shouldHideEmailField ? (
+            <div className="form-group">
+              <label htmlFor="email">
+                {language === 'en' ? 'Email' : '电子邮件'}
+                <span className="required">*</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder={language === 'en' ? 'Enter your email' : '请输入您的电子邮件'}
+                className={errors.email ? 'error' : ''}
+              />
+              {errors.email && <span className="error-message">{errors.email}</span>}
+            </div>
+          ) : (
+            <div className="form-group">
+              <label>
+                {language === 'en' ? 'Email' : '电子邮件'}
+              </label>
+              <div className="readonly-email">
+                {verifiedEmailNormalized}
+              </div>
+            </div>
+          )}
 
           {/* Password Field */}
           <div className="form-group">
@@ -424,7 +733,7 @@ const Login = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder={mode === 'register' 
+              placeholder={isRegisterMode 
                 ? (language === 'en' ? 'At least 8 characters' : '至少8个字符')
                 : (language === 'en' ? 'Enter your password' : '请输入您的密码')}
               className={errors.password ? 'error' : ''}
@@ -433,7 +742,7 @@ const Login = () => {
           </div>
 
           {/* Confirm Password Field - Only show in register mode */}
-          {mode === 'register' && (
+          {isRegisterMode && (
             <div className="form-group">
               <label htmlFor="confirmPassword">
                 {language === 'en' ? 'Confirm Password' : '确认密码'}
@@ -454,13 +763,13 @@ const Login = () => {
 
           {/* Submit Button */}
           <button type="submit" className="submit-button">
-            {mode === 'register'
+            {isRegisterMode
               ? (language === 'en' ? 'Create Account' : '创建账号')
               : (language === 'en' ? 'Login' : '登录')}
           </button>
           
           {/* Forgot Password / Sign Up Links */}
-          {mode === 'login' ? (
+          {!isRegisterMode ? (
             <div className="form-links">
               <a
                 href="#"
@@ -491,10 +800,19 @@ const Login = () => {
                 </span>
               </Link>
             </div>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              className="link-text back-button"
+              onClick={() => setAccountPhase('verify')}
+            >
+              {language === 'en' ? '← Use a different email' : '← 使用其他邮箱'}
+            </button>
+          )}
         </form>
               </div>
             </>
+            )
           ) : (
             <>
               {/* Forgot Password Forms */}
@@ -539,8 +857,8 @@ const Login = () => {
           }}></h2>
           <p className="otp-instruction">
             {language === 'en' 
-              ? `We sent a reset link to ${forgotPasswordData.email}. Open it to set a new password.` 
-              : `我们已向 ${forgotPasswordData.email} 发送重置链接，请打开链接设置新密码。`}
+              ? `We sent a reset link to ${forgotPasswordData.email}.` 
+              : `我们已向 ${forgotPasswordData.email} 发送重置链接。`}
           </p>
           <button type="button" className="link-text back-button" onClick={handleBackToLogin}>
             {language === 'en' ? '← Back to Login' : '← 返回登录'}

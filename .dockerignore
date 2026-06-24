@@ -87,3 +87,17 @@ backend/*.tmp
 database/*.json
 
 database/output.json
+
+# Smaller build context = faster docker build / less to upload to daemon
+database/
+frontend/
+td8.json
+task-definition.json
+taskdef.json
+taskdef-register.json
+ecs-service-full.json
+service.json
+update-service.json
+acm-validation.json
+app-alias.json
+.github/

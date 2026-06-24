@@ -1,32 +1,37 @@
+# Full stack: API (root application.py) + static SPA (nginx).
+# Set VITE_API_URL to the browser-reachable API URL before building the frontend
+# (e.g. http://localhost:5000 for local compose, or https://api.yourdomain.com for prod images).
+
 version: '3.8'
 
 services:
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     ports:
-      - "5001:5001"
+      - "${BACKEND_HOST_PORT:-5000}:5000"
     environment:
+      - PORT=5000
       - SUPABASE_URL=${SUPABASE_URL}
+      # Server must use the service_role secret (Dashboard → API). Anon key causes RLS 42501 on writes.
       - SUPABASE_KEY=${SUPABASE_KEY}
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - POSTMARK_SERVER_TOKEN=${POSTMARK_SERVER_TOKEN}
       - EMAIL_FROM=${EMAIL_FROM:-contact@chon.life}
       - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-CHON}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-      - PORT=5001
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
     ports:
-      - "3000:3000"
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:5001}
-      - PORT=3000
-    restart: unless-stopped
+      - "${FRONTEND_HOST_PORT:-3000}:80"
     depends_on:
       - backend
-
+    restart: unless-stopped

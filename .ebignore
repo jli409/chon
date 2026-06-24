@@ -1,0 +1,27 @@
+# Used by `eb deploy` (not Docker). Smaller bundle = faster uploads and fewer timeouts.
+.git/
+.cursor/
+.github/
+frontend/
+database/
+node_modules/
+**/__pycache__/
+**/*.pyc
+dist/
+.vite/
+*.md
+url
+# Infra / task metadata — not needed for Flask API at runtime
+td8.json
+task-definition.json
+taskdef.json
+taskdef-register.json
+ecs-service-full.json
+service.json
+update-service.json
+acm-validation.json
+app-alias.json
+package-lock.json
+compose.yaml
+docker-compose.yml
+deploy-aws.sh

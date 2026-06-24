@@ -1,0 +1,11 @@
+Run these files in order:
+
+1. 01_delete_prior_recovered_rows.sql
+2. 02_insert_recovered_question_responses.sql
+3. 03_insert_recovered_tag_scores.sql
+4. 04_postcheck_recovered_rows.sql
+
+These are reconstructed rows derived from tag_statistics aggregates. They use
+real app-shaped question_responses IDs (for example, other_5) and real unified
+original_question_id values, but the answer scores are still reconstructed from
+aggregate totals rather than recovered original raw choices.
