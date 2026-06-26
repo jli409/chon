@@ -26,6 +26,26 @@ type ResultsLocationState = {
   };
 };
 
+interface LegendComment {
+  id: string;
+  author: string;
+  text: string;
+}
+
+const legendStorageKey = (characterEn: string) => `chon_legend_comments_${characterEn}`;
+
+const loadLegendComments = (characterEn: string): LegendComment[] => {
+  try {
+    const raw = localStorage.getItem(legendStorageKey(characterEn));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as LegendComment[]) : [];
+  } catch (e) {
+    console.error('Error parsing legend comments:', e);
+    return [];
+  }
+};
+
 interface CardData {
   id: string;
   name: {
@@ -520,7 +540,7 @@ const cardsData: CardData[] = [
         'Where competition is win-lose only,',
         'No ground for collaboration,',
         'Where market need is undetermined,',
-        'Everyone was scrambling all over the place.'
+        'Everyone was scrambling all over the place.',
         '',
         'You dissect, lead and attack with brothers by your side,',
         'From complexity of market demand and risk of corporate structure,',
@@ -554,7 +574,7 @@ const cardsData: CardData[] = [
         '在市场需求交错的脉络里，',
         '在企业结构潜藏的风险里，',
         '一个重生的经济世界，',
-        '被你重新塑起。'
+        '被你重新塑起。',
         '不论多混乱的市场秩序，',
         '你的眼睛都能看穿困惑、迷失、挫败。',
         '',
@@ -696,7 +716,7 @@ const cardsData: CardData[] = [
         'It begins with responsibility,',
         'With the courage to challenge what is accepted,',
         'And the willingness to carry burdens that others cannot yet see.',
-        ''
+        '',
         'The work that matters most is often invisible at first:',
         'A discovery before its application,',
         'An idea before its recognition,',
@@ -989,7 +1009,7 @@ const cardsData: CardData[] = [
         '你知道人们正在寻找什么；',
         '在变革之中，',
         '你理解人们最不愿失去什么。',
-        ''
+        '',
         '你的力量并非来自说服，',
         '而是来自真正的吸引力。',
         '不是迫使人们在意，',
@@ -1030,6 +1050,10 @@ const Results: React.FC = () => {
   const [animationKey, setAnimationKey] = useState(0);
   const [isCardSwitching, setIsCardSwitching] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLegendInput, setShowLegendInput] = useState(false);
+  const [legendText, setLegendText] = useState('');
+  const [legendComments, setLegendComments] = useState<LegendComment[]>([]);
+  const [expandedBubbleId, setExpandedBubbleId] = useState<string | null>(null);
 
   // 添加图片预加载功能
   useEffect(() => {
@@ -1190,18 +1214,49 @@ const Results: React.FC = () => {
 
     const didHydrate = hydrateResults();
     if (!didHydrate) {
+      let cancelled = false;
+
+      // A logged-in account holder (e.g. arriving via the Personality Test tab on a fresh session)
+      // may not have tagStats in localStorage. Pull their saved snapshot from the backend so the
+      // results page renders instead of bouncing them to the intro / first question.
+      const restoreSnapshotForAccount = async () => {
+        const sid = (localStorage.getItem('userSessionId') || '').trim();
+        const hasAccount = localStorage.getItem('userAccount');
+        if (!sid || !hasAccount || localStorage.getItem('tagStats')) {
+          return;
+        }
+        const snap = await userSessionApi.getAccountSnapshot(sid);
+        if (cancelled || !snap?.has_results || !snap.tag_stats_local_storage) {
+          return;
+        }
+        localStorage.setItem('tagStats', JSON.stringify(snap.tag_stats_local_storage));
+        localStorage.setItem('chon_questionnaire_completed', 'true');
+        if (snap.questionnaire_type) {
+          localStorage.setItem('userSessionQuestionnaireType', snap.questionnaire_type);
+        }
+      };
+
+      void restoreSnapshotForAccount();
+
       let attempts = 0;
       const interval = window.setInterval(() => {
+        if (cancelled) {
+          return;
+        }
         attempts += 1;
         const success = hydrateResults();
-        if (success || attempts >= 10) {
+        // Allow ~3s so the async account-snapshot restore above can land before giving up.
+        if (success || attempts >= 20) {
           window.clearInterval(interval);
           if (!success) {
             navigate('/personality-test/intro');
           }
         }
-      }, 100);
-      return () => window.clearInterval(interval);
+      }, 150);
+      return () => {
+        cancelled = true;
+        window.clearInterval(interval);
+      };
     }
     return undefined;
   }, [location.key, navigate]);
@@ -1260,6 +1315,49 @@ const Results: React.FC = () => {
     };
   }, []);
 
+  // Load this character's user-submitted legends from localStorage
+  useEffect(() => {
+    if (!matchedCard) return;
+    setLegendComments(loadLegendComments(matchedCard.name.en));
+    setExpandedBubbleId(null);
+    setShowLegendInput(false);
+    setLegendText('');
+  }, [matchedCard]);
+
+  const getAuthorName = () => {
+    const raw = localStorage.getItem('userAccount');
+    if (raw) {
+      try {
+        const account = JSON.parse(raw) as { name?: string; username?: string; email?: string };
+        if (account.name) return account.name;
+        if (account.username) return account.username;
+        if (account.email) return account.email.split('@')[0];
+      } catch (e) {
+        console.error('Error parsing userAccount for author name:', e);
+      }
+    }
+    return language === 'en' ? 'Anonymous' : '匿名';
+  };
+
+  const handleSubmitLegend = () => {
+    const text = legendText.trim();
+    if (!text || !matchedCard) return;
+    const newComment: LegendComment = {
+      id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+      author: getAuthorName(),
+      text
+    };
+    const updated = [...loadLegendComments(matchedCard.name.en), newComment];
+    try {
+      localStorage.setItem(legendStorageKey(matchedCard.name.en), JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving legend comment:', e);
+    }
+    setLegendComments(updated);
+    setLegendText('');
+    setShowLegendInput(false);
+  };
+
   const handleCardClick = (index: number) => {
     if (index !== activeCardIndex) {
       // 设置切换状态
@@ -1312,23 +1410,63 @@ const Results: React.FC = () => {
           </div>
           
           <div className="hexagon-chart">
-            <HexagonChart 
-              scores={tagScores} 
-              labels={tagLabels} 
-              language={language} 
+            <HexagonChart
+              scores={tagScores}
+              labels={tagLabels}
+              language={language}
               animationKey={animationKey}
               characterRanges={matchedCard.tagRanges}
             />
           </div>
-          
+
           {/* Create Account Button - Below hexagon on desktop */}
           {!isLoggedIn && (
-            <button 
+            <button
               className="create-account-button-desktop"
               onClick={() => navigate('/login', { state: { flow: 'create-account' } })}
             >
               {language === 'en' ? 'Create Account' : '创建账户'}
             </button>
+          )}
+
+          {/* Share Your Legend - shown after the user has created an account */}
+          {isLoggedIn && (
+            <div className="share-legend-section">
+              <button
+                className="share-legend-button"
+                onClick={() => setShowLegendInput(prev => !prev)}
+              >
+                {language === 'en' ? 'Share Your Legend' : '分享你的传奇'}
+              </button>
+
+              {showLegendInput && (
+                <div className="legend-input-container">
+                  <label className="legend-input-label">
+                    {language === 'en'
+                      ? `Work experience that resonate with ${matchedCard.name.en}`
+                      : `与${matchedCard.name.zh}产生共鸣的工作经历`}
+                  </label>
+                  <textarea
+                    className="legend-textarea"
+                    value={legendText}
+                    onChange={(e) => setLegendText(e.target.value)}
+                    placeholder={language === 'en'
+                      ? 'Share a moment from your work life...'
+                      : '分享你工作中的一个瞬间……'}
+                    rows={4}
+                  />
+                  <div className="legend-input-actions">
+                    <button
+                      className="legend-submit-button"
+                      onClick={handleSubmitLegend}
+                      disabled={!legendText.trim()}
+                    >
+                      {language === 'en' ? 'Share' : '分享'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
         
@@ -1355,29 +1493,6 @@ const Results: React.FC = () => {
             </div>
           )}
           
-          <div className="user-results">
-            <h3>{language === 'en' ? 'Your Test Results' : '您的测试结果'}</h3>
-            <div className="results-grid">
-              {Object.entries(tagScores).map(([tag, score], index) => (
-                <div key={tag} className="result-item" style={{ animationDelay: `${1.3 + index * 0.1}s` }}>
-                  <span className="result-label">
-                    {tagLabels[tag] ? (language === 'en' ? tagLabels[tag].en : tagLabels[tag].zh) : tag}
-                  </span>
-                  <div className="result-bar-container">
-                    <div 
-                      className="result-bar" 
-                      style={{ 
-                        '--target-width': `${score}%`,
-                        animation: `growWidth 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) ${1.4 + index * 0.1}s forwards`
-                      } as React.CSSProperties}
-                    ></div>
-                  </div>
-                  <span className="result-value">{Math.round(score)}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
           {/* Create Account Button - At bottom on mobile */}
           {!isLoggedIn && (
             <button 
@@ -1390,6 +1505,51 @@ const Results: React.FC = () => {
         </div>
       </div>
       
+      {/* Transparent legend bubbles flowing on the right side */}
+      {legendComments.length > 0 && (
+        <div className="legend-bubbles">
+          {legendComments.slice(-8).map((comment, index) => (
+            <div
+              key={comment.id}
+              className={`legend-bubble ${expandedBubbleId === comment.id ? 'active' : ''}`}
+              style={{
+                top: `${10 + (index * 11) % 78}%`,
+                right: `${8 + (index % 3) * 16}px`,
+                animationDelay: `${(index % 5) * 0.8}s`,
+                animationDuration: `${6 + (index % 4)}s`
+              }}
+              onClick={() => setExpandedBubbleId(prev => (prev === comment.id ? null : comment.id))}
+              title={comment.author}
+            >
+              <span className="legend-bubble-initial">
+                {comment.author.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Expanded comment popup */}
+      {(() => {
+        const expanded = legendComments.find(c => c.id === expandedBubbleId);
+        if (!expanded) return null;
+        return (
+          <div className="legend-comment-overlay" onClick={() => setExpandedBubbleId(null)}>
+            <div className="legend-comment-card" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="legend-comment-close"
+                onClick={() => setExpandedBubbleId(null)}
+                aria-label={language === 'en' ? 'Close' : '关闭'}
+              >
+                ×
+              </button>
+              <span className="legend-comment-author">{expanded.author}</span>
+              <p className="legend-comment-text">{expanded.text}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 将角色卡片Dock作为独立元素，不嵌套在其他容器中 */}
       <div id="character-dock-container" style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 1000, pointerEvents: 'none' }}>
         <div className="character-cards-dock" style={{ pointerEvents: 'auto' }}>

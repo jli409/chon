@@ -402,10 +402,10 @@ const AccountEmailVerification = ({ onVerified, onBack }: AccountEmailVerificati
       setVerificationMessage(
         language === 'en'
           ? supabase.success
-            ? 'Magic link sent. Check your inbox (Supabase Auth email) and click the link to continue creating your account.'
+            ? 'Please check inbox for link to continue creating your account.'
             : 'Verification link sent. Please check your inbox and click the link to continue creating your account.'
           : supabase.success
-            ? '魔法链接已发送。请查收邮箱（Supabase Auth 邮件）并点击链接继续创建账号。'
+            ? '请查收邮箱中的链接以继续创建账号。'
             : '验证链接已发送。请查收邮件并点击链接继续创建账号。'
       );
     } catch (error) {

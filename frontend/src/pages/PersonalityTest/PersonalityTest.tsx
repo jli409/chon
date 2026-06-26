@@ -826,6 +826,13 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
   
   // 保存身份选择到本地存储
   useEffect(() => {
+    // Don't clobber a previously saved selection with the initial empty set on mount.
+    // Under React.StrictMode the load effect runs twice; if we wrote [] here on the first
+    // mount, the second load would read it back as empty and the verify/questionnaire guard
+    // would bounce the user back to /intro. Explicit resets clear this key directly.
+    if (selectedIdentities.size === 0) {
+      return;
+    }
     localStorage.setItem('chon_personality_identities', JSON.stringify(Array.from(selectedIdentities)));
   }, [selectedIdentities]);
   
@@ -1082,6 +1089,24 @@ const PersonalityTest = ({ onWhiteThemeChange, onHideUIChange }: PersonalityTest
     setLocalChoices({ yes: 0, no: 0 });
     setHasUserChosen(false);
     setUserChoice(null);
+
+    // Start the identity step from a clean slate. Without this, a previous attempt's
+    // identity/questionnaire selection bleeds into the new run: the identity page renders
+    // with a card already "selected", so the first tap deselects it, the CONTINUE button
+    // hides, and the user appears stuck on /identity ("doesn't go to questionnaire").
+    clearStoredProgressForNewEmail();
+    setSelectedIdentities(new Set());
+    setActiveQuestionnaire(null);
+    setSecondaryQuestionnaire(null);
+    setSelectedCorporateRole(null);
+    setShowCorporateRoles(false);
+    localStorage.removeItem('chon_personality_identities');
+    localStorage.removeItem('selectedQuestionnaireType');
+    localStorage.removeItem('userSessionQuestionnaireType');
+    localStorage.removeItem('selectedCorporateRole');
+    localStorage.removeItem('chon_questionnaire_completed');
+    localStorage.removeItem('chon_personality_step');
+
     goToStep('identity', 'identity');
   };
 

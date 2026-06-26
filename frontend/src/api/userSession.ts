@@ -244,6 +244,33 @@ export const fetchSavedQuestionnaireAnswers = async (
   }
 };
 
+/**
+ * Saved results snapshot for an account-holder's session (tag stats + character match), keyed by
+ * session id. Backend only returns data when the session has a registered account, so a logged-in
+ * user can restore their results page without re-entering a password.
+ */
+export type AccountSnapshot = {
+  success: boolean;
+  has_results?: boolean;
+  questionnaire_type?: string | null;
+  character_match?: string | null;
+  tag_stats_local_storage?: Record<string, Record<string, unknown>>;
+};
+
+export const getAccountSnapshot = async (
+  userSessionId: string
+): Promise<AccountSnapshot | null> => {
+  try {
+    const response = await axios.get(
+      `${getApiBaseUrl()}/user-sessions/${encodeURIComponent(userSessionId)}/account-snapshot`
+    );
+    return response.data as AccountSnapshot;
+  } catch (error) {
+    console.error('Error fetching account snapshot:', error);
+    return null;
+  }
+};
+
 export default {
   createUserSession,
   patchUserSessionEmail,
@@ -253,5 +280,6 @@ export default {
   saveCharacterMatches,
   getUserSession,
   fetchSavedQuestionnaireAnswers,
+  getAccountSnapshot,
 };
 

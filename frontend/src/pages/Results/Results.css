@@ -324,14 +324,15 @@
 
 .workplace-description {
   font-size: 1.1rem;
-  line-height: 1.7;
+  /* Poem spacing trimmed ~50%: leading halved (1.7 → 1.35) and row gap halved. */
+  line-height: 1.35;
   margin-bottom: 1.2rem;
   animation: fadeInRight 0.8s ease-out 1.0s forwards;
   opacity: 0;
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.375rem;
 }
 
 .workplace-description-row {
@@ -351,10 +352,17 @@
 }
 
 .result-item {
-  display: flex;
+  /* Label + value sit on the top row; the bar spans the full width beneath,
+     elongating each bar to the full column width (~2x the previous length). */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "label value"
+    "bar bar";
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.4rem;
+  column-gap: 0.6rem;
+  row-gap: 0.35rem;
+  margin-bottom: 0.7rem;
   animation: fadeInLeft 0.5s ease-out forwards;
   opacity: 0;
 }
@@ -367,7 +375,8 @@
 .result-item:nth-child(6) { animation-delay: 1.8s; }
 
 .result-label {
-  width: 40%;
+  grid-area: label;
+  width: auto;
   font-size: 0.9rem;
   white-space: nowrap;
   overflow: hidden;
@@ -375,7 +384,8 @@
 }
 
 .result-bar-container {
-  flex: 1;
+  grid-area: bar;
+  width: 100%;
   height: 12px;
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 6px;
@@ -402,7 +412,8 @@
 }
 
 .result-value {
-  width: 50px;
+  grid-area: value;
+  width: auto;
   font-size: 0.9rem;
   text-align: right;
   font-weight: bold;
@@ -914,13 +925,13 @@
   }
 
   .result-label {
-    width: 40%;
+    width: auto;
     font-size: 0.8rem;
   }
-  
+
   .result-value {
     font-size: 0.8rem;
-    width: 35px;
+    width: auto;
   }
   
   /* Hide desktop button, show mobile button */
@@ -1695,5 +1706,243 @@
   50% {
     transform: scale(1.05);
     box-shadow: 0 0 8px rgba(240, 189, 192, 0.7);
+  }
+}
+
+/* ===== Share Your Legend ===== */
+.share-legend-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 1.5rem;
+  animation: fadeInUp 0.8s ease-out 1.4s forwards;
+  opacity: 0;
+}
+
+.share-legend-button {
+  display: block;
+  padding: 0.77rem 1.925rem;
+  font-size: 0.924rem;
+  font-weight: 500;
+  font-family: 'Kaisei Decol', serif;
+  color: #F0BDC0;
+  background-color: transparent;
+  border: 1px solid #F0BDC0;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+}
+
+.share-legend-button:hover {
+  background-color: #F0BDC0;
+  color: black;
+  transform: translateY(-2px);
+}
+
+.share-legend-button:active {
+  transform: translateY(0);
+}
+
+.legend-input-container {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.legend-input-label {
+  font-size: 0.95rem;
+  color: #F0BDC0;
+  line-height: 1.4;
+}
+
+.legend-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  font-family: 'Kaisei Decol', serif;
+  color: white;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(240, 189, 192, 0.4);
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 90px;
+  transition: border-color 0.3s ease;
+}
+
+.legend-textarea:focus {
+  outline: none;
+  border-color: #F0BDC0;
+}
+
+.legend-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.legend-input-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.legend-submit-button {
+  padding: 0.55rem 1.6rem;
+  font-size: 0.85rem;
+  font-family: 'Kaisei Decol', serif;
+  font-weight: 500;
+  color: black;
+  background-color: #F0BDC0;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.legend-submit-button:hover:not(:disabled) {
+  background-color: #d47e83;
+}
+
+.legend-submit-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== Floating legend bubbles (right side) ===== */
+.legend-bubbles {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 90px;
+  height: 100vh;
+  z-index: 900;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.legend-bubble {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(240, 189, 192, 0.08);
+  border: 1px solid rgba(240, 189, 192, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  animation-name: floatBubble;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.legend-bubble:hover,
+.legend-bubble.active {
+  background: rgba(240, 189, 192, 0.25);
+  border-color: #F0BDC0;
+  transform: scale(1.12);
+  box-shadow: 0 0 14px rgba(240, 189, 192, 0.5);
+}
+
+.legend-bubble-initial {
+  font-family: 'Kaisei Decol', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #F0BDC0;
+  pointer-events: none;
+}
+
+@keyframes floatBubble {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+/* ===== Expanded comment popup ===== */
+.legend-comment-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.legend-comment-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem 1.8rem 1.8rem;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(240, 189, 192, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+.legend-comment-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.legend-comment-close:hover {
+  color: #F0BDC0;
+}
+
+.legend-comment-author {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #F0BDC0;
+  margin-bottom: 0.8rem;
+}
+
+.legend-comment-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .legend-bubbles {
+    width: 64px;
+  }
+
+  .legend-bubble {
+    width: 42px;
+    height: 42px;
+  }
+
+  .legend-bubble-initial {
+    font-size: 0.95rem;
   }
 }

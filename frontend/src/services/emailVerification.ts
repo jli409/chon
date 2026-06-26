@@ -66,8 +66,7 @@ export const sendSupabaseOtpVerificationLink = async (
   }
   return {
     success: true,
-    message:
-      'Magic link sent. Check your inbox for the email from Supabase Auth and open the link to continue creating your account.',
+    message: 'Please check inbox for link to continue creating your account.',
   };
 };
 

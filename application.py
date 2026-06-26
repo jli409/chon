@@ -2168,6 +2168,31 @@ def get_user_session(session_id):
         print(f"Error retrieving user session: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@application.route('/user-sessions/<session_id>/account-snapshot', methods=['GET'])
+@require_database
+def get_account_snapshot(session_id):
+    """
+    Return the saved results snapshot (tag stats + character match) for a session that already has a
+    registered account. Lets a logged-in account holder reopen their results page (e.g. via the
+    Personality Test tab) without re-entering a password — the session UUID plus an existing
+    ``user_accounts`` row act as the capability. No password ⇒ only returns data for sessions that
+    have an account (never for arbitrary/anonymous sessions).
+    """
+    try:
+        acct = supabase.table('user_accounts').select('id').eq(
+            'user_session_id', session_id
+        ).limit(1).execute()
+        ensure_supabase_ok(acct, "Failed to check account for session")
+        if not acct.data:
+            return jsonify({"success": False, "has_results": False, "error": "No account for session"}), 404
+
+        snap = _account_snapshot_payload(str(session_id))
+        return jsonify({"success": True, **snap}), 200
+    except Exception as e:
+        print(f"Error building account snapshot: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 @application.route('/user-accounts', methods=['POST'])
 @require_database
 def create_user_account():
